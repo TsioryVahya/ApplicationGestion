@@ -79,9 +79,15 @@ CREATE TABLE Employe (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     prenom VARCHAR(100) NOT NULL,
-    adresse VARCHAR(200),
+    adresse VARCHAR(200)
+);
+
+CREATE TABLE CandidatEmploye(
+    id INT AUTO_INCREMENT PRIMARY KEY,
     idCandidat INT,
-    FOREIGN KEY (idCandidat) REFERENCES Candidat(id)
+    idEmploye INT,
+    FOREIGN KEY (idCandidat) REFERENCES Candidat(id),
+    FOREIGN KEY (idEmploye) REFERENCES Employe(id)
 );
 
 -- Table Diplome

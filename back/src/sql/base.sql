@@ -15,7 +15,7 @@ CREATE TABLE Profil (
 );
 
 -- Table Utilisateur
-CREATE TABLE Utilisateur (
+CREATE TABLE Utilisateurs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(150) UNIQUE NOT NULL,
     motDePasse VARCHAR(200) NOT NULL,

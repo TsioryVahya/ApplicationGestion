@@ -72,16 +72,23 @@ const TestsQCM = () => {
 
   const chargerProfils = async () => {
     try {
+      console.log('Chargement des profils...');
       const token = localStorage.getItem('token');
       const response = await fetch('/api/qcm/profils', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      
+      console.log('Profils response status:', response.status);
       const data = await response.json();
+      console.log('Profils data:', data);
       
       if (data.success) {
         setProfils(data.data);
+        console.log('Profils chargés:', data.data);
+      } else {
+        console.error('Erreur profils:', data.message);
       }
     } catch (err) {
       console.error('Erreur lors du chargement des profils:', err);
@@ -203,6 +210,8 @@ const TestsQCM = () => {
     setQuestionData({ ...questionData, choix: newChoix });
   };
 
+  console.log('Render - loading:', loading, 'tests:', tests, 'error:', error);
+  
   if (loading) return <div style={styles.loading}>Chargement des tests QCM...</div>;
 
   return (

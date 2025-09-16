@@ -14,14 +14,7 @@ CREATE TABLE Profil (
     nom VARCHAR(100) NOT NULL
 );
 
--- Table Utilisateur
-CREATE TABLE Utilisateurs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(150) UNIQUE NOT NULL,
-    motDePasse VARCHAR(200) NOT NULL,
-    idEmploye INT,
-    FOREIGN KEY (idEmploye) REFERENCES Employe(id)
-);
+
 
 -- Table Critere
 CREATE TABLE Critere (
@@ -82,6 +75,14 @@ CREATE TABLE Employe (
     adresse VARCHAR(200),
     idCandidat INT,
     FOREIGN KEY (idCandidat) REFERENCES Candidat(id)
+);
+-- Table Utilisateur
+CREATE TABLE Utilisateurs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    motDePasse VARCHAR(200) NOT NULL,
+    idEmploye INT,
+    FOREIGN KEY (idEmploye) REFERENCES Employe(id)
 );
 
 -- Table Diplome

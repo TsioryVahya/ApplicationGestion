@@ -73,8 +73,26 @@ CREATE TABLE Employe (
     nom VARCHAR(100) NOT NULL,
     prenom VARCHAR(100) NOT NULL,
     adresse VARCHAR(200),
+    idDept INT,
+    FOREIGN KEY (idDept) REFERENCES Departement(id)
+);
+
+-- Table Utilisateur
+CREATE TABLE Utilisateurs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    motDePasse VARCHAR(200) NOT NULL,
+    idEmploye INT,
+    FOREIGN KEY (idEmploye) REFERENCES Employe(id)
+);
+
+
+CREATE TABLE CandidatEmploye(
+    id INT AUTO_INCREMENT PRIMARY KEY,
     idCandidat INT,
-    FOREIGN KEY (idCandidat) REFERENCES Candidat(id)
+    idEmploye INT,
+    FOREIGN KEY (idCandidat) REFERENCES Candidat(id),
+    FOREIGN KEY (idEmploye) REFERENCES Employe(id)
 );
 -- Table Utilisateur
 CREATE TABLE Utilisateurs (

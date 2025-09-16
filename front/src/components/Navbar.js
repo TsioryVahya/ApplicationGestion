@@ -22,6 +22,7 @@ const Sidebar = ({ user, onLogout }) => {
   const menuItems = [
     { path: '/', icon: FiHome, label: 'Tableau de bord', color: '#3B82F6' },
     { path: '/utilisateurs', icon: FiUsers, label: 'Utilisateurs', color: '#10B981' },
+    { path: '/profils', icon: FiBarChart2, label: 'Profils', color: '#F59E0B' },
     { path: '/rapports', icon: FiBarChart2, label: 'Rapports', color: '#F59E0B' },
     { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' }
   ];

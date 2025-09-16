@@ -2,7 +2,6 @@
 # Node.js / Express (backend)
 # ==========================
 back/node_modules/
-back/.env
 back/npm-debug.log*
 back/yarn-debug.log*
 back/yarn-error.log*
@@ -23,7 +22,6 @@ Thumbs.db
 # React (frontend)
 # ==========================
 front/node_modules/
-front/.env
 front/.env.local
 front/.env.development.local
 front/.env.test.local

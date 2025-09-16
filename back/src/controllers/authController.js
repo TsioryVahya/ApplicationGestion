@@ -38,9 +38,19 @@ class AuthController {
         });
       }
 
+      const { idEmploye } = req.body;
+
+      if (!idEmploye) {
+        return res.status(400).json({
+          success: false,
+          message: "L'employé doit être sélectionné"
+        });
+      }
+
       const nouvelUtilisateur = await AuthService.inscription({
         email,
-        motDePasse
+        motDePasse,
+        idEmploye
       });
 
       res.status(201).json({

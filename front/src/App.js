@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Navbar';
 import Home from './pages/Home';
 import ListeUtilisateurs from './pages/ListeUtilisateurs';
 import Login from './pages/Login';
@@ -53,13 +53,15 @@ function App() {
       <div style={styles.app}>
         {isAuthenticated ? (
           <>
-            <Navbar user={user} onLogout={handleLogout} />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/utilisateurs" element={<ListeUtilisateurs />} />
-              <Route path="/login" element={<Navigate to="/" replace />} />
-              <Route path="/inscription" element={<Navigate to="/" replace />} />
-            </Routes>
+            <Sidebar user={user} onLogout={handleLogout} />
+            <div style={styles.mainContent}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/utilisateurs" element={<ListeUtilisateurs />} />
+                <Route path="/login" element={<Navigate to="/" replace />} />
+                <Route path="/inscription" element={<Navigate to="/" replace />} />
+              </Routes>
+            </div>
           </>
         ) : (
           <Routes>
@@ -75,18 +77,26 @@ function App() {
 
 const styles = {
   app: {
-    fontFamily: 'Arial, sans-serif'
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    backgroundColor: '#f1f5f9',
+    minHeight: '100vh'
+  },
+  mainContent: {
+    marginLeft: '280px',
+    transition: 'margin-left 0.3s ease',
+    minHeight: '100vh',
+    backgroundColor: '#f1f5f9'
   },
   loading: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
-    backgroundColor: '#f8f9fa'
+    backgroundColor: '#f1f5f9'
   },
   loadingText: {
     fontSize: '1.5rem',
-    color: '#636e72'
+    color: '#64748b'
   }
 };
 

@@ -14,8 +14,6 @@ CREATE TABLE Profil (
     nom VARCHAR(100) NOT NULL
 );
 
-
-
 -- Table Critere
 CREATE TABLE Critere (
     id INT AUTO_INCREMENT PRIMARY KEY,

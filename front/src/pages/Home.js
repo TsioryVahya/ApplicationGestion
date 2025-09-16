@@ -1,71 +1,135 @@
 import { Link } from 'react-router-dom';
+import { 
+  FiUsers, 
+  FiBarChart2, 
+  FiSettings, 
+  FiTrendingUp,
+  FiDatabase,
+  FiArrowRight
+} from 'react-icons/fi';
 
 const Home = () => {
   return (
     <div style={styles.container}>
-      <div style={styles.hero}>
-        <h1 style={styles.title}>🎯 Application de Gestion</h1>
-        <p style={styles.subtitle}>
-          Plateforme complète pour la gestion des utilisateurs et des ressources
-        </p>
+      {/* Header Section */}
+      <div style={styles.header}>
+        <div style={styles.headerContent}>
+          <h1 style={styles.title}>Tableau de Bord RH</h1>
+          <p style={styles.subtitle}>
+            Gérez efficacement vos ressources humaines avec notre plateforme moderne
+          </p>
+        </div>
       </div>
 
-      <div style={styles.features}>
+      {/* Stats Cards */}
+      <div style={styles.statsGrid}>
+        <div style={styles.statCard}>
+          <div style={styles.statIcon}>
+            <FiUsers size={24} color="#1e40af" />
+          </div>
+          <div style={styles.statContent}>
+            <div style={styles.statNumber}>156</div>
+            <div style={styles.statLabel}>Employés Actifs</div>
+          </div>
+        </div>
+        
+        <div style={styles.statCard}>
+          <div style={styles.statIcon}>
+            <FiTrendingUp size={24} color="#059669" />
+          </div>
+          <div style={styles.statContent}>
+            <div style={styles.statNumber}>23</div>
+            <div style={styles.statLabel}>Nouveaux Recrutements</div>
+          </div>
+        </div>
+        
+        <div style={styles.statCard}>
+          <div style={styles.statIcon}>
+            <FiBarChart2 size={24} color="#dc2626" />
+          </div>
+          <div style={styles.statContent}>
+            <div style={styles.statNumber}>8</div>
+            <div style={styles.statLabel}>Entretiens Programmés</div>
+          </div>
+        </div>
+        
+        <div style={styles.statCard}>
+          <div style={styles.statIcon}>
+            <FiDatabase size={24} color="#7c3aed" />
+          </div>
+          <div style={styles.statContent}>
+            <div style={styles.statNumber}>5</div>
+            <div style={styles.statLabel}>Départements</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature Cards */}
+      <div style={styles.featuresGrid}>
         <div style={styles.featureCard}>
-          <div style={styles.featureIcon}>👥</div>
-          <h3 style={styles.featureTitle}>Gestion des Utilisateurs</h3>
+          <div style={styles.featureHeader}>
+            <div style={styles.featureIcon}>
+              <FiUsers size={32} color="#1e40af" />
+            </div>
+            <h3 style={styles.featureTitle}>Gestion des Employés</h3>
+          </div>
           <p style={styles.featureDescription}>
-            Créez, modifiez et gérez facilement tous vos utilisateurs avec une interface intuitive
+            Gérez les profils, les départements et les informations de vos employés en temps réel
           </p>
           <Link to="/utilisateurs" style={styles.featureButton}>
-            Voir les utilisateurs
+            <span>Accéder</span>
+            <FiArrowRight size={16} />
           </Link>
         </div>
 
         <div style={styles.featureCard}>
-          <div style={styles.featureIcon}>📊</div>
-          <h3 style={styles.featureTitle}>Tableau de Bord</h3>
+          <div style={styles.featureHeader}>
+            <div style={styles.featureIcon}>
+              <FiBarChart2 size={32} color="#059669" />
+            </div>
+            <h3 style={styles.featureTitle}>Rapports & Analytics</h3>
+          </div>
           <p style={styles.featureDescription}>
-            Visualisez les statistiques et les métriques importantes de votre application
+            Analysez les tendances RH et générez des rapports détaillés sur vos équipes
           </p>
           <button style={{...styles.featureButton, ...styles.disabledButton}}>
-            Bientôt disponible
+            <span>Bientôt disponible</span>
           </button>
         </div>
 
         <div style={styles.featureCard}>
-          <div style={styles.featureIcon}>⚙️</div>
-          <h3 style={styles.featureTitle}>Configuration</h3>
+          <div style={styles.featureHeader}>
+            <div style={styles.featureIcon}>
+              <FiSettings size={32} color="#dc2626" />
+            </div>
+            <h3 style={styles.featureTitle}>Configuration</h3>
+          </div>
           <p style={styles.featureDescription}>
-            Personnalisez les paramètres et les préférences de votre application
+            Personnalisez les paramètres système et configurez les workflows RH
           </p>
           <button style={{...styles.featureButton, ...styles.disabledButton}}>
-            Bientôt disponible
+            <span>Bientôt disponible</span>
           </button>
         </div>
       </div>
 
-      <div style={styles.stats}>
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>🚀</div>
-          <div style={styles.statLabel}>Application Active</div>
+      {/* Quick Actions */}
+      <div style={styles.quickActions}>
+        <h2 style={styles.sectionTitle}>Actions Rapides</h2>
+        <div style={styles.actionsGrid}>
+          <button style={styles.actionButton}>
+            <FiUsers size={20} />
+            <span>Nouvel Employé</span>
+          </button>
+          <button style={styles.actionButton}>
+            <FiBarChart2 size={20} />
+            <span>Générer Rapport</span>
+          </button>
+          <button style={styles.actionButton}>
+            <FiSettings size={20} />
+            <span>Paramètres</span>
+          </button>
         </div>
-        
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>💾</div>
-          <div style={styles.statLabel}>Base MySQL</div>
-        </div>
-        
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>⚡</div>
-          <div style={styles.statLabel}>API REST</div>
-        </div>
-      </div>
-
-      <div style={styles.footer}>
-        <p style={styles.footerText}>
-          Développé avec ❤️ - Application de Gestion v1.0.0
-        </p>
       </div>
     </div>
   );
@@ -73,106 +137,158 @@ const Home = () => {
 
 const styles = {
   container: {
-    minHeight: 'calc(100vh - 70px)',
-    backgroundColor: '#f8f9fa',
-    padding: '40px 20px'
+    padding: '32px',
+    backgroundColor: '#f1f5f9',
+    minHeight: '100vh'
   },
-  hero: {
-    textAlign: 'center',
-    marginBottom: '60px'
+  header: {
+    marginBottom: '32px'
+  },
+  headerContent: {
+    maxWidth: '1200px'
   },
   title: {
-    fontSize: '3rem',
-    color: '#2d3436',
-    marginBottom: '20px',
-    fontWeight: 'bold'
+    fontSize: '32px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '8px'
   },
   subtitle: {
-    fontSize: '1.3rem',
-    color: '#636e72',
-    maxWidth: '600px',
-    margin: '0 auto',
+    fontSize: '16px',
+    color: '#64748b',
     lineHeight: '1.6'
   },
-  features: {
+  statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '30px',
-    maxWidth: '1200px',
-    margin: '0 auto 60px auto'
-  },
-  featureCard: {
-    backgroundColor: 'white',
-    padding: '40px 30px',
-    borderRadius: '15px',
-    boxShadow: '0 5px 20px rgba(0,0,0,0.1)',
-    textAlign: 'center',
-    transition: 'transform 0.3s ease',
-    cursor: 'pointer'
-  },
-  featureIcon: {
-    fontSize: '3rem',
-    marginBottom: '20px'
-  },
-  featureTitle: {
-    fontSize: '1.5rem',
-    color: '#2d3436',
-    marginBottom: '15px',
-    fontWeight: 'bold'
-  },
-  featureDescription: {
-    color: '#636e72',
-    lineHeight: '1.6',
-    marginBottom: '25px'
-  },
-  featureButton: {
-    display: 'inline-block',
-    backgroundColor: '#00b894',
-    color: 'white',
-    padding: '12px 25px',
-    borderRadius: '8px',
-    textDecoration: 'none',
-    fontWeight: 'bold',
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease'
-  },
-  disabledButton: {
-    backgroundColor: '#b2bec3',
-    cursor: 'not-allowed'
-  },
-  stats: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '40px',
-    marginBottom: '60px',
-    flexWrap: 'wrap'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '24px',
+    marginBottom: '40px'
   },
   statCard: {
-    backgroundColor: 'white',
-    padding: '30px',
+    backgroundColor: '#ffffff',
+    padding: '24px',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    border: '1px solid #e2e8f0',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    transition: 'all 0.2s ease'
+  },
+  statIcon: {
+    width: '48px',
+    height: '48px',
     borderRadius: '12px',
-    boxShadow: '0 3px 15px rgba(0,0,0,0.1)',
-    textAlign: 'center',
-    minWidth: '150px'
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  statContent: {
+    flex: 1
   },
   statNumber: {
-    fontSize: '2.5rem',
-    marginBottom: '10px'
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '4px'
   },
   statLabel: {
-    color: '#636e72',
-    fontWeight: 'bold',
-    fontSize: '0.9rem'
+    fontSize: '14px',
+    color: '#64748b',
+    fontWeight: '500'
   },
-  footer: {
-    textAlign: 'center',
-    paddingTop: '40px',
-    borderTop: '1px solid #e9ecef'
+  featuresGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+    gap: '24px',
+    marginBottom: '40px'
   },
-  footerText: {
-    color: '#636e72',
-    fontSize: '0.9rem'
+  featureCard: {
+    backgroundColor: '#ffffff',
+    padding: '32px',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    border: '1px solid #e2e8f0',
+    transition: 'all 0.2s ease'
+  },
+  featureHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    marginBottom: '16px'
+  },
+  featureIcon: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '12px',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  featureTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1e293b',
+    margin: 0
+  },
+  featureDescription: {
+    color: '#64748b',
+    lineHeight: '1.6',
+    marginBottom: '24px',
+    fontSize: '15px'
+  },
+  featureButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    backgroundColor: '#1e40af',
+    color: '#ffffff',
+    padding: '12px 20px',
+    borderRadius: '10px',
+    textDecoration: 'none',
+    fontWeight: '500',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    fontSize: '14px'
+  },
+  disabledButton: {
+    backgroundColor: '#94a3b8',
+    cursor: 'not-allowed'
+  },
+  quickActions: {
+    backgroundColor: '#ffffff',
+    padding: '32px',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    border: '1px solid #e2e8f0'
+  },
+  sectionTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: '20px'
+  },
+  actionsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px'
+  },
+  actionButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px 20px',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#475569'
   }
 };
 

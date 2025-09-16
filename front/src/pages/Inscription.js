@@ -1,15 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const Inscription = ({ onRegister }) => {
   const [formData, setFormData] = useState({
     email: '',
     motDePasse: '',
-    confirmMotDePasse: ''
+    confirmMotDePasse: '',
+    idEmploye: ''
   });
+  const [employes, setEmployes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingEmployes, setLoadingEmployes] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    // Charger la liste des employés sans compte
+    const chargerEmployes = async () => {
+      try {
+        const response = await fetch('/api/employes/sans-compte');
+        const data = await response.json();
+        
+        if (data.success) {
+          setEmployes(data.data);
+        } else {
+          setError('Erreur lors du chargement des employés');
+        }
+      } catch (err) {
+        setError('Erreur de connexion au serveur');
+      } finally {
+        setLoadingEmployes(false);
+      }
+    };
+
+    chargerEmployes();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -39,6 +64,12 @@ const Inscription = ({ onRegister }) => {
       return;
     }
 
+    if (!formData.idEmploye) {
+      setError('Veuillez sélectionner un employé');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/inscription', {
         method: 'POST',
@@ -55,7 +86,8 @@ const Inscription = ({ onRegister }) => {
         setFormData({
           email: '',
           motDePasse: '',
-          confirmMotDePasse: ''
+          confirmMotDePasse: '',
+          idEmploye: ''
         });
         
         // Optionnel: rediriger vers login après 2 secondes
@@ -83,6 +115,28 @@ const Inscription = ({ onRegister }) => {
         </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>👤 Employé à inscrire</label>
+            {loadingEmployes ? (
+              <div style={styles.loadingSelect}>Chargement des employés...</div>
+            ) : (
+              <select
+                name="idEmploye"
+                value={formData.idEmploye}
+                onChange={handleChange}
+                style={styles.select}
+                required
+              >
+                <option value="">-- Sélectionner un employé --</option>
+                {employes.map(employe => (
+                  <option key={employe.id} value={employe.id}>
+                    {employe.prenom} {employe.nom} - {employe.nomDepartement}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
           <div style={styles.inputGroup}>
             <label style={styles.label}>📧 Email</label>
             <input
@@ -213,6 +267,25 @@ const styles = {
     fontSize: '1rem',
     transition: 'border-color 0.3s ease',
     outline: 'none'
+  },
+  select: {
+    padding: '12px 15px',
+    border: '2px solid #e9ecef',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    transition: 'border-color 0.3s ease',
+    outline: 'none',
+    backgroundColor: 'white',
+    cursor: 'pointer'
+  },
+  loadingSelect: {
+    padding: '12px 15px',
+    border: '2px solid #e9ecef',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    color: '#636e72',
+    backgroundColor: '#f8f9fa',
+    textAlign: 'center'
   },
   submitButton: {
     backgroundColor: '#00b894',

@@ -19,8 +19,8 @@ CREATE TABLE Utilisateurs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(150) UNIQUE NOT NULL,
     motDePasse VARCHAR(200) NOT NULL,
-    idProfil INT,
-    FOREIGN KEY (idProfil) REFERENCES Profil(id)
+    idEmploye INT,
+    FOREIGN KEY (idEmploye) REFERENCES Employe(id)
 );
 
 -- Table Critere

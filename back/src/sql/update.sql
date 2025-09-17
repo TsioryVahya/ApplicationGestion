@@ -27,3 +27,7 @@ ALTER TABLE Candidat
 ADD COLUMN idCompteCandidat INT,
 ADD CONSTRAINT fk_candidat_comptecandidat
     FOREIGN KEY (idCompteCandidat) REFERENCES CompteCandidat(id);
+
+-- Supprimer la colonne nomPoste de la table Annonce
+ALTER TABLE Annonce
+DROP COLUMN nomPoste;

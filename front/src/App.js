@@ -6,7 +6,7 @@ import ListeUtilisateurs from './pages/ListeUtilisateurs';
 import TestsQCM from './pages/QCM/TestsQCM';
 import CreerTestQCM from './pages/QCM/CreerTestQCM';
 import RepondreTestQCM from './pages/QCM/RepondreTestQCM';
-import ListeAnnonces from './pages/ListeAnnnonces';
+import ListeAnnonces from './pages/annonce/ListeAnnonces';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 

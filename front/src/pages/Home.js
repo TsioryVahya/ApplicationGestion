@@ -82,6 +82,22 @@ const Home = () => {
           </Link>
         </div>
 
+                <div style={styles.featureCard}>
+          <div style={styles.featureHeader}>
+            <div style={styles.featureIcon}>
+              <FiUsers size={32} color="#1e40af" />
+            </div>
+            <h3 style={styles.featureTitle}>Liste des candidats</h3>
+          </div>
+          <p style={styles.featureDescription}>
+            Liste des candidats
+          </p>
+          <Link to="/utilisateurs" style={styles.featureButton}>
+            <span>Accéder</span>
+            <FiArrowRight size={16} />
+          </Link>
+        </div>
+
         <div style={styles.featureCard}>
           <div style={styles.featureHeader}>
             <div style={styles.featureIcon}>

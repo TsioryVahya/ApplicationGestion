@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from './components/Navbar';
 import Home from './pages/Home';
 import ListeUtilisateurs from './pages/ListeUtilisateurs';
+import ListeAnnonces from './pages/ListeAnnnonces';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 
@@ -58,6 +59,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/utilisateurs" element={<ListeUtilisateurs />} />
+                <Route path="/annonces" element={<ListeAnnonces />} />
                 <Route path="/login" element={<Navigate to="/" replace />} />
                 <Route path="/inscription" element={<Navigate to="/" replace />} />
               </Routes>

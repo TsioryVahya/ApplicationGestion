@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 class CritereProfilService {
   // Obtenir tous les critères-profils avec détails
@@ -10,7 +10,7 @@ class CritereProfilService {
       JOIN Critere c ON cp.idCritere = c.id
       ORDER BY p.nom, c.nom
     `;
-    const [rows] = await db.execute(query);
+    const [rows] = await pool.execute(query);
     return rows;
   }
 
@@ -23,7 +23,7 @@ class CritereProfilService {
       WHERE cp.idProfil = ?
       ORDER BY c.nom
     `;
-    const [rows] = await db.execute(query, [profilId]);
+    const [rows] = await pool.execute(query, [profilId]);
     return rows;
   }
 
@@ -36,7 +36,7 @@ class CritereProfilService {
       JOIN Critere c ON cp.idCritere = c.id
       WHERE cp.id = ?
     `;
-    const [rows] = await db.execute(query, [id]);
+    const [rows] = await pool.execute(query, [id]);
     return rows[0];
   }
 
@@ -44,7 +44,7 @@ class CritereProfilService {
   static async creerCritereProfil(critereProfilData) {
     const { idProfil, idCritere, valeur, estObligatoire } = critereProfilData;
     const query = 'INSERT INTO CritereProfil (idProfil, idCritere, valeur, estObligatoire) VALUES (?, ?, ?, ?)';
-    const [result] = await db.execute(query, [idProfil, idCritere, valeur, estObligatoire]);
+    const [result] = await pool.execute(query, [idProfil, idCritere, valeur, estObligatoire]);
     
     // Retourner l'association créée avec les détails
     return await this.obtenirCritereProfilParId(result.insertId);
@@ -54,7 +54,7 @@ class CritereProfilService {
   static async mettreAJourCritereProfil(id, critereProfilData) {
     const { valeur, estObligatoire } = critereProfilData;
     const query = 'UPDATE CritereProfil SET valeur = ?, estObligatoire = ? WHERE id = ?';
-    const [result] = await db.execute(query, [valeur, estObligatoire, id]);
+    const [result] = await pool.execute(query, [valeur, estObligatoire, id]);
     
     if (result.affectedRows === 0) {
       return null;
@@ -66,14 +66,14 @@ class CritereProfilService {
   // Supprimer une association critère-profil
   static async supprimerCritereProfil(id) {
     const query = 'DELETE FROM CritereProfil WHERE id = ?';
-    const [result] = await db.execute(query, [id]);
+    const [result] = await pool.execute(query, [id]);
     return result.affectedRows > 0;
   }
 
   // Vérifier si une association existe déjà
   static async associationExiste(idProfil, idCritere) {
     const query = 'SELECT id FROM CritereProfil WHERE idProfil = ? AND idCritere = ?';
-    const [rows] = await db.execute(query, [idProfil, idCritere]);
+    const [rows] = await pool.execute(query, [idProfil, idCritere]);
     return rows.length > 0;
   }
 }

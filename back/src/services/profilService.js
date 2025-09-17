@@ -1,17 +1,17 @@
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 class ProfilService {
   // Obtenir tous les profils
   static async obtenirTousLesProfils() {
     const query = 'SELECT * FROM Profil ORDER BY nom';
-    const [rows] = await db.execute(query);
+    const [rows] = await pool.execute(query);
     return rows;
   }
 
   // Obtenir un profil par ID
   static async obtenirProfilParId(id) {
     const query = 'SELECT * FROM Profil WHERE id = ?';
-    const [rows] = await db.execute(query, [id]);
+    const [rows] = await pool.execute(query, [id]);
     return rows[0];
   }
 
@@ -19,7 +19,7 @@ class ProfilService {
   static async creerProfil(profilData) {
     const { nom, description } = profilData;
     const query = 'INSERT INTO Profil (nom, description) VALUES (?, ?)';
-    const [result] = await db.execute(query, [nom, description || null]);
+    const [result] = await pool.execute(query, [nom, description || null]);
     
     // Retourner le profil créé
     return await this.obtenirProfilParId(result.insertId);
@@ -29,7 +29,7 @@ class ProfilService {
   static async mettreAJourProfil(id, profilData) {
     const { nom, description } = profilData;
     const query = 'UPDATE Profil SET nom = ?, description = ? WHERE id = ?';
-    const [result] = await db.execute(query, [nom, description || null, id]);
+    const [result] = await pool.execute(query, [nom, description || null, id]);
     
     if (result.affectedRows === 0) {
       return null;
@@ -41,7 +41,7 @@ class ProfilService {
   // Supprimer un profil
   static async supprimerProfil(id) {
     const query = 'DELETE FROM Profil WHERE id = ?';
-    const [result] = await db.execute(query, [id]);
+    const [result] = await pool.execute(query, [id]);
     return result.affectedRows > 0;
   }
 
@@ -54,7 +54,7 @@ class ProfilService {
       WHERE cp.idProfil = ?
       ORDER BY c.nom
     `;
-    const [rows] = await db.execute(query, [profilId]);
+    const [rows] = await pool.execute(query, [profilId]);
     return rows;
   }
 }

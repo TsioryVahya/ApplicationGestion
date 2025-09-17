@@ -17,10 +17,21 @@ function CreerCritereProfil() {
   useEffect(() => {
     // Charger les profils et critères disponibles
     const fetchData = async () => {
+      // Récupérer le token d'authentification
+      const token = localStorage.getItem('token');
+      
       try {
         const [profilsResponse, criteresResponse] = await Promise.all([
-          fetch('/api/profils'),
-          fetch('/api/criteres')
+          fetch('/api/profils', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }),
+          fetch('/api/criteres', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
         ]);
 
         if (profilsResponse.ok) {
@@ -54,10 +65,14 @@ function CreerCritereProfil() {
     setMessage('');
 
     try {
+      // Récupérer le token d'authentification
+      const token = localStorage.getItem('token');
+      
       const response = await fetch('/api/critere-profils', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });

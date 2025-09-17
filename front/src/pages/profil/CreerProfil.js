@@ -23,11 +23,15 @@ function CreerProfil() {
     setLoading(true);
     setMessage('');
 
+    // Récupérer le token d'authentification
+    const token = localStorage.getItem('token');
+    
     try {
       const response = await fetch('/api/profils', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });

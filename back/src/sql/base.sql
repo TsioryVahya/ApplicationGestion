@@ -75,14 +75,7 @@ CREATE TABLE Employe (
     FOREIGN KEY (idDept) REFERENCES Departement(id)
 );
 
--- Table Utilisateur
-CREATE TABLE Utilisateurs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(150) UNIQUE NOT NULL,
-    motDePasse VARCHAR(200) NOT NULL,
-    idEmploye INT,
-    FOREIGN KEY (idEmploye) REFERENCES Employe(id)
-);
+
 
 
 CREATE TABLE CandidatEmploye(

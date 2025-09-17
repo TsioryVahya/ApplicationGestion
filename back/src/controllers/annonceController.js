@@ -156,13 +156,13 @@ class AnnonceController {
   // Créer une nouvelle annonce
   static async creerAnnonce(req, res) {
     try {
-      const { description, dateDebut, dateFin, nomPoste, idDepartement, idProfil } = req.body;
+      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, criteres } = req.body;
       
       // Validation des données
-      if (!nomPoste || !dateDebut || !dateFin || !idDepartement) {
+      if (!reference || !dateDebut || !dateFin || !idDepartement || !idProfil) {
         return res.status(400).json({
           success: false,
-          message: "Les champs nomPoste, dateDebut, dateFin et idDepartement sont requis"
+          message: "Les champs reference, dateDebut, dateFin, idDepartement et idProfil sont requis"
         });
       }
 
@@ -178,9 +178,10 @@ class AnnonceController {
         description,
         dateDebut,
         dateFin,
-        nomPoste,
+        reference,
         idDepartement,
-        idProfil
+        idProfil,
+        criteres
       });
 
       res.status(201).json({
@@ -318,6 +319,92 @@ class AnnonceController {
 
     } catch (error) {
       console.error('Erreur lors de la récupération du nombre de candidats:', error);
+      res.status(500).json({
+        success: false,
+        message: "Erreur interne du serveur",
+        error: error.message
+      });
+    }
+  }
+
+  // Obtenir tous les profils disponibles
+  static async obtenirProfils(req, res) {
+    try {
+      const profils = await AnnonceService.obtenirProfils();
+
+      res.status(200).json({
+        success: true,
+        message: "Liste des profils récupérée avec succès",
+        data: profils
+      });
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des profils:', error);
+      res.status(500).json({
+        success: false,
+        message: "Erreur interne du serveur",
+        error: error.message
+      });
+    }
+  }
+
+  // Obtenir les critères d'un profil spécifique
+  static async obtenirCriteresProfil(req, res) {
+    try {
+      const { idProfil } = req.params;
+      
+      const criteres = await AnnonceService.obtenirCriteresProfil(idProfil);
+
+      res.status(200).json({
+        success: true,
+        message: "Critères du profil récupérés avec succès",
+        data: criteres
+      });
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des critères:', error);
+      res.status(500).json({
+        success: false,
+        message: "Erreur interne du serveur",
+        error: error.message
+      });
+    }
+  }
+
+  // Obtenir tous les critères disponibles
+  static async obtenirTousLesCriteres(req, res) {
+    try {
+      const criteres = await AnnonceService.obtenirTousLesCriteres();
+
+      res.status(200).json({
+        success: true,
+        message: "Liste des critères récupérée avec succès",
+        data: criteres
+      });
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des critères:', error);
+      res.status(500).json({
+        success: false,
+        message: "Erreur interne du serveur",
+        error: error.message
+      });
+    }
+  }
+
+  // Obtenir tous les départements
+  static async obtenirDepartements(req, res) {
+    try {
+      const departements = await AnnonceService.obtenirDepartements();
+
+      res.status(200).json({
+        success: true,
+        message: "Liste des départements récupérée avec succès",
+        data: departements
+      });
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des départements:', error);
       res.status(500).json({
         success: false,
         message: "Erreur interne du serveur",

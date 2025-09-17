@@ -31,3 +31,7 @@ ADD CONSTRAINT fk_candidat_comptecandidat
 -- Supprimer la colonne nomPoste de la table Annonce
 ALTER TABLE Annonce
 DROP COLUMN nomPoste;
+
+-- Ajouter la colonne reference à la table Annonce
+ALTER TABLE Annonce
+ADD COLUMN reference VARCHAR(50) NOT NULL UNIQUE;

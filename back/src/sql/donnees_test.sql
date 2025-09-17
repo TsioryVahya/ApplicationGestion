@@ -72,13 +72,13 @@ INSERT INTO TypeAnnonce (libelle) VALUES
 ('Stage'),
 ('Freelance');
 
--- Insertion des annonces d'emploi (sans nomPoste)
-INSERT INTO Annonce (description, dateDebut, dateFin, ref, idDepartement, idProfil, idTypeAnnonce) VALUES 
-('Recherche développeur Full Stack avec 3 ans d\'expérience minimum en React, Node.js et bases de données', '2024-01-15', '2024-03-15', 'DEV-001', 2, 1, 1),
-('Poste de manager pour équipe RH avec expérience en gestion d\'équipe et recrutement', '2024-02-01', '2024-04-01', 'MAN-001', 1, 2, 1),
-('Comptable expérimenté pour département finance avec maîtrise des logiciels comptables', '2024-01-20', '2024-03-20', 'CPT-001', 4, 3, 1),
-('Commercial terrain secteur Sud-Est avec permis B obligatoire', '2024-02-10', '2024-04-10', 'COM-001', 3, 4, 2),
-('Technicien maintenance industrielle avec formation en électromécanique', '2024-01-25', '2024-03-25', 'TEC-001', 5, 5, 2);
+-- Insertion des annonces d'emploi (avec colonne reference)
+INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce) VALUES 
+('Recherche développeur Full Stack avec 3 ans d\'expérience minimum en React, Node.js et bases de données', '2024-01-15', '2024-03-15', 'DEV-2024-001', 2, 1, 1),
+('Poste de manager pour équipe RH avec expérience en gestion d\'équipe et recrutement', '2024-02-01', '2024-04-01', 'MAN-2024-001', 1, 2, 1),
+('Comptable expérimenté pour département finance avec maîtrise des logiciels comptables', '2024-01-20', '2024-03-20', 'CPT-2024-001', 4, 3, 1),
+('Commercial terrain secteur Sud-Est avec permis B obligatoire', '2024-02-10', '2024-04-10', 'COM-2024-001', 3, 4, 2),
+('Technicien maintenance industrielle avec formation en électromécanique', '2024-01-25', '2024-03-25', 'TEC-2024-001', 5, 5, 2);
 
 -- Insertion de critères supplémentaires pour les annonces
 INSERT INTO CritereProfil (idProfil, idCritere, valeurVarchar, estObligatoire) VALUES 

@@ -8,7 +8,8 @@ import {
   FiUser,
   FiMenu,
   FiX,
-  FiEdit3
+  FiEdit3,
+  FiBriefcase
 } from 'react-icons/fi';
 import { useState } from 'react';
 
@@ -23,10 +24,10 @@ const Sidebar = ({ user, onLogout }) => {
   const menuItems = [
     { path: '/', icon: FiHome, label: 'Tableau de bord', color: '#3B82F6' },
     { path: '/utilisateurs', icon: FiUsers, label: 'Utilisateurs', color: '#10B981' },
+    { path: '/annonces', icon: FiBriefcase, label: 'Annonces', color: '#DC2626' },
     { path: '/qcm', icon: FiEdit3, label: 'Tests QCM', color: '#8B5CF6' },
     { path: '/rapports', icon: FiBarChart2, label: 'Rapports', color: '#F59E0B' },
-    { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' } ,
-    { path: '/annonces', icon: FiUsers, label: 'Annonces', color: '#10B981' }
+    { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' }
   ];
 
   return (

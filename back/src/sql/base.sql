@@ -11,13 +11,15 @@ CREATE TABLE Departement (
 -- Table Profil
 CREATE TABLE Profil (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL
+    nom VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT
 );
 
 -- Table Critere
 CREATE TABLE Critere (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL
+    nom VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT
 );
 
 -- Table CritereProfil
@@ -25,11 +27,11 @@ CREATE TABLE CritereProfil (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idProfil INT,
     idCritere INT,
-    valeurDouble DECIMAL(10,2) NULL,
-    valeurVarchar VARCHAR(200) NULL,
-    valeurBool BOOLEAN NULL,
+    valeur VARCHAR(200) NOT NULL,
+    estObligatoire BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (idProfil) REFERENCES Profil(id),
-    FOREIGN KEY (idCritere) REFERENCES Critere(id)
+    FOREIGN KEY (idCritere) REFERENCES Critere(id),
+    UNIQUE KEY unique_profil_critere (idProfil, idCritere)
 );
 
 -- Table Annonce

@@ -5,6 +5,10 @@ import Home from './pages/Home';
 import ListeUtilisateurs from './pages/ListeUtilisateurs';
 import TestsQCM from './pages/QCM/TestsQCM';
 import CreerTestQCM from './pages/QCM/CreerTestQCM';
+import ListeAnnonces from './pages/annonce/ListeAnnonces';
+import CreerProfil from './pages/profil/CreerProfil';
+import CreerCritere from './pages/profil/CreerCritere';
+import CreerCritereProfil from './pages/profil/CreerCritereProfil';
 import RepondreTestQCM from './pages/QCM/RepondreTestQCM';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
@@ -69,6 +73,9 @@ function App() {
                     <Route path="/utilisateurs" element={<ListeUtilisateurs />} />
                     <Route path="/qcm" element={<TestsQCM />} />
                     <Route path="/qcm/creer" element={<CreerTestQCM />} />
+                    <Route path="/profil/creer-profil" element={<CreerProfil />} />
+                    <Route path="/profil/creer-critere" element={<CreerCritere />} />
+                    <Route path="/profil/creer-critere-profil" element={<CreerCritereProfil />} />
                     <Route path="/login" element={<Navigate to="/" replace />} />
                     <Route path="/inscription" element={<Navigate to="/" replace />} />
                   </Routes>

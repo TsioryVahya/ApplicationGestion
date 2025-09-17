@@ -8,16 +8,23 @@ import {
   FiUser,
   FiMenu,
   FiX,
-  FiEdit3
+  FiEdit3,
+  FiChevronDown,
+  FiChevronRight
 } from 'react-icons/fi';
 import { useState } from 'react';
 
 const Sidebar = ({ user, onLogout }) => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [profilDropdownOpen, setProfilDropdownOpen] = useState(false);
 
   const isActive = (path) => {
     return location.pathname === path;
+  };
+
+  const isProfilSectionActive = () => {
+    return location.pathname.includes('/profil/');
   };
 
   const menuItems = [
@@ -26,6 +33,12 @@ const Sidebar = ({ user, onLogout }) => {
     { path: '/qcm', icon: FiEdit3, label: 'Tests QCM', color: '#8B5CF6' },
     { path: '/rapports', icon: FiBarChart2, label: 'Rapports', color: '#F59E0B' },
     { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' }
+  ];
+
+  const profilMenuItems = [
+    { path: '/profil/creer-profil', label: 'Créer un Profil' },
+    { path: '/profil/creer-critere', label: 'Créer un Critère' },
+    { path: '/profil/creer-critere-profil', label: 'Associer Critère-Profil' }
   ];
 
   return (
@@ -86,6 +99,58 @@ const Sidebar = ({ user, onLogout }) => {
               </Link>
             );
           })}
+
+          {/* Profil Dropdown */}
+          <div style={styles.dropdownContainer}>
+            <div
+              onClick={() => setProfilDropdownOpen(!profilDropdownOpen)}
+              style={{
+                ...styles.menuItem,
+                ...(isProfilSectionActive() ? styles.activeMenuItem : {}),
+                justifyContent: isCollapsed ? 'center' : 'space-between',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                <div style={{...styles.menuIcon, color: isProfilSectionActive() ? '#ffffff' : '#9B59B6'}}>
+                  <FiUser size={20} />
+                </div>
+                {!isCollapsed && (
+                  <span style={{...styles.menuLabel, color: isProfilSectionActive() ? '#ffffff' : '#64748B'}}>
+                    Profil
+                  </span>
+                )}
+              </div>
+              {!isCollapsed && (
+                <div style={{...styles.menuIcon, color: isProfilSectionActive() ? '#ffffff' : '#64748B'}}>
+                  {profilDropdownOpen ? <FiChevronDown size={16} /> : <FiChevronRight size={16} />}
+                </div>
+              )}
+            </div>
+
+            {/* Dropdown Items */}
+            {profilDropdownOpen && !isCollapsed && (
+              <div style={styles.dropdownItems}>
+                {profilMenuItems.map((item) => {
+                  const active = isActive(item.path);
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      style={{
+                        ...styles.dropdownItem,
+                        ...(active ? styles.activeDropdownItem : {})
+                      }}
+                    >
+                      <span style={{...styles.dropdownLabel, color: active ? '#9B59B6' : '#64748B'}}>
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -249,6 +314,33 @@ const styles = {
   },
   logoutText: {
     color: '#ef4444'
+  },
+  dropdownContainer: {
+    marginTop: '4px'
+  },
+  dropdownItems: {
+    marginLeft: '32px',
+    marginTop: '4px',
+    paddingLeft: '12px',
+    borderLeft: '2px solid #334155'
+  },
+  dropdownItem: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '8px 12px',
+    margin: '2px 0',
+    borderRadius: '6px',
+    textDecoration: 'none',
+    transition: 'all 0.2s ease',
+    cursor: 'pointer'
+  },
+  activeDropdownItem: {
+    backgroundColor: 'rgba(155, 89, 182, 0.1)',
+    transform: 'translateX(2px)'
+  },
+  dropdownLabel: {
+    fontSize: '14px',
+    fontWeight: '500'
   }
 };
 

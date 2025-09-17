@@ -4,6 +4,9 @@ const UtilisateursController = require('../controllers/utilisateursController');
 const AuthController = require('../controllers/authController');
 const EmployeController = require('../controllers/employeController');
 const QcmController = require('../controllers/qcmController');
+const ProfilController = require('../controllers/profilController');
+const CritereController = require('../controllers/critereController');
+const CritereProfilController = require('../controllers/critereProfilController');
 
 // Routes d'authentification
 router.post('/auth/inscription', AuthController.inscription);
@@ -30,5 +33,26 @@ router.delete('/qcm/tests/:id', AuthController.verifierToken, QcmController.supp
 router.get('/utilisateurs', AuthController.verifierToken, UtilisateursController.obtenirTousLesUtilisateurs);
 router.get('/utilisateurs/:id', AuthController.verifierToken, UtilisateursController.obtenirUtilisateurParId);
 router.post('/utilisateurs', AuthController.verifierToken, UtilisateursController.creerUtilisateur);
+
+// Routes pour les profils (protégées)
+router.get('/profils', AuthController.verifierToken, ProfilController.obtenirTousLesProfils);
+router.get('/profils/:id', AuthController.verifierToken, ProfilController.obtenirProfilParId);
+router.post('/profils', AuthController.verifierToken, ProfilController.creerProfil);
+router.put('/profils/:id', AuthController.verifierToken, ProfilController.mettreAJourProfil);
+router.delete('/profils/:id', AuthController.verifierToken, ProfilController.supprimerProfil);
+
+// Routes pour les critères (protégées)
+router.get('/criteres', AuthController.verifierToken, CritereController.obtenirTousLesCriteres);
+router.get('/criteres/:id', AuthController.verifierToken, CritereController.obtenirCritereParId);
+router.post('/criteres', AuthController.verifierToken, CritereController.creerCritere);
+router.put('/criteres/:id', AuthController.verifierToken, CritereController.mettreAJourCritere);
+router.delete('/criteres/:id', AuthController.verifierToken, CritereController.supprimerCritere);
+
+// Routes pour les associations critère-profil (protégées)
+router.get('/critere-profils', AuthController.verifierToken, CritereProfilController.obtenirTousCriteresProfils);
+router.get('/critere-profils/profil/:profilId', AuthController.verifierToken, CritereProfilController.obtenirCriteresParProfil);
+router.post('/critere-profils', AuthController.verifierToken, CritereProfilController.creerCritereProfil);
+router.put('/critere-profils/:id', AuthController.verifierToken, CritereProfilController.mettreAJourCritereProfil);
+router.delete('/critere-profils/:id', AuthController.verifierToken, CritereProfilController.supprimerCritereProfil);
 
 module.exports = router;

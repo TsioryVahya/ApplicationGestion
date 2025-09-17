@@ -222,7 +222,7 @@ const TestsQCM = () => {
           Créez et gérez vos questionnaires à choix multiples
         </p>
         <button 
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => window.location.href = '/qcm/creer'}
           style={styles.createButton}
         >
           <FiPlus size={20} />
@@ -287,6 +287,13 @@ const TestsQCM = () => {
             </div>
 
             <div style={styles.testActions}>
+              <button 
+                onClick={() => window.open(`/test/${test.id}`, '_blank')}
+                style={styles.viewTestButton}
+              >
+                <FiEye size={16} />
+                <span>Répondre au Test</span>
+              </button>
               <button 
                 onClick={() => {
                   setSelectedTest(test);
@@ -609,8 +616,22 @@ const styles = {
   },
   testActions: {
     display: 'flex',
-    gap: '12px',
+    gap: '8px',
     justifyContent: 'space-between'
+  },
+  viewTestButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    backgroundColor: '#059669',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '8px 12px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '500',
+    flex: 1
   },
   addQuestionButton: {
     display: 'flex',

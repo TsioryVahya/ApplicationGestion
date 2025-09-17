@@ -24,7 +24,7 @@ function CreerProfil() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/profils', {
+      const response = await fetch('/api/profils', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

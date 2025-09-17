@@ -24,7 +24,7 @@ function CreerCritere() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/criteres', {
+      const response = await fetch('/api/criteres', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

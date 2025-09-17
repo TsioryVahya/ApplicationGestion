@@ -19,8 +19,8 @@ function CreerCritereProfil() {
     const fetchData = async () => {
       try {
         const [profilsResponse, criteresResponse] = await Promise.all([
-          fetch('http://localhost:3001/api/profils'),
-          fetch('http://localhost:3001/api/criteres')
+          fetch('/api/profils'),
+          fetch('/api/criteres')
         ]);
 
         if (profilsResponse.ok) {
@@ -54,7 +54,7 @@ function CreerCritereProfil() {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/critere-profils', {
+      const response = await fetch('/api/critere-profils', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

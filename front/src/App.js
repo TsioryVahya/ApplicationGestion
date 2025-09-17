@@ -76,8 +76,7 @@ function App() {
                     <Route path="/profil/creer-profil" element={<CreerProfil />} />
                     <Route path="/profil/creer-critere" element={<CreerCritere />} />
                     <Route path="/profil/creer-critere-profil" element={<CreerCritereProfil />} />
-                    <Route path="/login" element={<Navigate to="/" replace />} />
-                    <Route path="/inscription" element={<Navigate to="/" replace />} />
+                    <Route path="/annonces" element={<ListeAnnonces />} />
                   </Routes>
                 </div>
               </>

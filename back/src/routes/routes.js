@@ -7,6 +7,7 @@ const QcmController = require('../controllers/qcmController');
 const ProfilController = require('../controllers/profilController');
 const CritereController = require('../controllers/critereController');
 const CritereProfilController = require('../controllers/critereProfilController');
+const AnnonceController = require('../controllers/annonceController');
 
 // Routes d'authentification
 router.post('/auth/inscription', AuthController.inscription);
@@ -54,5 +55,17 @@ router.get('/critere-profils/profil/:profilId', AuthController.verifierToken, Cr
 router.post('/critere-profils', AuthController.verifierToken, CritereProfilController.creerCritereProfil);
 router.put('/critere-profils/:id', AuthController.verifierToken, CritereProfilController.mettreAJourCritereProfil);
 router.delete('/critere-profils/:id', AuthController.verifierToken, CritereProfilController.supprimerCritereProfil);
+// Routes pour les annonces (protégées)
+router.get('/annonces', AuthController.verifierToken, AnnonceController.obtenirToutesLesAnnonces);
+router.get('/annonces/actives', AuthController.verifierToken, AnnonceController.obtenirAnnoncesActives);
+router.get('/annonces/avec-candidats', AuthController.verifierToken, AnnonceController.obtenirAnnoncesAvecCandidats);
+router.get('/annonces/statistiques', AuthController.verifierToken, AnnonceController.obtenirStatistiques);
+router.get('/annonces/recherche', AuthController.verifierToken, AnnonceController.rechercherAnnonces);
+router.get('/annonces/departement/:idDepartement', AuthController.verifierToken, AnnonceController.obtenirAnnoncesParDepartement);
+router.get('/annonces/:id', AuthController.verifierToken, AnnonceController.obtenirAnnonceParId);
+router.get('/annonces/:id/candidats', AuthController.verifierToken, AnnonceController.obtenirNombreCandidats);
+router.post('/annonces', AuthController.verifierToken, AnnonceController.creerAnnonce);
+router.put('/annonces/:id', AuthController.verifierToken, AnnonceController.mettreAJourAnnonce);
+router.delete('/annonces/:id', AuthController.verifierToken, AnnonceController.supprimerAnnonce);
 
 module.exports = router;

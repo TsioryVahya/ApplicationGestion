@@ -32,7 +32,8 @@ const Sidebar = ({ user, onLogout }) => {
     { path: '/utilisateurs', icon: FiUsers, label: 'Utilisateurs', color: '#10B981' },
     { path: '/qcm', icon: FiEdit3, label: 'Tests QCM', color: '#8B5CF6' },
     { path: '/rapports', icon: FiBarChart2, label: 'Rapports', color: '#F59E0B' },
-    { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' }
+    { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' } ,
+    { path: '/annonces', icon: FiUsers, label: 'Annonces', color: '#10B981' }
   ];
 
   const profilMenuItems = [

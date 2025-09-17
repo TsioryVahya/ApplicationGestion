@@ -15,6 +15,9 @@ router.get('/employes', EmployeController.obtenirTousLesEmployes);
 router.get('/employes/sans-compte', EmployeController.obtenirEmployesSansCompte);
 router.get('/employes/:id', EmployeController.obtenirEmployeParId);
 
+// Routes publiques pour les tests QCM (accès candidats)
+router.get('/qcm/public/tests/:id', QcmController.obtenirTestParId);
+
 // Routes pour les tests QCM (protégées)
 router.get('/qcm/tests', AuthController.verifierToken, QcmController.obtenirTousLesTests);
 router.get('/qcm/tests/:id', AuthController.verifierToken, QcmController.obtenirTestParId);

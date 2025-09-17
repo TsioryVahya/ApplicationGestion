@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import Sidebar from './components/Navbar';
 import Home from './pages/Home';
 import ListeUtilisateurs from './pages/ListeUtilisateurs';
+import TestsQCM from './pages/QCM/TestsQCM';
+import CreerTestQCM from './pages/QCM/CreerTestQCM';
+import RepondreTestQCM from './pages/QCM/RepondreTestQCM';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 
@@ -51,25 +54,35 @@ function App() {
   return (
     <Router>
       <div style={styles.app}>
-        {isAuthenticated ? (
-          <>
-            <Sidebar user={user} onLogout={handleLogout} />
-            <div style={styles.mainContent}>
+        <Routes>
+          {/* Route publique pour les tests - toujours sans sidebar */}
+          <Route path="/test/:id" element={<RepondreTestQCM />} />
+          
+          {/* Routes conditionnelles selon l'authentification */}
+          <Route path="/*" element={
+            isAuthenticated ? (
+              <>
+                <Sidebar user={user} onLogout={handleLogout} />
+                <div style={styles.mainContent}>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/utilisateurs" element={<ListeUtilisateurs />} />
+                    <Route path="/qcm" element={<TestsQCM />} />
+                    <Route path="/qcm/creer" element={<CreerTestQCM />} />
+                    <Route path="/login" element={<Navigate to="/" replace />} />
+                    <Route path="/inscription" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </div>
+              </>
+            ) : (
               <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/utilisateurs" element={<ListeUtilisateurs />} />
-                <Route path="/login" element={<Navigate to="/" replace />} />
-                <Route path="/inscription" element={<Navigate to="/" replace />} />
+                <Route path="/login" element={<Login onLogin={handleLogin} />} />
+                <Route path="/inscription" element={<Inscription onRegister={handleRegister} />} />
+                <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>
-            </div>
-          </>
-        ) : (
-          <Routes>
-            <Route path="/login" element={<Login onLogin={handleLogin} />} />
-            <Route path="/inscription" element={<Inscription onRegister={handleRegister} />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        )}
+            )
+          } />
+        </Routes>
       </div>
     </Router>
   );

@@ -7,7 +7,8 @@ import {
   FiLogOut, 
   FiUser,
   FiMenu,
-  FiX
+  FiX,
+  FiEdit3
 } from 'react-icons/fi';
 import { useState } from 'react';
 
@@ -22,6 +23,7 @@ const Sidebar = ({ user, onLogout }) => {
   const menuItems = [
     { path: '/', icon: FiHome, label: 'Tableau de bord', color: '#3B82F6' },
     { path: '/utilisateurs', icon: FiUsers, label: 'Utilisateurs', color: '#10B981' },
+    { path: '/qcm', icon: FiEdit3, label: 'Tests QCM', color: '#8B5CF6' },
     { path: '/rapports', icon: FiBarChart2, label: 'Rapports', color: '#F59E0B' },
     { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' }
   ];

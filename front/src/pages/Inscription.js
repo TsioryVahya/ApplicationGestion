@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { 
+  FiLock, 
+  FiMail, 
+  FiUser,
+  FiUserPlus,
+  FiLoader,
+  FiAlertCircle,
+  FiCheckCircle
+} from 'react-icons/fi';
 
 const Inscription = ({ onRegister }) => {
   const [formData, setFormData] = useState({
@@ -110,81 +119,113 @@ const Inscription = ({ onRegister }) => {
     <div style={styles.container}>
       <div style={styles.registerBox}>
         <div style={styles.header}>
-          <h1 style={styles.title}>📝 Inscription</h1>
+          <div style={styles.iconContainer}>
+            <FiUserPlus size={48} color="#1e40af" />
+          </div>
+          <h1 style={styles.title}>Inscription</h1>
           <p style={styles.subtitle}>Créez votre compte pour accéder à l'application</p>
         </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>👤 Employé à inscrire</label>
+            <label style={styles.label}>
+              <FiUser size={16} style={styles.labelIcon} />
+              Employé à inscrire
+            </label>
             {loadingEmployes ? (
-              <div style={styles.loadingSelect}>Chargement des employés...</div>
+              <div style={styles.loadingSelect}>
+                <FiLoader size={18} style={styles.spinningIcon} />
+                Chargement des employés...
+              </div>
             ) : (
-              <select
-                name="idEmploye"
-                value={formData.idEmploye}
-                onChange={handleChange}
-                style={styles.select}
-                required
-              >
-                <option value="">-- Sélectionner un employé --</option>
-                {employes.map(employe => (
-                  <option key={employe.id} value={employe.id}>
-                    {employe.prenom} {employe.nom} - {employe.nomDepartement}
-                  </option>
-                ))}
-              </select>
+              <div style={styles.inputContainer}>
+                <FiUser size={18} style={styles.inputIcon} />
+                <select
+                  name="idEmploye"
+                  value={formData.idEmploye}
+                  onChange={handleChange}
+                  style={styles.select}
+                  required
+                >
+                  <option value="">-- Sélectionner un employé --</option>
+                  {employes.map(employe => (
+                    <option key={employe.id} value={employe.id}>
+                      {employe.prenom} {employe.nom} - {employe.nomDepartement}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>📧 Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              style={styles.input}
-              placeholder="votre.email@exemple.com"
-              required
-            />
+            <label style={styles.label}>
+              <FiMail size={16} style={styles.labelIcon} />
+              Email
+            </label>
+            <div style={styles.inputContainer}>
+              <FiMail size={18} style={styles.inputIcon} />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                style={styles.input}
+                placeholder="votre.email@exemple.com"
+                required
+              />
+            </div>
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>🔒 Mot de passe</label>
-            <input
-              type="password"
-              name="motDePasse"
-              value={formData.motDePasse}
-              onChange={handleChange}
-              style={styles.input}
-              placeholder="Au moins 6 caractères"
-              required
-            />
+            <label style={styles.label}>
+              <FiLock size={16} style={styles.labelIcon} />
+              Mot de passe
+            </label>
+            <div style={styles.inputContainer}>
+              <FiLock size={18} style={styles.inputIcon} />
+              <input
+                type="password"
+                name="motDePasse"
+                value={formData.motDePasse}
+                onChange={handleChange}
+                style={styles.input}
+                placeholder="Au moins 6 caractères"
+                required
+              />
+            </div>
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>🔒 Confirmer le mot de passe</label>
-            <input
-              type="password"
-              name="confirmMotDePasse"
-              value={formData.confirmMotDePasse}
-              onChange={handleChange}
-              style={styles.input}
-              placeholder="Répétez votre mot de passe"
-              required
-            />
+            <label style={styles.label}>
+              <FiLock size={16} style={styles.labelIcon} />
+              Confirmer le mot de passe
+            </label>
+            <div style={styles.inputContainer}>
+              <FiLock size={18} style={styles.inputIcon} />
+              <input
+                type="password"
+                name="confirmMotDePasse"
+                value={formData.confirmMotDePasse}
+                onChange={handleChange}
+                style={styles.input}
+                placeholder="Répétez votre mot de passe"
+                required
+              />
+            </div>
           </div>
 
           {error && (
             <div style={styles.error}>
-              ❌ {error}
+              <FiAlertCircle size={16} style={styles.errorIcon} />
+              {error}
             </div>
           )}
 
           {success && (
             <div style={styles.success}>
-              ✅ {success}
+              <FiCheckCircle size={16} style={styles.successIcon} />
+              {success}
             </div>
           )}
 
@@ -196,7 +237,17 @@ const Inscription = ({ onRegister }) => {
               ...(loading ? styles.disabledButton : {})
             }}
           >
-            {loading ? '⏳ Inscription...' : '🚀 S\'inscrire'}
+            {loading ? (
+              <>
+                <FiLoader size={18} style={styles.spinningIcon} />
+                Inscription...
+              </>
+            ) : (
+              <>
+                <FiUserPlus size={18} />
+                S'inscrire
+              </>
+            )}
           </button>
         </form>
 
@@ -216,39 +267,52 @@ const Inscription = ({ onRegister }) => {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f1f5f9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '20px'
+    padding: '20px',
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   },
   registerBox: {
-    backgroundColor: 'white',
-    borderRadius: '15px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-    padding: '40px',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    border: '1px solid #e2e8f0',
+    padding: '48px',
     width: '100%',
-    maxWidth: '450px'
+    maxWidth: '480px'
   },
   header: {
     textAlign: 'center',
-    marginBottom: '30px'
+    marginBottom: '40px'
+  },
+  iconContainer: {
+    width: '80px',
+    height: '80px',
+    borderRadius: '20px',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 24px auto'
   },
   title: {
-    color: '#2d3436',
-    fontSize: '2.2rem',
-    marginBottom: '10px',
-    fontWeight: 'bold'
+    color: '#1e293b',
+    fontSize: '32px',
+    fontWeight: '700',
+    marginBottom: '8px'
   },
   subtitle: {
-    color: '#636e72',
-    fontSize: '1rem',
+    color: '#64748b',
+    fontSize: '16px',
+    lineHeight: '1.6',
     margin: 0
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px'
+    gap: '24px'
   },
   inputGroup: {
     display: 'flex',
@@ -256,84 +320,126 @@ const styles = {
     gap: '8px'
   },
   label: {
-    color: '#2d3436',
-    fontWeight: 'bold',
-    fontSize: '0.9rem'
+    color: '#1e293b',
+    fontWeight: '600',
+    fontSize: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  labelIcon: {
+    color: '#64748b'
+  },
+  inputContainer: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: '16px',
+    color: '#94a3b8',
+    zIndex: 1
   },
   input: {
-    padding: '12px 15px',
-    border: '2px solid #e9ecef',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    transition: 'border-color 0.3s ease',
-    outline: 'none'
+    padding: '16px 16px 16px 48px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    fontSize: '16px',
+    transition: 'all 0.2s ease',
+    outline: 'none',
+    width: '100%',
+    backgroundColor: '#ffffff'
   },
   select: {
-    padding: '12px 15px',
-    border: '2px solid #e9ecef',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    transition: 'border-color 0.3s ease',
+    padding: '16px 16px 16px 48px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    fontSize: '16px',
+    transition: 'all 0.2s ease',
     outline: 'none',
-    backgroundColor: 'white',
-    cursor: 'pointer'
+    backgroundColor: '#ffffff',
+    cursor: 'pointer',
+    width: '100%'
   },
   loadingSelect: {
-    padding: '12px 15px',
-    border: '2px solid #e9ecef',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    color: '#636e72',
-    backgroundColor: '#f8f9fa',
-    textAlign: 'center'
+    padding: '16px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    fontSize: '16px',
+    color: '#64748b',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px'
   },
   submitButton: {
-    backgroundColor: '#00b894',
-    color: 'white',
+    backgroundColor: '#1e40af',
+    color: '#ffffff',
     border: 'none',
-    borderRadius: '8px',
-    padding: '15px',
-    fontSize: '1.1rem',
-    fontWeight: 'bold',
+    borderRadius: '12px',
+    padding: '16px 24px',
+    fontSize: '16px',
+    fontWeight: '600',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    marginTop: '10px'
+    transition: 'all 0.2s ease',
+    marginTop: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px'
   },
   disabledButton: {
-    backgroundColor: '#b2bec3',
+    backgroundColor: '#94a3b8',
     cursor: 'not-allowed'
   },
+  spinningIcon: {
+    animation: 'spin 1s linear infinite'
+  },
   error: {
-    backgroundColor: '#ff7675',
-    color: 'white',
-    padding: '12px',
-    borderRadius: '8px',
-    textAlign: 'center',
-    fontSize: '0.9rem'
+    backgroundColor: '#fef2f2',
+    color: '#dc2626',
+    border: '1px solid #fecaca',
+    padding: '16px',
+    borderRadius: '12px',
+    fontSize: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  errorIcon: {
+    flexShrink: 0
   },
   success: {
-    backgroundColor: '#00b894',
-    color: 'white',
-    padding: '12px',
-    borderRadius: '8px',
-    textAlign: 'center',
-    fontSize: '0.9rem'
+    backgroundColor: '#f0fdf4',
+    color: '#059669',
+    border: '1px solid #bbf7d0',
+    padding: '16px',
+    borderRadius: '12px',
+    fontSize: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  successIcon: {
+    flexShrink: 0
   },
   footer: {
     textAlign: 'center',
-    marginTop: '30px',
-    paddingTop: '20px',
-    borderTop: '1px solid #e9ecef'
+    marginTop: '32px',
+    paddingTop: '24px',
+    borderTop: '1px solid #e2e8f0'
   },
   footerText: {
-    color: '#636e72',
-    fontSize: '0.9rem',
+    color: '#64748b',
+    fontSize: '14px',
     margin: 0
   },
   link: {
-    color: '#00b894',
+    color: '#1e40af',
     textDecoration: 'none',
-    fontWeight: 'bold'
+    fontWeight: '600'
   }
 };
 

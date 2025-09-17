@@ -16,7 +16,7 @@ ADD CONSTRAINT fk_annonce_type
     FOREIGN KEY (idTypeAnnonce) REFERENCES TypeAnnonce(id);
 
 
-CREATE TABLE CompteCandidat (fff
+CREATE TABLE CompteCandidat (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(100) NOT NULL UNIQUE,
     motDePasse VARCHAR(255) NOT NULL

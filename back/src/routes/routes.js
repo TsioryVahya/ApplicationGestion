@@ -5,6 +5,7 @@ const AuthController = require('../controllers/authController');
 const EmployeController = require('../controllers/employeController');
 const ProfilController = require('../controllers/profilController');
 const CritereController = require('../controllers/critereController');
+const CritereProfilController = require('../controllers/critereProfilController');
 
 // Routes d'authentification
 router.post('/auth/inscription', AuthController.inscription);
@@ -36,8 +37,13 @@ router.post('/criteres', CritereController.create);
 router.put('/criteres/:id', CritereController.update);
 router.delete('/criteres/:id', CritereController.delete);
 
-// CritereProfil (association)
-// (routes désactivées car non implémentées dans le controller)
+
+// CRUD CritereProfil (association)
+router.get('/critereprofils', CritereProfilController.getAll);
+router.get('/critereprofils/:id', CritereProfilController.getById);
+router.post('/critereprofils', CritereProfilController.create);
+router.put('/critereprofils/:id', CritereProfilController.update);
+router.delete('/critereprofils/:id', CritereProfilController.delete);
 
 // ...existing code...
 

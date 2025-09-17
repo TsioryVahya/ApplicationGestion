@@ -329,10 +329,8 @@ const styles = {
     borderBottom: '1px solid #e2e8f0'
   },
   tr: {
-    borderBottom: '1px solid #e2e8f0',
-    '&:last-child': {
-      borderBottom: 'none'
-    }
+    borderBottom: '1px solid #e2e8f0'
+    // Note: '&:last-child' n'est pas supporté dans les objets de style JS natifs
   },
   td: {
     padding: '16px',

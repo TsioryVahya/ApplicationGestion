@@ -24,6 +24,7 @@ const Sidebar = ({ user, onLogout }) => {
     { path: '/utilisateurs', icon: FiUsers, label: 'Utilisateurs', color: '#10B981' },
     { path: '/profils', icon: FiBarChart2, label: 'Profils', color: '#F59E0B' },
     { path: '/criteres', icon: FiBarChart2, label: 'Criteres', color: '#F59E0B' },
+    { path: '/critereprofils', icon: FiBarChart2, label: 'Critère-Profils', color: '#F59E0B' },
     { path: '/rapports', icon: FiBarChart2, label: 'Rapports', color: '#F59E0B' },
     { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' }
   ];

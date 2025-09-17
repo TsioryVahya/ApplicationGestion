@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 import Profils from './pages/Profils';
 import Criteres from './pages/Criteres';
+import CritereProfils from './pages/CritereProfils';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/utilisateurs" element={<ListeUtilisateurs />} />
                 <Route path="/profils" element={<Profils />} />
                 <Route path="/criteres" element={<Criteres />} />
+                <Route path="/critereprofils" element={<CritereProfils />} />
                 <Route path="/login" element={<Navigate to="/" replace />} />
                 <Route path="/inscription" element={<Navigate to="/" replace />} />
               </Routes>

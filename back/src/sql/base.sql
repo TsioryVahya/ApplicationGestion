@@ -28,9 +28,11 @@ CREATE TABLE CritereProfil (
     valeurDouble DECIMAL(10,2) NULL,
     valeurVarchar VARCHAR(200) NULL,
     valeurBool BOOLEAN NULL,
+    estObligatoire BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (idProfil) REFERENCES Profil(id),
     FOREIGN KEY (idCritere) REFERENCES Critere(id)
 );
+    ALTER TABLE CritereProfil ADD COLUMN estObligatoire BOOLEAN DEFAULT TRUE;
 
 -- Table Annonce
 CREATE TABLE Annonce (

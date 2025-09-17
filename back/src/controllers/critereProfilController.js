@@ -1,98 +1,128 @@
-// const CritereProfilService = require('../services/critereProfilService');
 
-// class CritereProfilController {
+const CritereProfilService = require('../services/critereProfilService');
 
-//     static async getAll(req, res) {
-//         try {
-//             const critereProfils = await CritereProfilService.getAllCritereProfils();
-//             res.status(200).json({
-//                 success: true,
-//                 message: "Liste des criteres profils recuperee avec succes",
-//                 data: critereProfils,
-//                 total: critereProfils.length
-//             });
-//         } catch (error) {
-//             console.error('Erreur lors de la recuperation des criteres des profils', error);
-//             res.status(500).json({
-//                 success: false, 
-//                 message: "Erreur interne du serveur",
-//                 error: error.message
-//             });
-//         }
-//     }
+class CritereProfilController {
+        static async getAll(req, res) {
+                try {
+                        const associations = await CritereProfilService.getAll();
+                        res.status(200).json({
+                                success: true,
+                                message: "Liste des associations Critere-Profil récupérée avec succès",
+                                data: associations,
+                                total: associations.length
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur interne du serveur",
+                                error: error.message
+                        });
+                }
+        }
 
-//     static async getById(req, res) {
-//         try {
-//             const { id } = req.params;
-//             const critereProfil = await CritereProfilService.getCritereProfilById(id);
-//             if (!critereProfil) {
-//                 return res.status(404).json({
-//                     success: false,
-//                     message: "Critere Profil non trouve"
-//                 });
-//             }
-//             res.status(200).json({
-//                 success: true,
-//                 message:"Critere Profil recupere avec succes",
-//                 data: critereProfil
-//             });
-//         } catch (error) {
-//             console.error("Erreur lors de la recuperation du critere profil:", error);
-//             res.status(500).json({
-//                 success: false,
-//                 message: "Erreur interne du serveur",
-//                 error: error.message0
-//             });
-//         }
-//     }
+        static async getById(req, res) {
+                try {
+                        const { id } = req.params;
+                        const association = await CritereProfilService.getById(id);
+                        if (!association) {
+                                return res.status(404).json({
+                                        success: false,
+                                        message: "Association non trouvée"
+                                });
+                        }
+                        res.status(200).json({
+                                success: true,
+                                message: "Association récupérée avec succès",
+                                data: association
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur interne du serveur",
+                                error: error.message
+                        });
+                }
+        }
 
+        static async create(req, res) {
+                try {
+                        const { idProfil, idCritere, valeurDouble, valeurVarchar, valeurBool, estObligatoire } = req.body;
+                        if (!idProfil || !idCritere) {
+                                return res.status(400).json({
+                                        success: false,
+                                        message: "idProfil et idCritere sont requis"
+                                });
+                        }
+                        const newAssociation = await CritereProfilService.create({
+                                idProfil,
+                                idCritere,
+                                valeurDouble,
+                                valeurVarchar,
+                                valeurBool,
+                                estObligatoire
+                        });
+                        res.status(201).json({
+                                success: true,
+                                message: "Association créée avec succès",
+                                data: newAssociation
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur interne du serveur",
+                                error: error.message
+                        });
+                }
+        }
 
-//     static async create(req, res) {
-//         try {
-//             const { valeurDouble } = req.body;
-//             const { valeurVarchar } = req.body;
-//             const { valeurBool } = req.body;
-//             const { estObli } = req.body;
+        static async update(req, res) {
+                try {
+                        const { id } = req.params;
+                        const { idProfil, idCritere, valeurDouble, valeurVarchar, valeurBool, estObligatoire } = req.body;
+                        if (!idProfil || !idCritere) {
+                                return res.status(400).json({
+                                        success: false,
+                                        message: "idProfil et idCritere sont requis"
+                                });
+                        }
+                        const updated = await CritereProfilService.update(id, {
+                                idProfil,
+                                idCritere,
+                                valeurDouble,
+                                valeurVarchar,
+                                valeurBool,
+                                estObligatoire
+                        });
+                        res.status(200).json({
+                                success: true,
+                                message: "Association mise à jour avec succès",
+                                data: updated
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur interne du serveur",
+                                error: error.message
+                        });
+                }
+        }
 
-//             const newCritereProfil = await CritereProfilService.createCritereProfil(valeurDouble.trim, valeurVarchar.trim, valeurBool, estObli);
-//             res.status(201).json({
-//                 success: true,
-//                 message: "Critere Profil avec succes",
-//                 data: newCritereProfil
-//             });
-//         } catch (error) {
-//             console.error('Erreur lors de la creation du critere des profils', error);
-//             res.status(500).json({
-//                 success: false,
-//                 message: "Erreur interne du serveur",
-//                 error: error.message
-//             });
-//         }
-//     }
+        static async delete(req, res) {
+                try {
+                        const { id } = req.params;
+                        await CritereProfilService.delete(id);
+                        res.status(200).json({
+                                success: true,
+                                message: "Association supprimée avec succès"
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur interne du serveur",
+                                error: error.message
+                        });
+                }
+        }
+}
 
-//     static async update(req, res) {
-//         try {
-//             const { id } = req.params;
-//             const { idProfil } = req.params;
-//             const { idCritere } = req.params;
-//             const { valeurDouble } = req.body;
-//             const { valeurVarchar } = req.body;
-//             const { valeurBool } = req.body;
-//             const { estObli } = req.body;
-
-//             const existingCritereProfil = await CritereProfilService.getCritereProfilById(id);
-//             if (!existingCritereProfil) {
-//                 return res.status(404).json({
-//                     success:false,
-//                     message: "Critere du profil non trouve"
-//                 });
-//             }
-
-//             const updateCritereProfil = await CritereProfilService.updateCritereProfil(id)
-
-
-//         } catch (error) {
-            
-//         }
-//     }
-// }
+module.exports = CritereProfilController;

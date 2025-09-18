@@ -1,11 +1,11 @@
 const { pool } = require('../config/database');
 
 class ProfilService {
-  // Récupérer tous les profils
-  static async getAllProfils() {
-    const [rows] = await pool.execute('SELECT * FROM Profil');
-    return rows;
-  }
+    // Récupérer tous les profils
+    static async getAllProfils() {
+      const [rows] = await pool.execute('SELECT * FROM Profil');
+      return rows;
+    }
 
     // Récupérer un profil par ID
     static async getProfilById(id) {

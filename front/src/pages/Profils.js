@@ -25,7 +25,7 @@ const GestionProfils = () => {
         throw new Error('Erreur lors du chargement des profils (code ' + response.status + ')');
       }
       const data = await response.json();
-      console.log('Réponse API profils:', data); // debug
+      console.log('Réponse API profils:', data); 
       if (data.success && Array.isArray(data.data)) {
         setProfils(data.data);
       } else {
@@ -64,7 +64,7 @@ const GestionProfils = () => {
         setShowModal(false);
         setEditingProfil(null);
         setFormData({ nom: '' });
-        fetchProfils(); // Recharger la liste
+        fetchProfils(); 
       }
     } catch (err) {
       setError(err.message);
@@ -87,7 +87,7 @@ const GestionProfils = () => {
         throw new Error('Erreur lors de la suppression');
       }
 
-      fetchProfils(); // Recharger la liste
+      fetchProfils(); 
     } catch (err) {
       setError(err.message);
     }

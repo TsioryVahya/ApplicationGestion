@@ -2,6 +2,7 @@
 const CritereProfilService = require('../services/critereProfilService');
 
 class CritereProfilController {
+
         static async getAll(req, res) {
                 try {
                         const associations = await CritereProfilService.getAll();

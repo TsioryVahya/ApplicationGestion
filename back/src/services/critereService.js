@@ -1,7 +1,6 @@
 const { pool} = require('../config/database');
 
 class CritereService {
-    // Récupérer tous les critères
     static async getAllCriteres() {
         const [rows] = await pool.execute('SELECT * FROM Critere');
         return rows;

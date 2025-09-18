@@ -9,6 +9,9 @@ import RepondreTestQCM from './pages/QCM/RepondreTestQCM';
 import ListeAnnonces from './pages/ListeAnnnonces';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
+import Profils from './pages/Profils';
+import Criteres from './pages/Criteres';
+import CritereProfils from './pages/CritereProfils';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -71,6 +74,9 @@ function App() {
                     <Route path="/qcm" element={<TestsQCM />} />
                     <Route path="/qcm/creer" element={<CreerTestQCM />} />
                     <Route path="/annonces" element={<ListeAnnonces />} />
+                    <Route path="/profils" element={<Profils />} />
+                <Route path="/criteres" element={<Criteres />} />
+                <Route path="/critereprofils" element={<CritereProfils />} />
                     <Route path="/login" element={<Navigate to="/" replace />} />
                     <Route path="/inscription" element={<Navigate to="/" replace />} />
                   </Routes>
@@ -78,9 +84,8 @@ function App() {
               </>
             ) : (
               <Routes>
-                <Route path="/login" element={<Login onLogin={handleLogin} />} />
-                <Route path="/inscription" element={<Inscription onRegister={handleRegister} />} />
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                <Route path="/login" element={<Navigate to="/" replace />} />
+                <Route path="/inscription" element={<Navigate to="/" replace />} />
               </Routes>
             )
           } />

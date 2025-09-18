@@ -5,6 +5,7 @@ const AuthController = require('../controllers/authController');
 const EmployeController = require('../controllers/employeController');
 const QcmController = require('../controllers/qcmController');
 const AnnonceController = require('../controllers/annonceController');
+const CandidatController = require('../controllers/candidatController');
 
 // Routes d'authentification
 router.post('/auth/inscription', AuthController.inscription);
@@ -48,5 +49,14 @@ router.get('/annonces/:id/candidats', AuthController.verifierToken, AnnonceContr
 router.post('/annonces', AuthController.verifierToken, AnnonceController.creerAnnonce);
 router.put('/annonces/:id', AuthController.verifierToken, AnnonceController.mettreAJourAnnonce);
 router.delete('/annonces/:id', AuthController.verifierToken, AnnonceController.supprimerAnnonce);
+
+// Routes pour les candidats (protégées)
+router.get('/candidats', AuthController.verifierToken, CandidatController.obtenirTousLesCandidats);
+router.get('/candidats/annonce/:idAnnonce', AuthController.verifierToken, CandidatController.obtenirCandidatsParAnnonce);
+router.get('/candidats/statistiques', AuthController.verifierToken, CandidatController.obtenirStatistiques);
+router.get('/candidats/:id', AuthController.verifierToken, CandidatController.obtenirCandidatParId);
+router.post('/candidats', AuthController.verifierToken, CandidatController.creerCandidat);
+router.put('/candidats/:id/statut', AuthController.verifierToken, CandidatController.mettreAJourStatutCandidat);
+router.delete('/candidats/:id', AuthController.verifierToken, CandidatController.supprimerCandidat);
 
 module.exports = router;

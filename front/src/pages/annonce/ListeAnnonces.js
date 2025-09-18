@@ -269,7 +269,10 @@ const ListeAnnonces = ({ onCreerAnnonce }) => {
             </div>
 
             <div style={styles.annonceActions}>
-              <button style={styles.viewButton}>
+              <button 
+                onClick={() => window.location.href = `/annonces/${annonce.id}/details`}
+                style={styles.viewButton}
+              >
                 <FiEye size={16} />
                 <span>Voir Détails</span>
               </button>

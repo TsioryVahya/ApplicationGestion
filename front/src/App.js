@@ -7,6 +7,7 @@ import TestsQCM from './pages/QCM/TestsQCM';
 import CreerTestQCM from './pages/QCM/CreerTestQCM';
 import RepondreTestQCM from './pages/QCM/RepondreTestQCM';
 import AnnoncesPage from './pages/annonce/AnnoncesPage';
+import DetailsAnnonce from './pages/annonce/DetailsAnnonce';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 
@@ -71,6 +72,7 @@ function App() {
                     <Route path="/qcm" element={<TestsQCM />} />
                     <Route path="/qcm/creer" element={<CreerTestQCM />} />
                     <Route path="/annonces" element={<AnnoncesPage />} />
+            <Route path="/annonces/:id/details" element={<DetailsAnnonce />} />
                     <Route path="/login" element={<Navigate to="/" replace />} />
                     <Route path="/inscription" element={<Navigate to="/" replace />} />
                   </Routes>

@@ -92,7 +92,7 @@ const Home = () => {
           <p style={styles.featureDescription}>
             Liste des candidats
           </p>
-          <Link to="/utilisateurs" style={styles.featureButton}>
+          <Link to="/candidats" style={styles.featureButton}>
             <span>Accéder</span>
             <FiArrowRight size={16} />
           </Link>

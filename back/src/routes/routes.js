@@ -3,6 +3,7 @@ const router = express.Router();
 const UtilisateursController = require('../controllers/utilisateursController');
 const AuthController = require('../controllers/authController');
 const EmployeController = require('../controllers/employeController');
+const CandidatsController = require('../controllers/candidatsController');
 const QcmController = require('../controllers/qcmController');
 
 // Routes d'authentification
@@ -30,5 +31,8 @@ router.delete('/qcm/tests/:id', AuthController.verifierToken, QcmController.supp
 router.get('/utilisateurs', AuthController.verifierToken, UtilisateursController.obtenirTousLesUtilisateurs);
 router.get('/utilisateurs/:id', AuthController.verifierToken, UtilisateursController.obtenirUtilisateurParId);
 router.post('/utilisateurs', AuthController.verifierToken, UtilisateursController.creerUtilisateur);
+
+router.get('/candidats', AuthController.verifierToken, CandidatsController.obtenirTousLesCandidats);
+router.post('/contrats', AuthController.verifierToken, CandidatsController.ajouterContrat);
 
 module.exports = router;

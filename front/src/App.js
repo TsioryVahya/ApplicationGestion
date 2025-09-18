@@ -8,6 +8,9 @@ import CreerTestQCM from './pages/QCM/CreerTestQCM';
 import RepondreTestQCM from './pages/QCM/RepondreTestQCM';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
+import ListeCandidats from './pages/Contrat/ListeCandidats';
+import CandidatsFormulaire from './pages/Contrat/CandidatsFormulaire';
+
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -71,6 +74,8 @@ function App() {
                     <Route path="/qcm/creer" element={<CreerTestQCM />} />
                     <Route path="/login" element={<Navigate to="/" replace />} />
                     <Route path="/inscription" element={<Navigate to="/" replace />} />
+                    <Route path="/candidats" element={<ListeCandidats />} />
+                    <Route path="/contrats/ajouter/:id" element={<CandidatsFormulaire />} />
                   </Routes>
                 </div>
               </>

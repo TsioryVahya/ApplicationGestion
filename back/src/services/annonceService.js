@@ -1,25 +1,38 @@
 const { pool } = require('../config/database');
 
 class AnnonceService {
-  
+
+  static buildReference(id) {
+    return `ANN-${String(id).padStart(4,'0')}`;
+  }
+
+  static attachReference(rows) {
+    return rows.map(r => ({
+      ...r,
+      reference: r.reference || AnnonceService.buildReference(r.id)
+    }));
+  }
+
   // Récupérer toutes les annonces
   static async obtenirTousLesAnnonces() {
     try {
       const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.reference,
-                a.idDepartement, a.idProfil, a.idTypeAnnonce,
-                d.nom as nomDepartement,
-                p.nom as nomProfil,
-                t.libelle as typeAnnonce
-         FROM Annonce a 
-         LEFT JOIN Departement d ON a.idDepartement = d.id 
+        `SELECT a.id,
+                a.description,
+                a.dateDebut,
+                a.dateFin,
+                a.idDepartement,
+                a.idProfil,
+                d.nom AS nomDepartement,
+                p.nom AS nomProfil
+         FROM Annonce a
+         LEFT JOIN Departement d ON a.idDepartement = d.id
          LEFT JOIN Profil p ON a.idProfil = p.id
-         LEFT JOIN TypeAnnonce t ON a.idTypeAnnonce = t.id
          ORDER BY a.dateDebut DESC`
       );
-      return rows;
+      return this.attachReference(rows);
     } catch (error) {
-      console.error('Erreur lors de la récupération des annonces:', error);
+      console.error('Erreur SQL obtenirTousLesAnnonces:', error.message);
       throw error;
     }
   }
@@ -28,8 +41,12 @@ class AnnonceService {
   static async obtenirAnnonceParId(id) {
     try {
       const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.reference,
-                a.idDepartement, a.idProfil,
+        `SELECT a.id,
+                a.description,
+                a.dateDebut,
+                a.dateFin,
+                a.idDepartement,
+                a.idProfil,
                 d.nom as nomDepartement,
                 p.nom as nomProfil
          FROM Annonce a 
@@ -38,7 +55,9 @@ class AnnonceService {
          WHERE a.id = ?`,
         [id]
       );
-      return rows[0] || null;
+      const annonce = rows[0];
+      if (!annonce) return null;
+      return { ...annonce, reference: this.buildReference(annonce.id) };
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'annonce:', error);
       throw error;
@@ -49,19 +68,23 @@ class AnnonceService {
   static async obtenirAnnoncesActives() {
     try {
       const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.nomPoste,
-                a.idDepartement, a.idProfil,
-                d.nom as nomDepartement,
-                p.nom as nomProfil
-         FROM Annonce a 
-         LEFT JOIN Departement d ON a.idDepartement = d.id 
+        `SELECT a.id,
+                a.description,
+                a.dateDebut,
+                a.dateFin,
+                a.idDepartement,
+                a.idProfil,
+                d.nom AS nomDepartement,
+                p.nom AS nomProfil
+         FROM Annonce a
+         LEFT JOIN Departement d ON a.idDepartement = d.id
          LEFT JOIN Profil p ON a.idProfil = p.id
          WHERE a.dateFin >= CURDATE()
          ORDER BY a.dateDebut DESC`
       );
-      return rows;
+      return this.attachReference(rows);
     } catch (error) {
-      console.error('Erreur lors de la récupération des annonces actives:', error);
+      console.error('Erreur SQL obtenirAnnoncesActives:', error.message);
       throw error;
     }
   }
@@ -70,8 +93,12 @@ class AnnonceService {
   static async obtenirAnnoncesParDepartement(idDepartement) {
     try {
       const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.nomPoste,
-                a.idDepartement, a.idProfil,
+        `SELECT a.id,
+                a.description,
+                a.dateDebut,
+                a.dateFin,
+                a.idDepartement,
+                a.idProfil,
                 d.nom as nomDepartement,
                 p.nom as nomProfil
          FROM Annonce a 
@@ -81,7 +108,7 @@ class AnnonceService {
          ORDER BY a.dateDebut DESC`,
         [idDepartement]
       );
-      return rows;
+      return this.attachReference(rows);
     } catch (error) {
       console.error('Erreur lors de la récupération des annonces par département:', error);
       throw error;
@@ -93,18 +120,22 @@ class AnnonceService {
     try {
       const searchTerm = `%${terme}%`;
       const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.nomPoste,
-                a.idDepartement, a.idProfil,
+        `SELECT a.id,
+                a.description,
+                a.dateDebut,
+                a.dateFin,
+                a.idDepartement,
+                a.idProfil,
                 d.nom as nomDepartement,
                 p.nom as nomProfil
          FROM Annonce a 
          LEFT JOIN Departement d ON a.idDepartement = d.id 
          LEFT JOIN Profil p ON a.idProfil = p.id
-         WHERE a.nomPoste LIKE ? OR a.description LIKE ? OR d.nom LIKE ?
+         WHERE a.description LIKE ? OR d.nom LIKE ?
          ORDER BY a.dateDebut DESC`,
-        [searchTerm, searchTerm, searchTerm]
+        [searchTerm, searchTerm]
       );
-      return rows;
+      return this.attachReference(rows);
     } catch (error) {
       console.error('Erreur lors de la recherche d\'annonces:', error);
       throw error;
@@ -116,27 +147,25 @@ class AnnonceService {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
-      
-      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, criteres } = annonceData;
-      
-      // Créer l'annonce
+      const { description, dateDebut, dateFin, reference, nomPoste, idDepartement, idProfil, criteres } = annonceData;
+      const finalDescription = description || nomPoste || reference || 'Annonce';
+
       const [result] = await connection.execute(
-        'INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, idProfil) VALUES (?, ?, ?, ?, ?, ?)',
-        [description, dateDebut, dateFin, reference, idDepartement, idProfil]
+        'INSERT INTO Annonce (description, dateDebut, dateFin, idDepartement, idProfil) VALUES (?, ?, ?, ?, ?)',
+        [finalDescription, dateDebut, dateFin, idDepartement, idProfil]
       );
-      
       const annonceId = result.insertId;
-      
+
       // Sauvegarder les critères si fournis
       if (criteres && criteres.length > 0) {
         for (const critere of criteres) {
-          await connection.execute(
-            'INSERT INTO CritereProfil (idProfil, idCritere, valeurDouble, valeurVarchar, valeurBool, estObligatoire) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE valeurDouble = VALUES(valeurDouble), valeurVarchar = VALUES(valeurVarchar), valeurBool = VALUES(valeurBool)',
-            [idProfil, critere.idCritere, critere.valeurDouble || null, critere.valeurVarchar || null, critere.valeurBool || null, critere.estObligatoire || false]
-          );
+            await connection.execute(
+              'INSERT INTO CritereProfil (idProfil, idCritere, valeurDouble, valeurVarchar, valeurBool, estObligatoire) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE valeurDouble = VALUES(valeurDouble), valeurVarchar = VALUES(valeurVarchar), valeurBool = VALUES(valeurBool)',
+              [idProfil, critere.idCritere, critere.valeurDouble || null, critere.valeurVarchar || null, critere.valeurBool || null, critere.estObligatoire || false]
+            );
         }
       }
-      
+
       await connection.commit();
       return await this.obtenirAnnonceParId(annonceId);
     } catch (error) {
@@ -151,17 +180,13 @@ class AnnonceService {
   // Mettre à jour une annonce
   static async mettreAJourAnnonce(id, annonceData) {
     try {
-      const { description, dateDebut, dateFin, reference, idDepartement, idProfil } = annonceData;
-      
+      const { description, dateDebut, dateFin, reference, nomPoste, idDepartement, idProfil } = annonceData;
+      const finalDescription = description || nomPoste || reference;
       const [result] = await pool.execute(
-        'UPDATE Annonce SET description = ?, dateDebut = ?, dateFin = ?, nomPoste = ?, idDepartement = ?, idProfil = ? WHERE id = ?',
-        [description, dateDebut, dateFin, nomPoste, idDepartement, idProfil, id]
+        'UPDATE Annonce SET description = ?, dateDebut = ?, dateFin = ?, idDepartement = ?, idProfil = ? WHERE id = ?',
+        [finalDescription, dateDebut, dateFin, idDepartement, idProfil, id]
       );
-      
-      if (result.affectedRows === 0) {
-        return null;
-      }
-      
+      if (result.affectedRows === 0) return null;
       return await this.obtenirAnnonceParId(id);
     } catch (error) {
       console.error('Erreur lors de la mise à jour de l\'annonce:', error);
@@ -230,8 +255,12 @@ class AnnonceService {
   static async obtenirAnnoncesAvecCandidats() {
     try {
       const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.reference,
-                a.idDepartement, a.idProfil,
+        `SELECT a.id,
+                a.description,
+                a.dateDebut,
+                a.dateFin,
+                a.idDepartement,
+                a.idProfil,
                 d.nom as nomDepartement,
                 p.nom as nomProfil,
                 COUNT(c.id) as nombreCandidats
@@ -239,11 +268,11 @@ class AnnonceService {
          LEFT JOIN Departement d ON a.idDepartement = d.id 
          LEFT JOIN Profil p ON a.idProfil = p.id
          LEFT JOIN Candidat c ON a.id = c.idAnnonce
-         GROUP BY a.id, a.description, a.dateDebut, a.dateFin, a.reference, 
+         GROUP BY a.id, a.description, a.dateDebut, a.dateFin,
                   a.idDepartement, a.idProfil, d.nom, p.nom
          ORDER BY a.dateDebut DESC`
       );
-      return rows;
+      return this.attachReference(rows);
     } catch (error) {
       console.error('Erreur lors de la récupération des annonces avec candidats:', error);
       throw error;

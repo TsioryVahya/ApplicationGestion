@@ -1,293 +1,158 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './ListeAnnoncesClient.css';
+import { useEffect, useState, useMemo } from 'react';
+import { FiSearch, FiFilter, FiCalendar, FiMapPin, FiBriefcase } from 'react-icons/fi';
 
 const ListeAnnoncesClient = () => {
   const [annonces, setAnnonces] = useState([]);
-  const [annoncesFiltrees, setAnnoncesFiltrees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('');
-  const [filterLocation, setFilterLocation] = useState('');
-  const [savedJobs, setSavedJobs] = useState([]);
-  const navigate = useNavigate();
+  const [erreur, setErreur] = useState(null);
+  const [recherche, setRecherche] = useState('');
+  const [filtreType, setFiltreType] = useState('all');
 
-  // Charger les emplois sauvegardés depuis localStorage
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-    setSavedJobs(saved);
-  }, []);
-
-  // Charger les annonces depuis l'API publique
-  useEffect(() => {
-    const chargerAnnonces = async () => {
+    const charger = async () => {
       try {
-        setLoading(true);
-        const response = await fetch('/api/client/annonces');
-        
-        if (!response.ok) {
-          throw new Error('Erreur lors du chargement des annonces');
-        }
-
-        const data = await response.json();
-        
-        if (data.success) {
-          // Transformer les données pour correspondre au format attendu
-          const annoncesTransformees = data.data.map(annonce => ({
-            id: annonce.id,
-            titre: annonce.nomPoste || annonce.nomProfil || 'Poste non spécifié',
-            entreprise: annonce.nomDepartement || 'Entreprise non spécifiée',
-            lieu: 'Madagascar', // Valeur par défaut
-            type: 'CDI', // Valeur par défaut
-            salaire: 'À négocier', // Valeur par défaut
-            datePublication: annonce.dateDebut,
-            dateExpiration: annonce.dateFin,
-            description: annonce.description || 'Description non disponible',
-            competences: [], // Valeur par défaut
-            statut: new Date(annonce.dateFin) >= new Date() ? 'active' : 'expired',
-            isNew: isNewJob(annonce.dateDebut),
-            isUrgent: isUrgentJob(annonce.dateFin),
-            daysRemaining: calculateDaysRemaining(annonce.dateFin)
-          }));
-          
-          setAnnonces(annoncesTransformees);
-          setAnnoncesFiltrees(annoncesTransformees);
-        } else {
-          throw new Error(data.message || 'Erreur lors du chargement');
-        }
-      } catch (error) {
-        console.error('Erreur:', error);
-        setError(error.message);
+        const res = await fetch('/api/client/annonces');
+        if (!res.ok) throw new Error('Erreur réseau');
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message || 'Erreur serveur');
+        setAnnonces(json.data || []);
+      } catch (e) {
+        setErreur(e.message);
       } finally {
         setLoading(false);
       }
     };
-
-    chargerAnnonces();
+    charger();
   }, []);
 
-  // Fonctions utilitaires
-  const isNewJob = (dateDebut) => {
-    const jobDate = new Date(dateDebut);
-    const now = new Date();
-    const diffTime = Math.abs(now - jobDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7;
+  const annoncesFiltrees = useMemo(() => {
+    return annonces.filter(a => {
+      const txt = `${a.reference || ''} ${a.description || ''} ${a.nomDepartement || ''} ${a.nomProfil || ''}`.toLowerCase();
+      const okRecherche = txt.includes(recherche.toLowerCase());
+      const typeNorm = (a.typeAnnonce || '').toLowerCase();
+      const okType = filtreType === 'all' || typeNorm === filtreType.toLowerCase();
+      return okRecherche && okType;
+    });
+  }, [annonces, recherche, filtreType]);
+
+  const formatDate = d => {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  const isUrgentJob = (dateFin) => {
-    const endDate = new Date(dateFin);
-    const now = new Date();
-    const diffTime = endDate - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 5 && diffDays > 0;
-  };
-
-  const calculateDaysRemaining = (dateFin) => {
-    const endDate = new Date(dateFin);
-    const now = new Date();
-    const diffTime = endDate - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  };
-
-  // Filtrage des annonces
-  useEffect(() => {
-    let filtered = annonces.filter(annonce => annonce.statut === 'active');
-
-    if (searchTerm) {
-      filtered = filtered.filter(annonce =>
-        annonce.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        annonce.entreprise.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        annonce.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (filterType) {
-      filtered = filtered.filter(annonce => annonce.type === filterType);
-    }
-
-    if (filterLocation) {
-      filtered = filtered.filter(annonce =>
-        annonce.lieu.toLowerCase().includes(filterLocation.toLowerCase())
-      );
-    }
-
-    setAnnoncesFiltrees(filtered);
-  }, [annonces, searchTerm, filterType, filterLocation]);
-
-  // Sauvegarder/Désauvegarder un emploi
-  const toggleSaveJob = (jobId) => {
-    let newSavedJobs;
-    if (savedJobs.includes(jobId)) {
-      newSavedJobs = savedJobs.filter(id => id !== jobId);
-    } else {
-      newSavedJobs = [...savedJobs, jobId];
-    }
-    setSavedJobs(newSavedJobs);
-    localStorage.setItem('savedJobs', JSON.stringify(newSavedJobs));
-  };
-
-  // Postuler à une annonce
-  const handleApply = (annonceId) => {
-    navigate(`/candidature/${annonceId}`);
-  };
-
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Chargement des offres d'emploi...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="error-container">
-        <div className="error-message">
-          <h3>Erreur de chargement</h3>
-          <p>{error}</p>
-          <button onClick={() => window.location.reload()}>Réessayer</button>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div style={styles.center}>Chargement des offres...</div>;
+  if (erreur) return <div style={{ ...styles.center, color: '#dc2626' }}>Erreur: {erreur}</div>;
 
   return (
-    <div className="liste-annonces-client">
-      {/* Hero Section */}
-      <div className="hero-section">
-        <div className="hero-content">
-          <h1>Trouvez votre emploi idéal</h1>
-          <p>Découvrez les meilleures opportunités de carrière</p>
-          <div className="hero-stats">
-            <div className="stat">
-              <span className="stat-number">{annonces.filter(a => a.statut === 'active').length}</span>
-              <span className="stat-label">Offres actives</span>
-            </div>
-            <div className="stat">
-              <span className="stat-number">{annonces.filter(a => a.type === 'CDI').length}</span>
-              <span className="stat-label">Postes CDI</span>
-            </div>
-            <div className="stat">
-              <span className="stat-number">{annonces.filter(a => a.isNew).length}</span>
-              <span className="stat-label">Nouvelles offres</span>
-            </div>
-          </div>
-        </div>
+    <div style={styles.page}>
+      <div style={styles.hero}>
+        <h1 style={styles.title}>Offres d'emploi disponibles</h1>
+        <p style={styles.subtitle}>Consultez les opportunités actuellement ouvertes – aucune inscription requise.</p>
       </div>
 
-      {/* Filtres et recherche */}
-      <div className="filters-section">
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Rechercher par titre, entreprise ou description..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
+      <div style={styles.tools}>
+        <div style={styles.searchBox}>
+          <FiSearch size={18} color="#64748b" />
+            <input
+              style={styles.input}
+              placeholder="Rechercher (référence, département, profil, mot-clé)..."
+              value={recherche}
+              onChange={e => setRecherche(e.target.value)}
+            />
         </div>
-        
-        <div className="filters">
+        <div style={styles.filterBox}>
+          <FiFilter size={18} color="#64748b" />
           <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="filter-select"
+            value={filtreType}
+            onChange={e => setFiltreType(e.target.value)}
+            style={styles.select}
           >
-            <option value="">Tous les types</option>
-            <option value="CDI">CDI</option>
-            <option value="CDD">CDD</option>
-            <option value="Stage">Stage</option>
-            <option value="Freelance">Freelance</option>
+            <option value="all">Tous les types</option>
+            <option value="cdi">CDI</option>
+            <option value="cdd">CDD</option>
+            <option value="stage">Stage</option>
+            <option value="freelance">Freelance</option>
           </select>
-
-          <input
-            type="text"
-            placeholder="Localisation"
-            value={filterLocation}
-            onChange={(e) => setFilterLocation(e.target.value)}
-            className="filter-input"
-          />
         </div>
       </div>
 
-      {/* Liste des annonces */}
-      <div className="annonces-container">
-        {annoncesFiltrees.length === 0 ? (
-          <div className="no-results">
-            <h3>Aucune offre trouvée</h3>
-            <p>Essayez de modifier vos critères de recherche</p>
-          </div>
-        ) : (
-          <div className="annonces-grid">
-            {annoncesFiltrees.map((annonce) => (
-              <div key={annonce.id} className="annonce-card">
-                <div className="card-header">
-                  <div className="badges">
-                    {annonce.isNew && <span className="badge badge-new">Nouveau</span>}
-                    {annonce.isUrgent && <span className="badge badge-urgent">Urgent</span>}
-                  </div>
-                  <button
-                    className={`save-btn ${savedJobs.includes(annonce.id) ? 'saved' : ''}`}
-                    onClick={() => toggleSaveJob(annonce.id)}
-                  >
-                    ♥
-                  </button>
+      {annoncesFiltrees.length === 0 && (
+        <div style={styles.empty}>
+          <FiBriefcase size={46} color="#94a3b8" />
+          <h3 style={styles.emptyTitle}>Aucune offre trouvée</h3>
+          <p style={styles.emptyText}>Modifiez vos critères de recherche.</p>
+        </div>
+      )}
+
+      <div style={styles.grid}>
+        {annoncesFiltrees.map(a => {
+          const statut = new Date(a.dateFin) >= new Date() ? 'Active' : 'Expirée';
+          return (
+            <div key={a.id} style={styles.card}>
+              <div style={styles.cardHeader}>
+                <span style={styles.ref}>{a.reference || `Annonce #${a.id}`}</span>
+                <span style={{
+                  ...styles.badge,
+                  background: statut === 'Active' ? '#059669' : '#64748b'
+                }}>{statut}</span>
+              </div>
+              <div style={styles.meta}>
+                <div style={styles.metaLine}>
+                  <FiBriefcase size={14} color="#475569" />
+                  <span>{a.typeAnnonce || 'Type non défini'}</span>
                 </div>
-
-                <div className="card-content">
-                  <h3 className="job-title">{annonce.titre}</h3>
-                  <p className="company-name">{annonce.entreprise}</p>
-                  <div className="job-details">
-                    <span className="location">📍 {annonce.lieu}</span>
-                    <span className="job-type">{annonce.type}</span>
-                    <span className="salary">💰 {annonce.salaire}</span>
-                  </div>
-                  
-                  <p className="job-description">
-                    {annonce.description.length > 150
-                      ? `${annonce.description.substring(0, 150)}...`
-                      : annonce.description
-                    }
-                  </p>
-
-                  {annonce.competences.length > 0 && (
-                    <div className="skills">
-                      {annonce.competences.slice(0, 3).map((skill, index) => (
-                        <span key={index} className="skill-tag">{skill}</span>
-                      ))}
-                    </div>
-                  )}
+                <div style={styles.metaLine}>
+                  <FiMapPin size={14} color="#475569" />
+                  <span>{a.nomDepartement || 'Département'}</span>
                 </div>
-
-                <div className="card-footer">
-                  <div className="job-meta">
-                    <span className="publish-date">
-                      Publié le {new Date(annonce.datePublication).toLocaleDateString()}
-                    </span>
-                    {annonce.daysRemaining > 0 && (
-                      <span className="days-remaining">
-                        {annonce.daysRemaining} jour{annonce.daysRemaining > 1 ? 's' : ''} restant{annonce.daysRemaining > 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    className="apply-btn"
-                    onClick={() => handleApply(annonce.id)}
-                  >
-                    Postuler
-                  </button>
+                <div style={styles.metaLine}>
+                  <FiCalendar size={14} color="#475569" />
+                  <span>Du {formatDate(a.dateDebut)} au {formatDate(a.dateFin)}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+              <p style={styles.desc}>
+                {a.description || 'Aucune description.'}
+              </p>
+              <div style={styles.footer}>
+                <span style={styles.profilTag}>{a.nomProfil || 'Profil non spécifié'}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={styles.note}>
+        Pour postuler, veuillez contacter le service RH indiqué dans l'annonce principale du site.
       </div>
     </div>
   );
+};
+
+const styles = {
+  page: { maxWidth: 1180, margin: '0 auto', padding: '40px 28px', fontFamily: 'Inter, sans-serif' },
+  hero: { marginBottom: 32 },
+  title: { margin: 0, fontSize: 34, fontWeight: 700, color: '#1e293b' },
+  subtitle: { marginTop: 8, color: '#64748b', fontSize: 16, lineHeight: 1.5 },
+  tools: { display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 28 },
+  searchBox: { display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid #e2e8f0', padding: '12px 16px', borderRadius: 14, flex: 1, minWidth: 280 },
+  input: { border: 'none', outline: 'none', flex: 1, fontSize: 14, background: 'transparent', color: '#1e293b' },
+  filterBox: { display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid #e2e8f0', padding: '12px 16px', borderRadius: 14 },
+  select: { border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: '#1e293b' },
+  grid: { display: 'grid', gap: 26, gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))' },
+  card: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 18, padding: 22, display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', minHeight: 250 },
+  cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, gap: 12 },
+  ref: { fontWeight: 600, fontSize: 18, color: '#1e293b', flex: 1 },
+  badge: { padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, letterSpacing: .5, color: '#fff', textTransform: 'uppercase' },
+  meta: { display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 },
+  metaLine: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#475569', fontWeight: 500 },
+  desc: { fontSize: 14, lineHeight: 1.55, color: '#64748b', flex: 1, margin: 0, marginBottom: 12, whiteSpace: 'pre-line' },
+  footer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  profilTag: { background: '#eff6ff', color: '#1e3a8a', fontSize: 12, padding: '6px 12px', borderRadius: 8, fontWeight: 500 },
+  empty: { textAlign: 'center', padding: '80px 20px', background: '#fff', border: '1px dashed #cbd5e1', borderRadius: 16 },
+  emptyTitle: { margin: '18px 0 4px', fontSize: 20, color: '#1e293b' },
+  emptyText: { margin: 0, fontSize: 14, color: '#64748b' },
+  center: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh', fontSize: 16, color: '#475569' },
+  note: { marginTop: 40, fontSize: 13, color: '#94a3b8', textAlign: 'center' }
 };
 
 export default ListeAnnoncesClient;

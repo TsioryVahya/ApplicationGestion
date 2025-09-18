@@ -40,7 +40,7 @@ router.get('/utilisateurs/:id', AuthController.verifierToken, UtilisateursContro
 router.post('/utilisateurs', AuthController.verifierToken, UtilisateursController.creerUtilisateur);
 
 // Routes publiques pour les annonces (accès client sans token) - DOIVENT ÊTRE AVANT LES ROUTES PARAMÉTRÉES
-router.get('/annonces/publiques', AnnonceController.obtenirAnnoncesActives);
+
 
 // Routes pour les annonces (protégées) - routes spécifiques avant les routes paramétrées
 router.get('/annonces', AuthController.verifierToken, AnnonceController.obtenirToutesLesAnnonces);

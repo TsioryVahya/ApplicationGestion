@@ -61,9 +61,11 @@ function App() {
     <Router>
       <div style={styles.app}>
         <Routes>
+          {/* Route publique annonces client (sans sidebar) */}
+          <Route path="/offres" element={<ListeAnnoncesClient />} />
           {/* Routes publiques - toujours sans sidebar */}
           <Route path="/test/:id" element={<RepondreTestQCM />} />
-          <Route path="/client/annonces" element={<ListeAnnoncesClient />} />
+          
           
           {/* Routes conditionnelles selon l'authentification */}
           <Route path="/*" element={
@@ -88,9 +90,10 @@ function App() {
               </>
             ) : (
               <Routes>
+                {/* Routes publiques quand non connecté */}
                 <Route path="/login" element={<Login onLogin={handleLogin} />} />
                 <Route path="/inscription" element={<Inscription onRegister={handleRegister} />} />
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<Navigate to="/offres" replace />} />
               </Routes>
             )
           } />

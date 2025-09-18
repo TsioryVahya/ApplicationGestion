@@ -1,7 +1,7 @@
 const AnnonceService = require('../services/annonceService');
 
 class AnnonceController {
-  
+
   // Récupérer toutes les annonces
   static async obtenirToutesLesAnnonces(req, res) {
     try {
@@ -156,22 +156,16 @@ class AnnonceController {
   // Créer une nouvelle annonce
   static async creerAnnonce(req, res) {
     try {
-      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, criteres } = req.body;
-      
-      // Validation des données
-      if (!reference || !dateDebut || !dateFin || !idDepartement || !idProfil) {
-        return res.status(400).json({
-          success: false,
-          message: "Les champs reference, dateDebut, dateFin, idDepartement et idProfil sont requis"
-        });
+      let { description, dateDebut, dateFin, reference, nomPoste, idDepartement, idProfil, criteres } = req.body;
+      if (!dateDebut || !dateFin || !idDepartement || !idProfil) {
+        return res.status(400).json({ success: false, message: "Champs requis: dateDebut, dateFin, idDepartement, idProfil" });
       }
-
-      // Vérifier que la date de fin est après la date de début
       if (new Date(dateFin) <= new Date(dateDebut)) {
-        return res.status(400).json({
-          success: false,
-          message: "La date de fin doit être postérieure à la date de début"
-        });
+        return res.status(400).json({ success: false, message: "La date de fin doit être postérieure à la date de début" });
+      }
+      description = description || nomPoste || reference;
+      if (!description) {
+        return res.status(400).json({ success: false, message: "Description (ou nomPoste/reference) requise" });
       }
 
       const nouvelleAnnonce = await AnnonceService.creerAnnonce({
@@ -179,24 +173,16 @@ class AnnonceController {
         dateDebut,
         dateFin,
         reference,
+        nomPoste,
         idDepartement,
         idProfil,
         criteres
       });
 
-      res.status(201).json({
-        success: true,
-        message: "Annonce créée avec succès",
-        data: nouvelleAnnonce
-      });
-
+      res.status(201).json({ success: true, message: "Annonce créée avec succès", data: nouvelleAnnonce });
     } catch (error) {
-      console.error('Erreur lors de la création de l\'annonce:', error);
-      res.status(500).json({
-        success: false,
-        message: "Erreur interne du serveur",
-        error: error.message
-      });
+      console.error("Erreur création annonce:", error);
+      res.status(500).json({ success: false, message: "Erreur interne du serveur", error: error.message });
     }
   }
 
@@ -204,53 +190,37 @@ class AnnonceController {
   static async mettreAJourAnnonce(req, res) {
     try {
       const { id } = req.params;
-      const { description, dateDebut, dateFin, nomPoste, idDepartement, idProfil } = req.body;
-      
-      // Validation des données
-      if (!nomPoste || !dateDebut || !dateFin || !idDepartement) {
-        return res.status(400).json({
-          success: false,
-          message: "Les champs nomPoste, dateDebut, dateFin et idDepartement sont requis"
-        });
-      }
+      let { description, dateDebut, dateFin, reference, nomPoste, idDepartement, idProfil } = req.body;
 
-      // Vérifier que la date de fin est après la date de début
+      if (!dateDebut || !dateFin || !idDepartement) {
+        return res.status(400).json({ success: false, message: "Champs requis: dateDebut, dateFin, idDepartement" });
+      }
       if (new Date(dateFin) <= new Date(dateDebut)) {
-        return res.status(400).json({
-          success: false,
-          message: "La date de fin doit être postérieure à la date de début"
-        });
+        return res.status(400).json({ success: false, message: "La date de fin doit être postérieure à la date de début" });
+      }
+      description = description || nomPoste || reference;
+      if (!description) {
+        return res.status(400).json({ success: false, message: "Description (ou nomPoste/reference) requise" });
       }
 
       const annonceModifiee = await AnnonceService.mettreAJourAnnonce(id, {
         description,
         dateDebut,
         dateFin,
+        reference,
         nomPoste,
         idDepartement,
         idProfil
       });
 
       if (!annonceModifiee) {
-        return res.status(404).json({
-          success: false,
-          message: "Annonce non trouvée"
-        });
+        return res.status(404).json({ success: false, message: "Annonce non trouvée" });
       }
 
-      res.status(200).json({
-        success: true,
-        message: "Annonce mise à jour avec succès",
-        data: annonceModifiee
-      });
-
+      res.status(200).json({ success: true, message: "Annonce mise à jour avec succès", data: annonceModifiee });
     } catch (error) {
-      console.error('Erreur lors de la mise à jour de l\'annonce:', error);
-      res.status(500).json({
-        success: false,
-        message: "Erreur interne du serveur",
-        error: error.message
-      });
+      console.error("Erreur mise à jour annonce:", error);
+      res.status(500).json({ success: false, message: "Erreur interne du serveur", error: error.message });
     }
   }
 

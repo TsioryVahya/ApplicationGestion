@@ -41,6 +41,10 @@ router.get('/annonces/actives', AuthController.verifierToken, AnnonceController.
 router.get('/annonces/avec-candidats', AuthController.verifierToken, AnnonceController.obtenirAnnoncesAvecCandidats);
 router.get('/annonces/statistiques', AuthController.verifierToken, AnnonceController.obtenirStatistiques);
 router.get('/annonces/recherche', AuthController.verifierToken, AnnonceController.rechercherAnnonces);
+router.get('/annonces/profils', AuthController.verifierToken, AnnonceController.obtenirProfils);
+router.get('/annonces/profils/:idProfil/criteres', AuthController.verifierToken, AnnonceController.obtenirCriteresProfil);
+router.get('/annonces/criteres', AuthController.verifierToken, AnnonceController.obtenirTousLesCriteres);
+router.get('/annonces/departements', AuthController.verifierToken, AnnonceController.obtenirDepartements);
 router.get('/annonces/departement/:idDepartement', AuthController.verifierToken, AnnonceController.obtenirAnnoncesParDepartement);
 router.get('/annonces/:id', AuthController.verifierToken, AnnonceController.obtenirAnnonceParId);
 router.get('/annonces/:id/candidats', AuthController.verifierToken, AnnonceController.obtenirNombreCandidats);

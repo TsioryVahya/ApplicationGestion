@@ -65,13 +65,47 @@ INSERT INTO Diplome (nom) VALUES
 ('École d\'ingénieur'),
 ('École de commerce');
 
--- Insertion des annonces d'emploi
-INSERT INTO Annonce (description, dateDebut, dateFin, nomPoste, idDepartement, idProfil) VALUES 
-('Recherche développeur Full Stack avec 3 ans d\'expérience minimum', '2024-01-15', '2024-03-15', 'Développeur Full Stack', 2, 1),
-('Poste de manager pour équipe RH', '2024-02-01', '2024-04-01', 'Manager RH', 1, 2),
-('Comptable expérimenté pour département finance', '2024-01-20', '2024-03-20', 'Comptable Senior', 4, 3),
-('Commercial terrain secteur Sud-Est', '2024-02-10', '2024-04-10', 'Commercial', 3, 4),
-('Technicien maintenance industrielle', '2024-01-25', '2024-03-25', 'Technicien', 5, 5);
+-- Insertion des types d'annonce
+INSERT INTO TypeAnnonce (libelle) VALUES 
+('CDI'),
+('CDD'),
+('Stage'),
+('Freelance');
+
+-- Insertion des annonces d'emploi (avec colonne reference)
+INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce) VALUES 
+('Recherche développeur Full Stack avec 3 ans d\'expérience minimum en React, Node.js et bases de données', '2024-01-15', '2024-03-15', 'DEV-2024-001', 2, 1, 1),
+('Poste de manager pour équipe RH avec expérience en gestion d\'équipe et recrutement', '2024-02-01', '2024-04-01', 'MAN-2024-001', 1, 2, 1),
+('Comptable expérimenté pour département finance avec maîtrise des logiciels comptables', '2024-01-20', '2024-03-20', 'CPT-2024-001', 4, 3, 1),
+('Commercial terrain secteur Sud-Est avec permis B obligatoire', '2024-02-10', '2024-04-10', 'COM-2024-001', 3, 4, 2),
+('Technicien maintenance industrielle avec formation en électromécanique', '2024-01-25', '2024-03-25', 'TEC-2024-001', 5, 5, 2);
+
+-- Insertion de critères supplémentaires pour les annonces
+INSERT INTO CritereProfil (idProfil, idCritere, valeurVarchar, estObligatoire) VALUES 
+-- Pour le profil Développeur (id=1)
+(1, 3, 'React, Node.js, MySQL', TRUE),
+(1, 4, 'Français, Anglais technique', TRUE),
+(1, 1, '2-5 ans', TRUE),
+
+-- Pour le profil Manager (id=2)  
+(2, 1, '5+ ans', TRUE),
+(2, 4, 'Français, Anglais', TRUE),
+(2, 2, 'Master en Management', FALSE),
+
+-- Pour le profil Comptable (id=3)
+(3, 3, 'Sage, Excel avancé', TRUE),
+(3, 1, '3+ ans', TRUE),
+(3, 2, 'BTS/DUT Comptabilité', TRUE),
+
+-- Pour le profil Commercial (id=4)
+(4, 1, '1-3 ans', TRUE),
+(4, 4, 'Français, Malgache', TRUE),
+(4, 5, 'Disponible pour déplacements', TRUE),
+
+-- Pour le profil Technicien (id=5)
+(5, 3, 'Électromécanique, Maintenance préventive', TRUE),
+(5, 1, '2+ ans', TRUE),
+(5, 2, 'CAP/BEP Électromécanique', TRUE);
 
 -- Insertion des tests QCM
 INSERT INTO QcmTest (nom, idProfil) VALUES 

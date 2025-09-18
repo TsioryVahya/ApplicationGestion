@@ -14,7 +14,7 @@ import {
   FiUsers
 } from 'react-icons/fi';
 
-const ListeAnnonces = () => {
+const ListeAnnonces = ({ onCreerAnnonce }) => {
   const [annonces, setAnnonces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,10 +42,11 @@ const ListeAnnonces = () => {
           // Transformer les données de la base pour correspondre au format attendu
           const annoncesTransformees = data.data.map(annonce => ({
             id: annonce.id,
-            titre: annonce.nomPoste,
+            titre: annonce.reference || `Annonce ${annonce.id}`,
+            reference: annonce.reference,
             entreprise: annonce.nomDepartement || "Département non spécifié",
             lieu: "Antananarivo, Madagascar", // Valeur par défaut
-            type: "CDI", // Valeur par défaut, peut être ajoutée à la base plus tard
+            type: annonce.typeAnnonce || "CDI", // Utiliser le type de la base
             salaire: "À négocier", // Valeur par défaut, peut être ajoutée à la base plus tard
             datePublication: annonce.dateDebut,
             dateExpiration: annonce.dateFin,
@@ -98,6 +99,40 @@ const ListeAnnonces = () => {
     });
   };
 
+  const handleModifierAnnonce = (annonceId) => {
+    // TODO: Implémenter la modification d'annonce
+    console.log('Modifier annonce:', annonceId);
+    alert(`Modification de l'annonce ${annonceId} - Fonctionnalité à implémenter`);
+  };
+
+  const handleSupprimerAnnonce = async (annonceId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?')) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/annonces/${annonceId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          // Recharger la liste des annonces
+          setAnnonces(prev => prev.filter(a => a.id !== annonceId));
+          alert('Annonce supprimée avec succès');
+        } else {
+          alert('Erreur lors de la suppression: ' + data.message);
+        }
+      } catch (err) {
+        console.error('Erreur:', err);
+        alert('Erreur lors de la suppression de l\'annonce');
+      }
+    }
+  };
+
   if (loading) return <div style={styles.loading}>Chargement des annonces...</div>;
   if (error) return <div style={styles.error}>Erreur: {error}</div>;
 
@@ -110,7 +145,7 @@ const ListeAnnonces = () => {
             Découvrez les dernières opportunités de carrière disponibles
           </p>
         </div>
-        <button style={styles.addButton}>
+        <button onClick={onCreerAnnonce} style={styles.addButton}>
           <FiPlus size={20} />
           <span>Nouvelle Annonce</span>
         </button>
@@ -238,10 +273,16 @@ const ListeAnnonces = () => {
                 <FiEye size={16} />
                 <span>Voir Détails</span>
               </button>
-              <button style={styles.editButton}>
+              <button 
+                onClick={() => handleModifierAnnonce(annonce.id)}
+                style={styles.editButton}
+              >
                 <FiEdit3 size={16} />
               </button>
-              <button style={styles.deleteButton}>
+              <button 
+                onClick={() => handleSupprimerAnnonce(annonce.id)}
+                style={styles.deleteButton}
+              >
                 <FiTrash2 size={16} />
               </button>
             </div>

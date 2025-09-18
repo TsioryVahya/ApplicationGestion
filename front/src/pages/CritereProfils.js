@@ -11,11 +11,8 @@ const GestionCritereProfils = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
     idProfil: '',
-    idCritere: '',
-    valeurDouble: '',
-    valeurVarchar: '',
-    valeurBool: false,
-    estObligatoire: true
+    criteresSelectionnes: [], // tableau d'idCritere sélectionnés
+    valeurs: {} // { [idCritere]: { valeurDouble, valeurVarchar, valeurBool, estObligatoire } }
   });
 
   useEffect(() => {
@@ -60,36 +57,60 @@ const GestionCritereProfils = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const url = editingItem ? `/api/critereprofils/${editingItem.id}` : '/api/critereprofils';
-      const method = editingItem ? 'PUT' : 'POST';
-      // Préparer les données à envoyer (convertir les types si besoin)
-      const dataToSend = {
-        idProfil: formData.idProfil,
-        idCritere: formData.idCritere,
-        valeurDouble: formData.valeurDouble === '' ? null : parseFloat(formData.valeurDouble),
-        valeurVarchar: formData.valeurVarchar === '' ? null : formData.valeurVarchar,
-        valeurBool: !!formData.valeurBool,
-        estObligatoire: !!formData.estObligatoire
+      const sendXHR = (dataToSend, method = 'POST', id = null) => {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          let url = '/api/critereprofils';
+          if (method === 'PUT' && id) url += `/${id}`;
+          xhr.open(method, url);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(xhr.responseText);
+            } else {
+              reject(xhr.statusText || 'Erreur AJAX');
+            }
+          };
+          xhr.onerror = function() {
+            reject('Erreur réseau');
+          };
+          xhr.send(JSON.stringify(dataToSend));
+        });
       };
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(dataToSend)
-      });
-      if (!response.ok) throw new Error(editingItem ? 'Erreur modification' : 'Erreur création');
+
+      if (editingItem) {
+        // Modification d'une seule association
+        const idCritere = formData.criteresSelectionnes[0];
+        const valeurs = formData.valeurs[idCritere] || {};
+        const dataToSend = {
+          idProfil: formData.idProfil,
+          idCritere,
+          valeurDouble: valeurs.valeurDouble === '' || valeurs.valeurDouble === undefined ? null : parseFloat(valeurs.valeurDouble),
+          valeurVarchar: valeurs.valeurVarchar === '' || valeurs.valeurVarchar === undefined ? null : valeurs.valeurVarchar,
+          valeurBool: valeurs.valeurBool === undefined ? null : !!valeurs.valeurBool,
+          estObligatoire: valeurs.estObligatoire === undefined ? true : !!valeurs.estObligatoire
+        };
+        await sendXHR(dataToSend, 'PUT', editingItem.id);
+      } else {
+        // Création de plusieurs associations
+        const promises = formData.criteresSelectionnes.map(idCritere => {
+          const valeurs = formData.valeurs[idCritere] || {};
+          const dataToSend = {
+            idProfil: formData.idProfil,
+            idCritere,
+            valeurDouble: valeurs.valeurDouble === '' || valeurs.valeurDouble === undefined ? null : parseFloat(valeurs.valeurDouble),
+            valeurVarchar: valeurs.valeurVarchar === '' || valeurs.valeurVarchar === undefined ? null : valeurs.valeurVarchar,
+            valeurBool: valeurs.valeurBool === undefined ? null : !!valeurs.valeurBool,
+            estObligatoire: valeurs.estObligatoire === undefined ? true : !!valeurs.estObligatoire
+          };
+          return sendXHR(dataToSend);
+        });
+        await Promise.all(promises);
+      }
       setShowModal(false);
       setEditingItem(null);
-      setFormData({
-        idProfil: '',
-        idCritere: '',
-        valeurDouble: '',
-        valeurVarchar: '',
-        valeurBool: false,
-        estObligatoire: true
-      });
+      setFormData({ idProfil: '', criteresSelectionnes: [], valeurs: {} });
       fetchAll();
     } catch (err) {
       setError(err.message);
@@ -115,11 +136,15 @@ const GestionCritereProfils = () => {
     setEditingItem(item);
     setFormData({
       idProfil: item.idProfil,
-      idCritere: item.idCritere,
-      valeurDouble: item.valeurDouble ?? '',
-      valeurVarchar: item.valeurVarchar ?? '',
-      valeurBool: !!item.valeurBool,
-      estObligatoire: item.estObligatoire === undefined ? true : !!item.estObligatoire
+      criteresSelectionnes: [item.idCritere],
+      valeurs: {
+        [item.idCritere]: {
+          valeurDouble: item.valeurDouble ?? '',
+          valeurVarchar: item.valeurVarchar ?? '',
+          valeurBool: item.valeurBool === null || item.valeurBool === undefined ? false : !!item.valeurBool,
+          estObligatoire: item.estObligatoire === undefined ? true : !!item.estObligatoire
+        }
+      }
     });
     setShowModal(true);
     setError(null);
@@ -130,11 +155,8 @@ const GestionCritereProfils = () => {
     setEditingItem(null);
     setFormData({
       idProfil: '',
-      idCritere: '',
-      valeurDouble: '',
-      valeurVarchar: '',
-      valeurBool: false,
-      estObligatoire: true
+      criteresSelectionnes: [],
+      valeurs: {}
     });
   };
 
@@ -210,7 +232,7 @@ const GestionCritereProfils = () => {
       {showModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
-            <h2 style={styles.modalTitle}>{editingItem ? 'Modifier l\'association' : 'Créer une association'}</h2>
+            <h2 style={styles.modalTitle}>Créer une association</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Profil</label>
@@ -227,65 +249,106 @@ const GestionCritereProfils = () => {
                 </select>
               </div>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Critère</label>
-                <select
-                  value={formData.idCritere}
-                  onChange={e => setFormData({ ...formData, idCritere: e.target.value })}
-                  style={styles.input}
-                  required
-                >
-                  <option value="">-- Sélectionner --</option>
+                <label style={styles.label}>Sélectionnez les critères à associer :</label>
+                <div style={{display:'flex', flexWrap:'wrap', gap:'12px'}}>
                   {criteres.map(c => (
-                    <option key={c.id} value={c.id}>{c.nom}</option>
+                    <label key={c.id} style={{display:'flex',alignItems:'center',gap:'6px',background:'#f1f5f9',padding:'6px 12px',borderRadius:'8px'}}>
+                      <input
+                        type="checkbox"
+                        checked={formData.criteresSelectionnes.includes(c.id)}
+                        onChange={e => {
+                          const checked = e.target.checked;
+                          setFormData(prev => {
+                            let criteresSelectionnes = checked
+                              ? [...prev.criteresSelectionnes, c.id]
+                              : prev.criteresSelectionnes.filter(id => id !== c.id);
+                            // Si décoché, on retire aussi les valeurs associées
+                            let valeurs = {...prev.valeurs};
+                            if (!checked) delete valeurs[c.id];
+                            return { ...prev, criteresSelectionnes, valeurs };
+                          });
+                        }}
+                      />
+                      {c.nom}
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Valeur Double</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.valeurDouble}
-                  onChange={e => setFormData({ ...formData, valeurDouble: e.target.value })}
-                  style={styles.input}
-                  placeholder="Ex: 12.34"
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Valeur Varchar</label>
-                <input
-                  type="text"
-                  value={formData.valeurVarchar}
-                  onChange={e => setFormData({ ...formData, valeurVarchar: e.target.value })}
-                  style={styles.input}
-                  placeholder="Texte libre"
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Valeur Booléenne</label>
-                <select
-                  value={formData.valeurBool ? 'true' : 'false'}
-                  onChange={e => setFormData({ ...formData, valeurBool: e.target.value === 'true' })}
-                  style={styles.input}
-                >
-                  <option value="false">Non</option>
-                  <option value="true">Oui</option>
-                </select>
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Est Obligatoire</label>
-                <select
-                  value={formData.estObligatoire ? 'true' : 'false'}
-                  onChange={e => setFormData({ ...formData, estObligatoire: e.target.value === 'true' })}
-                  style={styles.input}
-                >
-                  <option value="true">Oui</option>
-                  <option value="false">Non</option>
-                </select>
-              </div>
+              {/* Affichage dynamique des champs pour chaque critère sélectionné */}
+              {formData.criteresSelectionnes.length > 0 && (
+                <div style={{marginTop:'18px'}}>
+                  <div style={{fontWeight:'600',marginBottom:'8px'}}>Valeurs à remplir pour chaque critère sélectionné :</div>
+                  {formData.criteresSelectionnes.map(idCritere => {
+                    const critere = criteres.find(c => c.id === idCritere);
+                    const valeurs = formData.valeurs[idCritere] || {};
+                    return (
+                      <div key={idCritere} style={{background:'#f8fafc',borderRadius:'8px',padding:'12px',marginBottom:'10px'}}>
+                        <div style={{fontWeight:'500',marginBottom:'6px'}}>{critere?.nom || idCritere}</div>
+                        <div style={{display:'flex',gap:'12px',flexWrap:'wrap'}}>
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="Valeur Double"
+                            value={valeurs.valeurDouble || ''}
+                            onChange={e => setFormData(prev => ({
+                              ...prev,
+                              valeurs: {
+                                ...prev.valeurs,
+                                [idCritere]: { ...valeurs, valeurDouble: e.target.value }
+                              }
+                            }))}
+                            style={styles.input}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Valeur Varchar"
+                            value={valeurs.valeurVarchar || ''}
+                            onChange={e => setFormData(prev => ({
+                              ...prev,
+                              valeurs: {
+                                ...prev.valeurs,
+                                [idCritere]: { ...valeurs, valeurVarchar: e.target.value }
+                              }
+                            }))}
+                            style={styles.input}
+                          />
+                          <select
+                            value={valeurs.valeurBool === true ? 'true' : valeurs.valeurBool === false ? 'false' : ''}
+                            onChange={e => setFormData(prev => ({
+                              ...prev,
+                              valeurs: {
+                                ...prev.valeurs,
+                                [idCritere]: { ...valeurs, valeurBool: e.target.value === 'true' }
+                              }
+                            }))}
+                            style={styles.input}
+                          >
+                            <option value="false">Booléen: Non</option>
+                            <option value="true">Booléen: Oui</option>
+                          </select>
+                          <select
+                            value={valeurs.estObligatoire === false ? 'false' : 'true'}
+                            onChange={e => setFormData(prev => ({
+                              ...prev,
+                              valeurs: {
+                                ...prev.valeurs,
+                                [idCritere]: { ...valeurs, estObligatoire: e.target.value === 'true' }
+                              }
+                            }))}
+                            style={styles.input}
+                          >
+                            <option value="true">Obligatoire: Oui</option>
+                            <option value="false">Obligatoire: Non</option>
+                          </select>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div style={styles.modalActions}>
                 <button type="button" onClick={closeModal} style={styles.cancelButton}>Annuler</button>
-                <button type="submit" style={styles.saveButton}>{editingItem ? 'Modifier' : 'Créer'}</button>
+                <button type="submit" style={styles.saveButton}>Créer</button>
               </div>
             </form>
           </div>

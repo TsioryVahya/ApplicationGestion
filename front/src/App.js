@@ -13,6 +13,7 @@ import Inscription from './pages/Inscription';
 import Profils from './pages/Profils';
 import Criteres from './pages/Criteres';
 import CritereProfils from './pages/CritereProfils';
+import OffresClient from './pages/client/OffresClient';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -60,8 +61,9 @@ function App() {
     <Router>
       <div style={styles.app}>
         <Routes>
-          {/* Route publique pour les tests - toujours sans sidebar */}
+          {/* Routes publiques - toujours sans sidebar */}
           <Route path="/test/:id" element={<RepondreTestQCM />} />
+          <Route path="/offres" element={<OffresClient />} />
           
           {/* Routes conditionnelles selon l'authentification */}
           <Route path="/*" element={

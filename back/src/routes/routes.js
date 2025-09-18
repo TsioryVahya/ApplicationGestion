@@ -36,6 +36,9 @@ router.get('/utilisateurs', AuthController.verifierToken, UtilisateursController
 router.get('/utilisateurs/:id', AuthController.verifierToken, UtilisateursController.obtenirUtilisateurParId);
 router.post('/utilisateurs', AuthController.verifierToken, UtilisateursController.creerUtilisateur);
 
+// Route publique pour les clients (sans authentification)
+router.get('/client/annonce', AnnonceController.obtenirAnnoncesActives);
+
 // Routes pour les annonces (protégées)
 router.get('/annonces', AuthController.verifierToken, AnnonceController.obtenirToutesLesAnnonces);
 router.get('/annonces/actives', AuthController.verifierToken, AnnonceController.obtenirAnnoncesActives);

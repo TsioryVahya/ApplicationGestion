@@ -18,11 +18,13 @@ const CreerAnnonce = ({ onRetour }) => {
     dateDebut: '',
     dateFin: '',
     idDepartement: '',
-    idProfil: ''
+    idProfil: '',
+    idTypeAnnonce: ''
   });
 
   const [profils, setProfils] = useState([]);
   const [departements, setDepartements] = useState([]);
+  const [typesAnnonce, setTypesAnnonce] = useState([]);
   const [criteresDisponibles, setCriteresDisponibles] = useState([]);
   const [tousLesCriteres, setTousLesCriteres] = useState([]);
   const [criteresSelectionnes, setCriteresSelectionnes] = useState([]);
@@ -68,6 +70,15 @@ const CreerAnnonce = ({ onRetour }) => {
       const criteresData = await criteresResponse.json();
       if (criteresData.success) {
         setTousLesCriteres(criteresData.data);
+      }
+
+      // Charger les types d'annonce
+      const typesResponse = await fetch('/api/annonces/types', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const typesData = await typesResponse.json();
+      if (typesData.success) {
+        setTypesAnnonce(typesData.data);
       }
     } catch (err) {
       setError('Erreur lors du chargement des données');
@@ -341,6 +352,24 @@ const CreerAnnonce = ({ onRetour }) => {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Type d'annonce *</label>
+              <select
+                name="idTypeAnnonce"
+                value={formData.idTypeAnnonce}
+                onChange={handleInputChange}
+                style={styles.select}
+                required
+              >
+                <option value="">Sélectionnez un type d'annonce</option>
+                {typesAnnonce.map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.libelle}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

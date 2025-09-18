@@ -177,14 +177,6 @@ INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, 
 ('Commercial terrain secteur Sud-Est avec permis B obligatoire', '2024-02-10', '2024-04-10', 'COM-2024-001', 3, 4),
 ('Technicien maintenance industrielle avec formation en électromécanique', '2024-01-25', '2024-03-25', 'TEC-2024-001', 5, 5);
 
--- Insertion des candidats
-INSERT INTO Candidat (nom, prenom, dateNaissance, adresse, cv, idAnnonce, idStatut) VALUES 
-('Petit', 'Alexandre', '1995-05-15', '12 Rue des Lilas, Paris', 'CV développeur junior avec formation React', 1, 1),
-('Garnier', 'Léa', '1988-08-22', '34 Avenue Mozart, Lyon', 'CV manager avec 8 ans d\'expérience RH', 2, 2),
-('Mercier', 'David', '1992-03-10', '56 Boulevard Voltaire, Marseille', 'CV comptable certifié avec expertise fiscale', 3, 1),
-('Blanc', 'Sarah', '1990-11-30', '78 Rue Pasteur, Toulouse', 'CV commerciale terrain avec résultats prouvés', 4, 4),
-('Rousseau', 'Maxime', '1987-07-18', '90 Place de la Mairie, Nice', 'CV technicien maintenance avec certifications', 5, 1);
-
 -- Insertion des résultats
 INSERT INTO Resultat (note, appreciation) VALUES 
 (85, 'Très bon niveau technique'),

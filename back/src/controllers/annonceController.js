@@ -412,6 +412,27 @@ class AnnonceController {
       });
     }
   }
+
+  // Obtenir tous les types d'annonce
+  static async obtenirTypesAnnonce(req, res) {
+    try {
+      const typesAnnonce = await AnnonceService.obtenirTypesAnnonce();
+
+      res.status(200).json({
+        success: true,
+        message: "Liste des types d'annonce récupérée avec succès",
+        data: typesAnnonce
+      });
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des types d\'annonce:', error);
+      res.status(500).json({
+        success: false,
+        message: "Erreur interne du serveur",
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = AnnonceController;

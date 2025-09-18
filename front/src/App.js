@@ -11,6 +11,9 @@ import DetailsAnnonce from './pages/annonce/DetailsAnnonce';
 import ModifierAnnonce from './pages/annonce/ModifierAnnonce';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
+import Profils from './pages/Profils';
+import Criteres from './pages/Criteres';
+import CritereProfils from './pages/CritereProfils';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -72,6 +75,9 @@ function App() {
                     <Route path="/utilisateurs" element={<ListeUtilisateurs />} />
                     <Route path="/qcm" element={<TestsQCM />} />
                     <Route path="/qcm/creer" element={<CreerTestQCM />} />
+                    <Route path="/profils" element={<Profils />} />
+                <Route path="/criteres" element={<Criteres />} />
+                <Route path="/critereprofils" element={<CritereProfils />} />
                     <Route path="/annonces" element={<AnnoncesPage />} />
             <Route path="/annonces/:id/details" element={<DetailsAnnonce />} />
             <Route path="/annonces/:id/modifier" element={<ModifierAnnonce />} />

@@ -2,13 +2,6 @@
 -- DONNÉES DE TEST
 -- =========================
 
--- Insertion des utilisateurs (pour l'authentification)
--- Mot de passe: 'password123' (hashé avec bcrypt)
-INSERT INTO Utilisateurs (email, motDePasse, idEmploye) VALUES 
-('jean.dupont@company.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1),
-('marie.martin@company.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2),
-('admin@company.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3);
-
 -- Insertion des départements
 INSERT INTO Departement (nom) VALUES 
 ('Ressources Humaines'),

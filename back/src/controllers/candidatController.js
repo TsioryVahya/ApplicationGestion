@@ -81,26 +81,23 @@ class CandidatController {
   // Créer un nouveau candidat
   static async creerCandidat(req, res) {
     try {
-      const { nom, prenom, email, telephone, adresse, dateNaissance, lettreMotivation, idAnnonce, idDiplome } = req.body;
+      const { nom, prenom, dateNaissance, adresse, cv, idAnnonce } = req.body;
       
       // Validation des données
-      if (!nom || !prenom || !email || !idAnnonce) {
+      if (!nom || !prenom || !idAnnonce) {
         return res.status(400).json({
           success: false,
-          message: "Les champs nom, prenom, email et idAnnonce sont requis"
+          message: "Les champs nom, prenom et idAnnonce sont requis"
         });
       }
 
       const nouveauCandidat = await CandidatService.creerCandidat({
         nom,
         prenom,
-        email,
-        telephone,
-        adresse,
         dateNaissance,
-        lettreMotivation,
-        idAnnonce,
-        idDiplome
+        adresse,
+        cv,
+        idAnnonce
       });
 
       res.status(201).json({

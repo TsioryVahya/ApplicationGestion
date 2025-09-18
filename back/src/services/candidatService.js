@@ -6,17 +6,14 @@ class CandidatService {
   static async obtenirTousLesCandidats() {
     try {
       const [rows] = await pool.execute(
-        `SELECT c.id, c.nom, c.prenom, c.email, c.telephone, c.adresse, 
-                c.dateNaissance, c.lettreMotivation, c.idAnnonce, c.idDiplome, c.idStatut,
+        `SELECT c.id, c.nom, c.prenom, c.dateNaissance, c.adresse, 
+                c.cv, c.idAnnonce, c.idStatut,
                 a.reference as annonceReference,
-                d.nom as diplomeNom,
-                s.nom as statutNom,
-                DATE(c.dateCreation) as dateCandidature
+                s.nom as statutNom
          FROM Candidat c
          LEFT JOIN Annonce a ON c.idAnnonce = a.id
-         LEFT JOIN Diplome d ON c.idDiplome = d.id
          LEFT JOIN StatutCandidat s ON c.idStatut = s.id
-         ORDER BY c.dateCreation DESC`
+         ORDER BY c.id DESC`
       );
       return rows;
     } catch (error) {
@@ -29,19 +26,15 @@ class CandidatService {
   static async obtenirCandidatsParAnnonce(idAnnonce) {
     try {
       const [rows] = await pool.execute(
-        `SELECT c.id, c.nom, c.prenom, c.email, c.telephone, c.adresse, 
-                c.dateNaissance, c.lettreMotivation, c.idAnnonce, c.idDiplome, c.idStatut,
+        `SELECT c.id, c.nom, c.prenom, c.dateNaissance, c.adresse, 
+                c.cv, c.idAnnonce, c.idStatut,
                 a.reference as annonceReference,
-                d.nom as diplomeNom,
-                s.nom as statutNom,
-                DATE(c.dateCreation) as dateCandidature,
-                c.dateCreation
+                s.nom as statutNom
          FROM Candidat c
          LEFT JOIN Annonce a ON c.idAnnonce = a.id
-         LEFT JOIN Diplome d ON c.idDiplome = d.id
          LEFT JOIN StatutCandidat s ON c.idStatut = s.id
          WHERE c.idAnnonce = ?
-         ORDER BY c.dateCreation DESC`,
+         ORDER BY c.id DESC`,
         [idAnnonce]
       );
       return rows;
@@ -55,15 +48,12 @@ class CandidatService {
   static async obtenirCandidatParId(id) {
     try {
       const [rows] = await pool.execute(
-        `SELECT c.id, c.nom, c.prenom, c.email, c.telephone, c.adresse, 
-                c.dateNaissance, c.lettreMotivation, c.idAnnonce, c.idDiplome, c.idStatut,
+        `SELECT c.id, c.nom, c.prenom, c.dateNaissance, c.adresse, 
+                c.cv, c.idAnnonce, c.idStatut,
                 a.reference as annonceReference,
-                d.nom as diplomeNom,
-                s.nom as statutNom,
-                DATE(c.dateCreation) as dateCandidature
+                s.nom as statutNom
          FROM Candidat c
          LEFT JOIN Annonce a ON c.idAnnonce = a.id
-         LEFT JOIN Diplome d ON c.idDiplome = d.id
          LEFT JOIN StatutCandidat s ON c.idStatut = s.id
          WHERE c.id = ?`,
         [id]
@@ -78,16 +68,15 @@ class CandidatService {
   // Créer un nouveau candidat
   static async creerCandidat(candidatData) {
     try {
-      const { nom, prenom, email, telephone, adresse, dateNaissance, lettreMotivation, idAnnonce, idDiplome } = candidatData;
+      const { nom, prenom, dateNaissance, adresse, cv, idAnnonce } = candidatData;
       
       // Statut par défaut : "En attente" (ID = 1)
       const idStatutDefaut = 1;
       
       const [result] = await pool.execute(
-        `INSERT INTO Candidat (nom, prenom, email, telephone, adresse, dateNaissance, 
-                              lettreMotivation, idAnnonce, idDiplome, idStatut, dateCreation)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [nom, prenom, email, telephone, adresse, dateNaissance, lettreMotivation, idAnnonce, idDiplome, idStatutDefaut]
+        `INSERT INTO Candidat (nom, prenom, dateNaissance, adresse, cv, idAnnonce, idStatut)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [nom, prenom, dateNaissance, adresse, cv, idAnnonce, idStatutDefaut]
       );
 
       // Récupérer le candidat créé avec toutes les informations
@@ -166,18 +155,15 @@ class CandidatService {
     try {
       const searchTerm = `%${terme}%`;
       const [rows] = await pool.execute(
-        `SELECT c.id, c.nom, c.prenom, c.email, c.telephone, c.adresse, 
-                c.dateNaissance, c.lettreMotivation, c.idAnnonce, c.idDiplome, c.idStatut,
+        `SELECT c.id, c.nom, c.prenom, c.adresse, 
+                c.dateNaissance, c.cv, c.idAnnonce, c.idStatut,
                 a.reference as annonceReference,
-                d.nom as diplomeNom,
-                s.nom as statutNom,
-                DATE(c.dateCreation) as dateCandidature
+                s.nom as statutNom
          FROM Candidat c
          LEFT JOIN Annonce a ON c.idAnnonce = a.id
-         LEFT JOIN Diplome d ON c.idDiplome = d.id
          LEFT JOIN StatutCandidat s ON c.idStatut = s.id
-         WHERE c.nom LIKE ? OR c.prenom LIKE ? OR c.email LIKE ? OR a.reference LIKE ?
-         ORDER BY c.dateCreation DESC`,
+         WHERE c.nom LIKE ? OR c.prenom LIKE ? OR c.cv LIKE ? OR a.reference LIKE ?
+         ORDER BY c.id DESC`,
         [searchTerm, searchTerm, searchTerm, searchTerm]
       );
       return rows;

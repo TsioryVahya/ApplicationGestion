@@ -70,15 +70,45 @@ INSERT INTO TypeAnnonce (libelle) VALUES
 ('CDI'),
 ('CDD'),
 ('Stage'),
-('Freelance');
+('Freelance'),
+('Alternance');
 
--- Insertion des annonces d'emploi (avec colonne reference)
-INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce) VALUES 
-('Recherche développeur Full Stack avec 3 ans d\'expérience minimum en React, Node.js et bases de données', '2024-01-15', '2024-03-15', 'DEV-2024-001', 2, 1, 1),
-('Poste de manager pour équipe RH avec expérience en gestion d\'équipe et recrutement', '2024-02-01', '2024-04-01', 'MAN-2024-001', 1, 2, 1),
-('Comptable expérimenté pour département finance avec maîtrise des logiciels comptables', '2024-01-20', '2024-03-20', 'CPT-2024-001', 4, 3, 1),
-('Commercial terrain secteur Sud-Est avec permis B obligatoire', '2024-02-10', '2024-04-10', 'COM-2024-001', 3, 4, 2),
-('Technicien maintenance industrielle avec formation en électromécanique', '2024-01-25', '2024-03-25', 'TEC-2024-001', 5, 5, 2);
+-- Insertion des candidats de test
+INSERT INTO Candidat (nom, prenom, dateNaissance, adresse, cv, idAnnonce, idStatut) VALUES 
+-- Candidats pour l'annonce 1 (Développeur Full-Stack)
+('Martin', 'Pierre', '1995-03-15', '15 rue de la Paix, 75001 Paris', 'Développeur Full-Stack avec 5 ans d\'expérience. Compétences: React, Node.js, MongoDB, PostgreSQL. Expérience en startup et méthodes agiles. Passionné par les nouvelles technologies et l\'innovation.', 1, 1),
+
+('Dubois', 'Marie', '1992-07-22', '42 avenue des Champs, 69000 Lyon', 'Ingénieure logiciel spécialisée JavaScript/Python. 6 ans d\'expérience en développement web. Leadership technique sur projets de digitalisation. Expertise en architecture microservices et DevOps.', 1, 2),
+
+('Leroy', 'Thomas', '1990-11-08', '8 place du Marché, 33000 Bordeaux', 'Expert en développement full-stack et architecture système. 8 ans d\'expérience. Spécialités: React, Vue.js, Node.js, Docker, Kubernetes. Certifié AWS Solutions Architect.', 1, 4),
+
+-- Candidats pour l'annonce 2 (Manager Commercial)
+('Moreau', 'Sophie', '1988-05-12', '23 boulevard Saint-Germain, 75006 Paris', 'Manager commerciale senior avec 8 ans d\'expérience dans la tech B2B. Expertise en développement d\'équipes commerciales et stratégies de croissance. Résultats: +150% CA sur 3 ans.', 2, 1),
+
+('Bernard', 'Julien', '1985-09-30', '67 rue de la République, 13000 Marseille', 'Commercial B2B expérimenté. 10 ans dans la vente de solutions technologiques. Gestion de portefeuilles clients grands comptes. Expertise en négociation et développement commercial.', 2, 3),
+
+-- Candidats pour l'annonce 3 (Comptable Senior)
+('Petit', 'Camille', '1987-12-03', '91 rue Victor Hugo, 59000 Lille', 'Comptable senior spécialisée en consolidation et reporting financier. 7 ans d\'expérience. Maîtrise des normes IFRS, SAP, et outils de contrôle de gestion. Expertise en audit interne.', 3, 1),
+
+('Roux', 'Antoine', '1983-04-18', '34 avenue de la Liberté, 67000 Strasbourg', 'Expert-comptable avec 12 ans d\'expérience cabinet/entreprise. Spécialités: fiscalité, consolidation, contrôle de gestion. Diplômé DSCG. Expérience en management d\'équipe comptable.', 3, 2),
+
+-- Candidats pour l'annonce 4 (Responsable Marketing Digital)
+('Fournier', 'Laura', '1991-08-25', '56 place Bellecour, 69002 Lyon', 'Spécialiste marketing digital avec 6 ans d\'expérience. Expertise SEO/SEA, social media, analytics. Résultats: +200% trafic organique, ROI campagnes publicitaires >300%. Certifiée Google Ads.', 4, 4),
+
+('Girard', 'Maxime', '1989-01-14', '78 cours Mirabeau, 13100 Aix-en-Provence', 'Growth hacker et responsable acquisition. 7 ans d\'expérience en marketing digital. Spécialités: funnel optimization, A/B testing, marketing automation. Doublé le trafic en 18 mois.', 4, 1),
+
+-- Candidats pour l'annonce 5 (Technicien Maintenance)
+('Michel', 'David', '1986-06-07', '12 rue de l\'Industrie, 38000 Grenoble', 'Technicien maintenance industrielle avec 10 ans d\'expérience. Spécialités: électromécanique, automatismes, maintenance préventive. Habilitations électriques. Autonome et polyvalent.', 5, 1),
+
+('Garcia', 'Nicolas', '1993-10-19', '45 avenue de la Gare, 31000 Toulouse', 'Technicien maintenance junior avec 3 ans d\'expérience. Formation BTS Maintenance Industrielle. Compétences: mécanique, hydraulique, pneumatique. Motivé et adaptable aux nouveaux équipements.', 5, 3);
+
+-- Mise à jour des annonces avec les types
+UPDATE Annonce SET idTypeAnnonce = 1 WHERE id = 1; -- CDI
+UPDATE Annonce SET idTypeAnnonce = 1 WHERE id = 2; -- CDI  
+UPDATE Annonce SET idTypeAnnonce = 2 WHERE id = 3; -- CDD
+UPDATE Annonce SET idTypeAnnonce = 1 WHERE id = 4; -- CDI
+UPDATE Annonce SET idTypeAnnonce = 2 WHERE id = 5; -- CDD;
+
 
 -- Insertion de critères supplémentaires pour les annonces
 INSERT INTO CritereProfil (idProfil, idCritere, valeurVarchar, estObligatoire) VALUES 
@@ -138,6 +168,14 @@ INSERT INTO QcmChoix (idQuestion, texte, estCorrect) VALUES
 (3, 'Aucune différence', false),
 (3, 'const permet la réassignation, let non', false),
 (3, 'let est pour les nombres, const pour les chaînes', false);
+
+-- Insertion des annonces d'emploi (avec colonne reference)
+INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, idProfil) VALUES 
+('Recherche développeur Full Stack avec 3 ans d\'expérience minimum en React, Node.js et bases de données', '2024-01-15', '2024-03-15', 'DEV-2024-001', 2, 1),
+('Poste de manager pour équipe RH avec expérience en gestion d\'équipe et recrutement', '2024-02-01', '2024-04-01', 'MAN-2024-001', 1, 2),
+('Comptable expérimenté pour département finance avec maîtrise des logiciels comptables', '2024-01-20', '2024-03-20', 'CPT-2024-001', 4, 3),
+('Commercial terrain secteur Sud-Est avec permis B obligatoire', '2024-02-10', '2024-04-10', 'COM-2024-001', 3, 4),
+('Technicien maintenance industrielle avec formation en électromécanique', '2024-01-25', '2024-03-25', 'TEC-2024-001', 5, 5);
 
 -- Insertion des candidats
 INSERT INTO Candidat (nom, prenom, dateNaissance, adresse, cv, idAnnonce, idStatut) VALUES 

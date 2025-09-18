@@ -100,9 +100,7 @@ const ListeAnnonces = ({ onCreerAnnonce }) => {
   };
 
   const handleModifierAnnonce = (annonceId) => {
-    // TODO: Implémenter la modification d'annonce
-    console.log('Modifier annonce:', annonceId);
-    alert(`Modification de l'annonce ${annonceId} - Fonctionnalité à implémenter`);
+    window.location.href = `/annonces/${annonceId}/modifier`;
   };
 
   const handleSupprimerAnnonce = async (annonceId) => {

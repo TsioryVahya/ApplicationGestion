@@ -173,24 +173,34 @@ const GestionCritereProfils = () => {
       </div>
 
       <div style={styles.cardGrid}>
-        {associations.map(a => {
-          const profil = profils.find(p => p.id === a.idProfil);
-          const critere = criteres.find(c => c.id === a.idCritere);
+        {/* Regrouper les associations par profil */}
+        {profils.map(profil => {
+          const assocProfil = associations.filter(a => a.idProfil === profil.id);
+          if (assocProfil.length === 0) return null;
           return (
-            <div key={a.id} style={styles.card}>
+            <div key={profil.id} style={styles.card}>
               <div style={styles.cardHeader}>
-                <div style={styles.cardTitle}>{profil?.nom || a.idProfil} <span style={styles.cardSubTitle}>/ {critere?.nom || a.idCritere}</span></div>
-                <div style={styles.cardActions}>
-                  <button style={styles.editButton} onClick={() => openEditModal(a)}><FiEdit3 size={16} /></button>
-                  <button style={styles.deleteButton} onClick={() => handleDelete(a.id)}><FiTrash2 size={16} /></button>
-                </div>
+                <div style={styles.cardTitle}>{profil.nom}</div>
               </div>
               <div style={styles.cardBody}>
-                <div><b>ID:</b> {a.id}</div>
-                <div><b>Valeur Double:</b> {a.valeurDouble !== null && a.valeurDouble !== undefined ? a.valeurDouble : <span style={{color:'#64748b'}}>N/A</span>}</div>
-                <div><b>Valeur Varchar:</b> {a.valeurVarchar || <span style={{color:'#64748b'}}>N/A</span>}</div>
-                <div><b>Valeur Booléenne:</b> {a.valeurBool === true ? 'Oui' : a.valeurBool === false ? 'Non' : <span style={{color:'#64748b'}}>N/A</span>}</div>
-                <div><b>Obligatoire:</b> {a.estObligatoire ? 'Oui' : 'Non'}</div>
+                {assocProfil.map(a => {
+                  const critere = criteres.find(c => c.id === a.idCritere);
+                  return (
+                    <div key={a.id} style={styles.critereRow}>
+                      <div style={{fontWeight:'600', color:'#1e293b'}}>{critere?.nom || a.idCritere}</div>
+                      <div style={{fontSize:'14px', color:'#64748b'}}>
+                        <span><b>Valeur Double:</b> {a.valeurDouble !== null && a.valeurDouble !== undefined ? a.valeurDouble : <span style={{color:'#b6bcc8'}}>N/A</span>}</span> |{' '}
+                        <span><b>Valeur Varchar:</b> {a.valeurVarchar || <span style={{color:'#b6bcc8'}}>N/A</span>}</span> |{' '}
+                        <span><b>Booléen:</b> {a.valeurBool === true ? 'Oui' : a.valeurBool === false ? 'Non' : <span style={{color:'#b6bcc8'}}>N/A</span>}</span> |{' '}
+                        <span><b>Obligatoire:</b> {a.estObligatoire ? 'Oui' : 'Non'}</span>
+                      </div>
+                      <div style={styles.cardActions}>
+                        <button style={styles.editButton} onClick={() => openEditModal(a)}><FiEdit3 size={16} /></button>
+                        <button style={styles.deleteButton} onClick={() => handleDelete(a.id)}><FiTrash2 size={16} /></button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
@@ -407,9 +417,20 @@ const styles = {
   cardBody: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px',
+    gap: '12px',
     fontSize: '15px',
-    color: '#334155'
+    color: '#334155',
+    marginTop: '8px'
+  },
+  critereRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '12px',
+    background: '#f8fafc',
+    borderRadius: '8px',
+    padding: '8px 12px',
+    marginBottom: '4px'
   },
   actions: {
     display: 'flex',

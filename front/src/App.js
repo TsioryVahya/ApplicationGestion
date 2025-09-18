@@ -86,8 +86,9 @@ function App() {
               </>
             ) : (
               <Routes>
-                <Route path="/login" element={<Navigate to="/" replace />} />
-                <Route path="/inscription" element={<Navigate to="/" replace />} />
+                <Route path="/login" element={<Login onLogin={handleLogin} />} />
+                <Route path="/inscription" element={<Inscription onRegister={handleRegister} />} />
+                <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>
             )
           } />

@@ -8,6 +8,7 @@ import CreerTestQCM from './pages/QCM/CreerTestQCM';
 import RepondreTestQCM from './pages/QCM/RepondreTestQCM';
 import AnnoncesPage from './pages/annonce/AnnoncesPage';
 import DetailsAnnonce from './pages/annonce/DetailsAnnonce';
+import ListeAnnoncesClient from './pages/client/ListeAnnoncesClient';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 import Profils from './pages/Profils';
@@ -60,8 +61,9 @@ function App() {
     <Router>
       <div style={styles.app}>
         <Routes>
-          {/* Route publique pour les tests - toujours sans sidebar */}
+          {/* Routes publiques - toujours sans sidebar */}
           <Route path="/test/:id" element={<RepondreTestQCM />} />
+          <Route path="/client/annonces" element={<ListeAnnoncesClient />} />
           
           {/* Routes conditionnelles selon l'authentification */}
           <Route path="/*" element={

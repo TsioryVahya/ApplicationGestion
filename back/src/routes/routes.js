@@ -23,6 +23,9 @@ router.get('/employes/:id', EmployeController.obtenirEmployeParId);
 // Routes publiques pour les tests QCM (accès candidats)
 router.get('/qcm/public/tests/:id', QcmController.obtenirTestParId);
 
+// Routes publiques pour les clients (SANS AUTHENTIFICATION)
+router.get('/client/annonces', AnnonceController.obtenirAnnoncesActives);
+
 // Routes pour les tests QCM (protégées)
 router.get('/qcm/tests', AuthController.verifierToken, QcmController.obtenirTousLesTests);
 router.get('/qcm/tests/:id', AuthController.verifierToken, QcmController.obtenirTestParId);
@@ -36,19 +39,22 @@ router.get('/utilisateurs', AuthController.verifierToken, UtilisateursController
 router.get('/utilisateurs/:id', AuthController.verifierToken, UtilisateursController.obtenirUtilisateurParId);
 router.post('/utilisateurs', AuthController.verifierToken, UtilisateursController.creerUtilisateur);
 
-// Routes pour les annonces (protégées)
+// Routes publiques pour les annonces (accès client sans token) - DOIVENT ÊTRE AVANT LES ROUTES PARAMÉTRÉES
+router.get('/annonces/publiques', AnnonceController.obtenirAnnoncesActives);
+
+// Routes pour les annonces (protégées) - routes spécifiques avant les routes paramétrées
 router.get('/annonces', AuthController.verifierToken, AnnonceController.obtenirToutesLesAnnonces);
 router.get('/annonces/actives', AuthController.verifierToken, AnnonceController.obtenirAnnoncesActives);
 router.get('/annonces/avec-candidats', AuthController.verifierToken, AnnonceController.obtenirAnnoncesAvecCandidats);
 router.get('/annonces/statistiques', AuthController.verifierToken, AnnonceController.obtenirStatistiques);
 router.get('/annonces/recherche', AuthController.verifierToken, AnnonceController.rechercherAnnonces);
 router.get('/annonces/profils', AuthController.verifierToken, AnnonceController.obtenirProfils);
-router.get('/annonces/profils/:idProfil/criteres', AuthController.verifierToken, AnnonceController.obtenirCriteresProfil);
 router.get('/annonces/criteres', AuthController.verifierToken, AnnonceController.obtenirTousLesCriteres);
 router.get('/annonces/departements', AuthController.verifierToken, AnnonceController.obtenirDepartements);
+router.get('/annonces/profils/:idProfil/criteres', AuthController.verifierToken, AnnonceController.obtenirCriteresProfil);
 router.get('/annonces/departement/:idDepartement', AuthController.verifierToken, AnnonceController.obtenirAnnoncesParDepartement);
-router.get('/annonces/:id', AuthController.verifierToken, AnnonceController.obtenirAnnonceParId);
 router.get('/annonces/:id/candidats', AuthController.verifierToken, AnnonceController.obtenirNombreCandidats);
+router.get('/annonces/:id', AuthController.verifierToken, AnnonceController.obtenirAnnonceParId);
 router.post('/annonces', AuthController.verifierToken, AnnonceController.creerAnnonce);
 router.put('/annonces/:id', AuthController.verifierToken, AnnonceController.mettreAJourAnnonce);
 router.delete('/annonces/:id', AuthController.verifierToken, AnnonceController.supprimerAnnonce);

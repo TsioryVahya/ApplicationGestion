@@ -32,7 +32,7 @@ const OffresClient = () => {
 
   const annoncesFiltrees = useMemo(() => {
     return annonces.filter(a => {
-      const txt = `${a.reference || ''} ${a.description || ''} ${a.nomDepartement || ''} ${a.nomProfil || ''}`.toLowerCase();
+      const txt = `${a.reference || ''} ${a.nomPoste || a.titre || ''} ${a.description || ''} ${a.nomDepartement || ''} ${a.nomProfil || ''}`.toLowerCase();
       const okRecherche = txt.includes(recherche.toLowerCase());
       const typeNorm = (a.typeAnnonce || '').toLowerCase();
       const okType = filtreType === 'all' || typeNorm === filtreType.toLowerCase();
@@ -111,12 +111,15 @@ const OffresClient = () => {
           return (
             <div key={`annonce-${a.idAnnonce || index}`} style={styles.card}>
               <div style={styles.cardHeader}>
-                <span style={styles.ref}>{a.reference || `Annonce #${a.idAnnonce}`}</span>
+                <span style={styles.ref}>{a.reference || `${a.nomProfil}`}</span>
                 <span style={{
                   ...styles.badge,
                   background: statut === 'Active' ? '#059669' : '#64748b'
                 }}>{statut}</span>
               </div>
+              {(a.nomPoste || a.titre) && (
+                <div style={styles.jobTitle}>{a.nomPoste || a.titre}</div>
+              )}
               <div style={styles.meta}>
                 <div style={styles.metaLine}>
                   <FiBriefcase size={14} color="#475569" />
@@ -135,7 +138,6 @@ const OffresClient = () => {
                 {a.description || 'Aucune description.'}
               </p>
               <div style={styles.footer}>
-                <span style={styles.profilTag}>{a.nomProfil || 'Profil non spécifié'}</span>
                 <button
                   onClick={() => handlePostuler(a)}
                   style={styles.postulerBtn}
@@ -174,6 +176,7 @@ const styles = {
   card: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 18, padding: 22, display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', minHeight: 250 },
   cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, gap: 12 },
   ref: { fontWeight: 600, fontSize: 18, color: '#1e293b', flex: 1 },
+  jobTitle: { fontWeight: 700, fontSize: 18, color: '#0f172a', marginBottom: 8 },
   badge: { padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, letterSpacing: .5, color: '#fff', textTransform: 'uppercase' },
   meta: { display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 },
   metaLine: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#475569', fontWeight: 500 },

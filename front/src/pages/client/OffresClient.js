@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { FiSearch, FiFilter, FiCalendar, FiMapPin, FiBriefcase } from 'react-icons/fi';
+import { FiSearch, FiFilter, FiCalendar, FiMapPin, FiBriefcase, FiUser } from 'react-icons/fi';
+import ModalConnexionCandidat from '../../components/ModalConnexionCandidat';
 
 const OffresClient = () => {
   const [annonces, setAnnonces] = useState([]);
@@ -7,6 +8,8 @@ const OffresClient = () => {
   const [erreur, setErreur] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [filtreType, setFiltreType] = useState('all');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedAnnonce, setSelectedAnnonce] = useState(null);
 
   useEffect(() => {
     const charger = async () => {
@@ -38,6 +41,19 @@ const OffresClient = () => {
   const formatDate = d => {
     if (!d) return '';
     return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const handlePostuler = (annonce) => {
+    setSelectedAnnonce(annonce);
+    setModalOpen(true);
+  };
+
+  const handleLoginSuccess = (data) => {
+    // Rediriger vers le formulaire de candidature après connexion réussie
+    console.log('Connexion réussie:', data);
+    if (selectedAnnonce) {
+      window.location.href = `/candidature/${selectedAnnonce.idAnnonce}`;
+    }
   };
 
   if (loading) return <div style={styles.center}>Chargement des offres...</div>;
@@ -85,10 +101,10 @@ const OffresClient = () => {
       )}
 
       <div style={styles.grid}>
-        {annoncesFiltrees.map(a => {
+        {annoncesFiltrees.map((a, index) => {
           const statut = new Date(a.dateFin) >= new Date() ? 'Active' : 'Expirée';
           return (
-            <div key={a.idAnnonce} style={styles.card}>
+            <div key={`annonce-${a.idAnnonce || index}`} style={styles.card}>
               <div style={styles.cardHeader}>
                 <span style={styles.ref}>{a.reference || `Annonce #${a.idAnnonce}`}</span>
                 <span style={{
@@ -115,15 +131,26 @@ const OffresClient = () => {
               </p>
               <div style={styles.footer}>
                 <span style={styles.profilTag}>{a.nomProfil || 'Profil non spécifié'}</span>
+                <button
+                  onClick={() => handlePostuler(a)}
+                  style={styles.postulerBtn}
+                  disabled={statut === 'Expirée'}
+                >
+                  <FiUser size={16} />
+                  Postuler
+                </button>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div style={styles.note}>
-        Pour postuler, veuillez contacter le service RH indiqué dans l'annonce principale du site.
-      </div>
+      <ModalConnexionCandidat
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={handleLoginSuccess}
+        selectedAnnonce={selectedAnnonce}
+      />
     </div>
   );
 };
@@ -146,8 +173,24 @@ const styles = {
   meta: { display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 },
   metaLine: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#475569', fontWeight: 500 },
   desc: { fontSize: 14, lineHeight: 1.55, color: '#64748b', flex: 1, margin: 0, marginBottom: 12, whiteSpace: 'pre-line' },
-  footer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  footer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   profilTag: { background: '#eff6ff', color: '#1e3a8a', fontSize: 12, padding: '6px 12px', borderRadius: 8, fontWeight: 500 },
+  postulerBtn: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: 6, 
+    background: '#059669', 
+    color: '#fff', 
+    border: 'none', 
+    padding: '8px 16px', 
+    borderRadius: 8, 
+    fontSize: 13, 
+    fontWeight: 600, 
+    cursor: 'pointer', 
+    transition: 'all 0.2s',
+    ':hover': { background: '#047857' },
+    ':disabled': { background: '#9ca3af', cursor: 'not-allowed' }
+  },
   empty: { textAlign: 'center', padding: '80px 20px', background: '#fff', border: '1px dashed #cbd5e1', borderRadius: 16 },
   emptyTitle: { margin: '18px 0 4px', fontSize: 20, color: '#1e293b' },
   emptyText: { margin: 0, fontSize: 14, color: '#64748b' },

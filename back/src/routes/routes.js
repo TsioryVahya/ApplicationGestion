@@ -33,6 +33,10 @@ router.get('/utilisateurs/:id', AuthController.verifierToken, UtilisateursContro
 router.post('/utilisateurs', AuthController.verifierToken, UtilisateursController.creerUtilisateur);
 
 router.get('/candidats', AuthController.verifierToken, CandidatsController.obtenirTousLesCandidats);
+router.get('/employes/:id', AuthController.verifierToken, CandidatsController.obtenirEmployeParId);
 router.post('/contrats', AuthController.verifierToken, CandidatsController.ajouterContrat);
+router.get('/contrats', AuthController.verifierToken, CandidatsController.obtenirTousLesContrats);
+router.get('/contrats/:id', AuthController.verifierToken, CandidatsController.obtenirContratParId);
+
 
 module.exports = router;

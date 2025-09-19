@@ -10,6 +10,8 @@ import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 import ListeCandidats from './pages/Contrat/ListeCandidats';
 import CandidatsFormulaire from './pages/Contrat/CandidatsFormulaire';
+import ListeContrats from './pages/Contrat/ListeContrats';
+import DetailsCandidatContrat from './pages/Contrat/DetailsCandidatContrat';
 
 
 function App() {
@@ -76,7 +78,9 @@ function App() {
                     <Route path="/inscription" element={<Navigate to="/" replace />} />
                     <Route path="/candidats" element={<ListeCandidats />} />
                     <Route path="/contrats/ajouter/:id" element={<CandidatsFormulaire />} />
-                  </Routes>
+                    <Route path="/contrats" element={<ListeContrats />}/>
+                    <Route path="/contrats/details/:id" element={<DetailsCandidatContrat />} />
+                  </Routes> 
                 </div>
               </>
             ) : (

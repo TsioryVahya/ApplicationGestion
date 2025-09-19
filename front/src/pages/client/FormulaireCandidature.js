@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { FiUser, FiMail, FiCalendar, FiMapPin, FiFileText, FiSend, FiArrowLeft } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { FiUser, FiCalendar, FiMapPin, FiFileText, FiSend, FiArrowLeft, FiBriefcase } from 'react-icons/fi';
 
 const FormulaireCandidature = () => {
   const { annonceId } = useParams();
+  const location = useLocation();
+  const stateAnnonceId = location.state?.idAnnonce || location.state?.annonce?.idAnnonce;
+  const effectiveAnnonceId = annonceId || stateAnnonceId;
   const navigate = useNavigate();
   
   const [annonce, setAnnonce] = useState(null);
@@ -22,26 +25,17 @@ const FormulaireCandidature = () => {
   
   const [criteresReponses, setCriteresReponses] = useState({});
 
-  useEffect(() => {
-    const token = localStorage.getItem('candidatToken');
-    if (!token) {
-      navigate('/offres');
-      return;
-    }
-    
-    chargerDonnees();
-  }, [annonceId]);
-
-  const chargerDonnees = async () => {
+  const chargerDonnees = useCallback(async () => {
     try {
       // Charger les détails de l'annonce
-      const resAnnonce = await fetch(`/api/client/annonce/${annonceId}`);
+      const resAnnonce = await fetch(`/api/client/annonce/${effectiveAnnonceId}`);
       if (!resAnnonce.ok) throw new Error('Annonce non trouvée');
       const dataAnnonce = await resAnnonce.json();
-      setAnnonce(dataAnnonce.data);
+      if (dataAnnonce.success === false) throw new Error(dataAnnonce.message || 'Annonce non trouvée');
+      setAnnonce(dataAnnonce.data || dataAnnonce);
 
       // Charger les critères du profil de l'annonce
-      const resCriteres = await fetch(`/api/annonces/profils/${dataAnnonce.data.idProfil}/criteres`, {
+      const resCriteres = await fetch(`/api/annonces/profils/${(dataAnnonce.data || dataAnnonce).idProfil}/criteres`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('candidatToken')}`
         }
@@ -49,12 +43,13 @@ const FormulaireCandidature = () => {
       
       if (resCriteres.ok) {
         const dataCriteres = await resCriteres.json();
-        setCriteres(dataCriteres.data || []);
+        setCriteres(dataCriteres.data || dataCriteres || []);
         
         // Initialiser les réponses des critères
         const initReponses = {};
-        dataCriteres.data?.forEach(critere => {
-          initReponses[critere.idCritere] = '';
+        (dataCriteres.data || dataCriteres || []).forEach(critere => {
+          const critereId = critere.idCritere || critere.id || critere.idCritereProfil;
+          initReponses[critereId] = '';
         });
         setCriteresReponses(initReponses);
       }
@@ -63,7 +58,21 @@ const FormulaireCandidature = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [effectiveAnnonceId]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('candidatToken');
+    if (!token) {
+      navigate('/offres');
+      return;
+    }
+    if (!effectiveAnnonceId) {
+      setErreur("Identifiant d'annonce manquant");
+      setLoading(false);
+      return;
+    }
+    chargerDonnees();
+  }, [effectiveAnnonceId, navigate, chargerDonnees]);
 
   const handleCandidatChange = (field, value) => {
     setCandidatData(prev => ({
@@ -89,7 +98,7 @@ const FormulaireCandidature = () => {
       
       const candidatureData = {
         ...candidatData,
-        idAnnonce: parseInt(annonceId),
+        idAnnonce: parseInt(effectiveAnnonceId),
         criteres: Object.entries(criteresReponses).map(([critereId, valeur]) => ({
           idCritere: parseInt(critereId),
           valeur: valeur
@@ -127,14 +136,15 @@ const FormulaireCandidature = () => {
   };
 
   const renderCritereInput = (critere) => {
-    const value = criteresReponses[critere.idCritere] || '';
+    const critereId = critere.idCritere || critere.id || critere.idCritereProfil;
+    const value = criteresReponses[critereId] || '';
     
     // Déterminer le type de champ basé sur les valeurs du critère
     if (critere.valeurBool !== null) {
       return (
         <select
           value={value}
-          onChange={(e) => handleCritereChange(critere.idCritere, e.target.value)}
+          onChange={(e) => handleCritereChange(critereId, e.target.value)}
           style={styles.input}
           required={critere.estObligatoire}
         >
@@ -149,7 +159,7 @@ const FormulaireCandidature = () => {
           type="number"
           step="0.01"
           value={value}
-          onChange={(e) => handleCritereChange(critere.idCritere, e.target.value)}
+          onChange={(e) => handleCritereChange(critereId, e.target.value)}
           style={styles.input}
           placeholder="Entrez une valeur numérique"
           required={critere.estObligatoire}
@@ -160,7 +170,7 @@ const FormulaireCandidature = () => {
         <input
           type="text"
           value={value}
-          onChange={(e) => handleCritereChange(critere.idCritere, e.target.value)}
+          onChange={(e) => handleCritereChange(critereId, e.target.value)}
           style={styles.input}
           placeholder="Entrez votre réponse"
           required={critere.estObligatoire}
@@ -189,6 +199,15 @@ const FormulaireCandidature = () => {
     );
   }
 
+  const formatDate = (d) => {
+    if (!d) return '';
+    try {
+      return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (_) {
+      return d;
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -199,8 +218,29 @@ const FormulaireCandidature = () => {
         <h1 style={styles.title}>Candidature</h1>
         {annonce && (
           <div style={styles.annonceInfo}>
-            <h2 style={styles.annonceTitle}>{annonce.reference}</h2>
-            <p style={styles.annonceDept}>{annonce.nomDepartement}</p>
+            <div style={styles.annonceHeaderRow}>
+              <h2 style={styles.annonceTitle}>{annonce.reference || `Annonce #${annonce.idAnnonce}`}</h2>
+              <span style={styles.profilTag}>{annonce.nomProfil || 'Profil non spécifié'}</span>
+            </div>
+            <div style={styles.metaRow}>
+              <div style={styles.metaItem}>
+                <FiBriefcase size={14} color="#475569" />
+                <span>{annonce.typeAnnonce || 'Type non défini'}</span>
+              </div>
+              <div style={styles.metaItem}>
+                <FiMapPin size={14} color="#475569" />
+                <span>{annonce.nomDepartement || 'Département'}</span>
+              </div>
+              <div style={styles.metaItem}>
+                <FiCalendar size={14} color="#475569" />
+                <span>
+                  {annonce.dateDebut ? `Du ${formatDate(annonce.dateDebut)} au ${formatDate(annonce.dateFin)}` : ''}
+                </span>
+              </div>
+            </div>
+            {annonce.description && (
+              <p style={styles.annonceDesc}>{annonce.description}</p>
+            )}
           </div>
         )}
       </div>
@@ -287,15 +327,17 @@ const FormulaireCandidature = () => {
               Critères requis pour ce poste
             </h3>
             
-            {criteres.map(critere => (
-              <div key={critere.idCritere} style={styles.inputGroup}>
+            {criteres.map(critere => {
+              const critereId = critere.idCritere || critere.id || critere.idCritereProfil;
+              return (
+              <div key={critereId} style={styles.inputGroup}>
                 <label style={styles.label}>
-                  {critere.nomCritere}
+                  {critere.nom || critere.nomCritere}
                   {critere.estObligatoire && <span style={styles.required}> *</span>}
                 </label>
                 {renderCritereInput(critere)}
               </div>
-            ))}
+            );})}
           </div>
         )}
 
@@ -378,6 +420,42 @@ const styles = {
     fontSize: '14px',
     color: '#64748b',
     margin: 0
+  },
+  annonceHeaderRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '12px',
+    marginBottom: '8px'
+  },
+  profilTag: {
+    background: '#eff6ff',
+    color: '#1e3a8a',
+    fontSize: '12px',
+    padding: '6px 10px',
+    borderRadius: '8px',
+    fontWeight: 600,
+    whiteSpace: 'nowrap'
+  },
+  metaRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '16px',
+    marginBottom: '8px'
+  },
+  metaItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13px',
+    color: '#475569',
+    fontWeight: 500
+  },
+  annonceDesc: {
+    fontSize: '14px',
+    color: '#64748b',
+    margin: 0,
+    whiteSpace: 'pre-line'
   },
   form: {
     background: '#fff',

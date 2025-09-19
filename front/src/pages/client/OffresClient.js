@@ -1,8 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiFilter, FiCalendar, FiMapPin, FiBriefcase, FiUser } from 'react-icons/fi';
 import ModalConnexionCandidat from '../../components/ModalConnexionCandidat';
 
 const OffresClient = () => {
+  const navigate = useNavigate();
   const [annonces, setAnnonces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
@@ -50,10 +52,13 @@ const OffresClient = () => {
 
   const handleLoginSuccess = (data) => {
     // Rediriger vers le formulaire de candidature après connexion réussie
-    console.log('Connexion réussie:', data);
-    if (selectedAnnonce) {
-      window.location.href = `/candidature/${selectedAnnonce.idAnnonce}`;
+    if (!selectedAnnonce) return;
+    const id = selectedAnnonce.idAnnonce || selectedAnnonce.id || selectedAnnonce.annonceId;
+    if (!id) {
+      console.error('ID annonce manquant dans selectedAnnonce', selectedAnnonce);
+      return;
     }
+    navigate(`/candidature/${id}` , { state: { idAnnonce: id, annonce: selectedAnnonce } });
   };
 
   if (loading) return <div style={styles.center}>Chargement des offres...</div>;

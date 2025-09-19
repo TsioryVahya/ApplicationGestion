@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import jsPDF from 'jspdf';
 import { FiArrowLeft, FiDownload } from 'react-icons/fi';
+import jsPDF from 'jspdf';
 
 const DetailsCandidatContrat = () => {
   const { id } = useParams();
@@ -74,68 +74,100 @@ const DetailsCandidatContrat = () => {
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
-    const lineHeight = 10;
+    const margin = 20;
+    const lineHeight = 8;
     let y = margin;
 
     // Couleurs
-    const blueColor = '#1E3A8A'; // Bleu professionnel
-    const grayColor = '#64748B'; // Gris pour sous-titres
-    const textColor = '#1E293B'; // Noir pour texte
+    const primaryColor = '#1e40af'; // Bleu professionnel
+    const secondaryColor = '#059669'; // Vert pour accents
+    const textColor = '#1e293b'; // Noir pour texte
+    const lightGray = '#f1f5f9'; // Fond clair
+    const grayBorder = '#e2e8f0'; // Bordure grise
 
-    // Fond d'en-tête
-    doc.setFillColor('#F8FAFC');
-    doc.rect(0, 0, pageWidth, 40, 'F');
-
-    // Titre
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(22);
-    doc.setTextColor(blueColor);
-    doc.text('Détails du Contrat', pageWidth / 2, 25, { align: 'center' });
-
-    // Ligne de séparation
-    doc.setDrawColor(grayColor);
-    doc.setLineWidth(0.5);
-    doc.line(margin, 45, pageWidth - margin, 45);
-
-    y = 55;
-
-    // Section Employé
-    doc.setFontSize(16);
-    doc.setTextColor(blueColor);
-    doc.text('Informations de l\'Employé', margin, y);
-    y += lineHeight;
-
+    // En-tête
+    doc.setFillColor(lightGray);
+    doc.rect(0, 0, pageWidth, 50, 'F');
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(primaryColor);
+    doc.text('Détails du Contrat', pageWidth / 2, 30, { align: 'center' });
     doc.setFontSize(12);
     doc.setTextColor(textColor);
-    doc.text(`Nom: ${employe.nom || 'Non défini'}`, margin, y);
-    y += lineHeight;
-    doc.text(`Prénom: ${employe.prenom || 'Non défini'}`, margin, y);
-    y += lineHeight;
-    doc.text(`Adresse: ${employe.adresse || 'Non défini'}`, margin, y);
-    y += lineHeight * 2;
+    doc.text(`Système de Gestion RH`, pageWidth / 2, 40, { align: 'center' });
 
-    // Section Contrat
-    doc.setFontSize(16);
-    doc.setTextColor(blueColor);
-    doc.text('Informations du Contrat', margin, y);
-    y += lineHeight;
+    // Ligne décorative
+    doc.setDrawColor(secondaryColor);
+    doc.setLineWidth(1);
+    doc.line(margin, 55, pageWidth - margin, 55);
+    y = 65;
 
-    doc.setFontSize(12);
+    // Métadonnées
+    doc.setFontSize(10);
     doc.setTextColor(textColor);
     doc.text(`ID du Contrat: ${id}`, margin, y);
-    y += lineHeight;
-    doc.text(`Date de Début: ${contrat.dateDebut ? new Date(contrat.dateDebut).toLocaleDateString() : 'Non défini'}`, margin, y);
-    y += lineHeight;
-    doc.text(`Nombre de Mois: ${contrat.nombreMois || 'Non défini'}`, margin, y);
-    y += lineHeight;
-    doc.text(`Type de Contrat: ${contrat.typeContrat || 'Non défini'}`, margin, y);
-    y += lineHeight * 2;
+    doc.text(`Date d'Émission: ${new Date().toLocaleDateString()}`, pageWidth - margin - 50, y);
+    y += 15;
+
+    // Tableau Employé
+    doc.setFontSize(16);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(primaryColor);
+    doc.text('Informations de l\'Employé', margin, y);
+    y += 10;
+
+    // Bordure du tableau
+    doc.setDrawColor(grayBorder);
+    doc.setLineWidth(0.5);
+    doc.rect(margin, y - 5, pageWidth - 2 * margin, 40); // Hauteur ajustée pour contenu
+
+    doc.setFontSize(12);
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(textColor);
+    doc.text(`Nom: ${employe.nom || 'Non défini'}`, margin + 5, y + 5);
+    doc.text(`Prénom: ${employe.prenom || 'Non défini'}`, margin + 5, y + 15);
+    doc.text(`Adresse: ${employe.adresse || 'Non défini'}`, margin + 5, y + 25);
+    y += 50;
+
+    // Tableau Contrat
+    doc.setFontSize(16);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(primaryColor);
+    doc.text('Informations du Contrat', margin, y);
+    y += 10;
+
+    // Bordure du tableau
+    doc.setDrawColor(grayBorder);
+    doc.rect(margin, y - 5, pageWidth - 2 * margin, 60); // Hauteur ajustée
+
+    doc.setFontSize(12);
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(textColor);
+    doc.text(`ID Employé: ${contrat.idEmploye || 'Non défini'}`, margin + 5, y + 5);
+    doc.text(`Date de Début: ${contrat.dateDebut ? new Date(contrat.dateDebut).toLocaleDateString() : 'Non défini'}`, margin + 5, y + 15);
+    doc.text(`Nombre de Mois: ${contrat.nombreMois || 'Non défini'}`, margin + 5, y + 25);
+    doc.text(`Type de Contrat: ${contrat.typeContrat || 'Non défini'}`, margin + 5, y + 35);
+    doc.text(`Statut: ${contrat.statut || 'Actif'}`, margin + 5, y + 45); // Statut par défaut
+    y += 70;
+
+    // Signature
+    doc.setFontSize(12);
+    doc.setFont('Helvetica', 'italic');
+    doc.setTextColor(primaryColor);
+    doc.text('Signé par: Système de Gestion RH', margin, y);
+    doc.setDrawColor(secondaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y + 5, margin + 60, y + 5); // Ligne de signature
 
     // Footer
     doc.setFontSize(10);
-    doc.setTextColor(grayColor);
-    doc.text(`Généré le ${new Date().toLocaleDateString()}`, pageWidth / 2, pageHeight - margin, { align: 'center' });
+    doc.setTextColor('#64748b');
+    doc.text(`Généré automatiquement par le Système RH - Page 1`, pageWidth / 2, pageHeight - margin, { align: 'center' });
+
+    // Bordure de page
+    doc.setDrawColor(grayBorder);
+    doc.setLineWidth(0.2);
+    doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
 
     doc.save(`contrat_${id}.pdf`);
   };
@@ -181,9 +213,11 @@ const DetailsCandidatContrat = () => {
             <div style={styles.infoGrid}>
               <div style={styles.infoItem}>
                 <span style={styles.infoLabel}>Date de Début :</span>
-                <span style={styles.infoValue}>{contrat.dateDebut
-                  ? new Date(contrat.dateDebut).toLocaleDateString()
-                  : 'Non défini'}</span>
+                <span style={styles.infoValue}>
+                  {contrat.dateDebut
+                    ? new Date(contrat.dateDebut).toLocaleDateString()
+                    : 'Non défini'}
+                </span>
               </div>
               <div style={styles.infoItem}>
                 <span style={styles.infoLabel}>Nombre de Mois :</span>

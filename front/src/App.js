@@ -9,6 +9,7 @@ import RepondreTestQCM from './pages/QCM/RepondreTestQCM';
 import AnnoncesPage from './pages/annonce/AnnoncesPage';
 import DetailsAnnonce from './pages/annonce/DetailsAnnonce';
 import ModifierAnnonce from './pages/annonce/ModifierAnnonce';
+import CalendrierEntretiens from './pages/calendrier/CalendrierEntretiens';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 import Profils from './pages/Profils';
@@ -81,6 +82,7 @@ function App() {
                     <Route path="/annonces" element={<AnnoncesPage />} />
             <Route path="/annonces/:id/details" element={<DetailsAnnonce />} />
             <Route path="/annonces/:id/modifier" element={<ModifierAnnonce />} />
+                    <Route path="/calendrier" element={<CalendrierEntretiens />} />
                     <Route path="/login" element={<Navigate to="/" replace />} />
                     <Route path="/inscription" element={<Navigate to="/" replace />} />
                   </Routes>

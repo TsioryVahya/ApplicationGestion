@@ -29,12 +29,14 @@ class AnnonceService {
     try {
       const [rows] = await pool.execute(
         `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.reference,
-                a.idDepartement, a.idProfil,
+                a.idDepartement, a.idProfil, a.idTypeAnnonce,
                 d.nom as nomDepartement,
-                p.nom as nomProfil
+                p.nom as nomProfil,
+                t.libelle as typeAnnonce
          FROM Annonce a 
          LEFT JOIN Departement d ON a.idDepartement = d.id 
          LEFT JOIN Profil p ON a.idProfil = p.id
+         LEFT JOIN TypeAnnonce t ON a.idTypeAnnonce = t.id
          WHERE a.id = ?`,
         [id]
       );
@@ -52,8 +54,10 @@ class AnnonceService {
                 a.description,
                 a.dateDebut,
                 a.dateFin,
+                a.reference,
                 a.idDepartement,
                 a.idProfil,
+                a.idTypeAnnonce,
                 d.nom AS nomDepartement,
                 p.nom AS nomProfil,
                 t.libelle AS typeAnnonce
@@ -75,13 +79,15 @@ class AnnonceService {
   static async obtenirAnnoncesParDepartement(idDepartement) {
     try {
       const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.nomPoste,
-                a.idDepartement, a.idProfil,
+        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.reference,
+                a.idDepartement, a.idProfil, a.idTypeAnnonce,
                 d.nom as nomDepartement,
-                p.nom as nomProfil
+                p.nom as nomProfil,
+                t.libelle as typeAnnonce
          FROM Annonce a 
          LEFT JOIN Departement d ON a.idDepartement = d.id 
          LEFT JOIN Profil p ON a.idProfil = p.id
+         LEFT JOIN TypeAnnonce t ON a.idTypeAnnonce = t.id
          WHERE a.idDepartement = ?
          ORDER BY a.dateDebut DESC`,
         [idDepartement]
@@ -93,19 +99,21 @@ class AnnonceService {
     }
   }
 
-  // Rechercher des annonces par nom de poste
+  // Rechercher des annonces par référence
   static async rechercherAnnonces(terme) {
     try {
       const searchTerm = `%${terme}%`;
       const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.nomPoste,
-                a.idDepartement, a.idProfil,
+        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.reference,
+                a.idDepartement, a.idProfil, a.idTypeAnnonce,
                 d.nom as nomDepartement,
-                p.nom as nomProfil
+                p.nom as nomProfil,
+                t.libelle as typeAnnonce
          FROM Annonce a 
          LEFT JOIN Departement d ON a.idDepartement = d.id 
          LEFT JOIN Profil p ON a.idProfil = p.id
-         WHERE a.nomPoste LIKE ? OR a.description LIKE ? OR d.nom LIKE ?
+         LEFT JOIN TypeAnnonce t ON a.idTypeAnnonce = t.id
+         WHERE a.reference LIKE ? OR a.description LIKE ? OR d.nom LIKE ?
          ORDER BY a.dateDebut DESC`,
         [searchTerm, searchTerm, searchTerm]
       );
@@ -122,12 +130,31 @@ class AnnonceService {
     try {
       await connection.beginTransaction();
       
-      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, criteres } = annonceData;
+      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce, criteres } = annonceData;
+      
+      // Debug: afficher les données reçues
+      console.log('Données reçues pour création annonce:', {
+        description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce
+      });
+      
+      // Convertir les undefined en null pour MySQL
+      const params = [
+        description !== undefined ? description : null,
+        dateDebut !== undefined ? dateDebut : null,
+        dateFin !== undefined ? dateFin : null,
+        reference !== undefined ? reference : null,
+        idDepartement !== undefined ? idDepartement : null,
+        idProfil !== undefined ? idProfil : null,
+        idTypeAnnonce !== undefined ? idTypeAnnonce : null
+      ];
+      
+      // Debug: afficher les paramètres après conversion
+      console.log('Paramètres après conversion:', params);
       
       // Créer l'annonce
       const [result] = await connection.execute(
-        'INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, idProfil) VALUES (?, ?, ?, ?, ?, ?)',
-        [description, dateDebut, dateFin, reference, idDepartement, idProfil]
+        'INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        params
       );
       
       const annonceId = result.insertId;
@@ -135,9 +162,19 @@ class AnnonceService {
       // Sauvegarder les critères si fournis
       if (criteres && criteres.length > 0) {
         for (const critere of criteres) {
+          // Convertir les undefined en null pour MySQL
+          const critereParams = [
+            idProfil !== undefined ? idProfil : null,
+            critere.idCritere !== undefined ? critere.idCritere : null,
+            critere.valeurDouble !== undefined ? critere.valeurDouble : null,
+            critere.valeurVarchar !== undefined ? critere.valeurVarchar : null,
+            critere.valeurBool !== undefined ? critere.valeurBool : null,
+            critere.estObligatoire !== undefined ? critere.estObligatoire : false
+          ];
+          
           await connection.execute(
             'INSERT INTO CritereProfil (idProfil, idCritere, valeurDouble, valeurVarchar, valeurBool, estObligatoire) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE valeurDouble = VALUES(valeurDouble), valeurVarchar = VALUES(valeurVarchar), valeurBool = VALUES(valeurBool)',
-            [idProfil, critere.idCritere, critere.valeurDouble || null, critere.valeurVarchar || null, critere.valeurBool || null, critere.estObligatoire || false]
+            critereParams
           );
         }
       }
@@ -156,11 +193,23 @@ class AnnonceService {
   // Mettre à jour une annonce
   static async mettreAJourAnnonce(id, annonceData) {
     try {
-      const { description, dateDebut, dateFin, reference, idDepartement, idProfil } = annonceData;
+      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce } = annonceData;
+      
+      // Convertir les undefined en null pour MySQL
+      const params = [
+        description !== undefined ? description : null,
+        dateDebut !== undefined ? dateDebut : null,
+        dateFin !== undefined ? dateFin : null,
+        reference !== undefined ? reference : null,
+        idDepartement !== undefined ? idDepartement : null,
+        idProfil !== undefined ? idProfil : null,
+        idTypeAnnonce !== undefined ? idTypeAnnonce : null,
+        id
+      ];
       
       const [result] = await pool.execute(
-        'UPDATE Annonce SET description = ?, dateDebut = ?, dateFin = ?, nomPoste = ?, idDepartement = ?, idProfil = ? WHERE id = ?',
-        [description, dateDebut, dateFin, nomPoste, idDepartement, idProfil, id]
+        'UPDATE Annonce SET description = ?, dateDebut = ?, dateFin = ?, reference = ?, idDepartement = ?, idProfil = ?, idTypeAnnonce = ? WHERE id = ?',
+        params
       );
       
       if (result.affectedRows === 0) {

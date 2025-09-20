@@ -18,6 +18,8 @@ import CritereProfils from './pages/CritereProfils';
 import OffresClient from './pages/client/OffresClient';
 import FormulaireCandidature from './pages/client/FormulaireCandidature';
 import CandidatureConfirmee from './pages/client/CandidatureConfirmee';
+import HireHubHome from './pages/client/HireHubHome';
+import DetailsAnnonceClient from './pages/client/DetailsAnnonceClient';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -70,6 +72,11 @@ function App() {
           <Route path="/offres" element={<OffresClient />} />
           <Route path="/candidature/:annonceId" element={<FormulaireCandidature />} />
           <Route path="/candidature-confirmee" element={<CandidatureConfirmee />} />
+          
+          {/* Routes client HireHub - publiques */}
+          <Route path="/HireHub" element={<HireHubHome />} />
+          <Route path="/HireHub/annonces" element={<OffresClient />} />
+          <Route path="/HireHub/annonces/:id" element={<DetailsAnnonceClient />} />
           
           {/* Routes conditionnelles selon l'authentification */}
           <Route path="/*" element={

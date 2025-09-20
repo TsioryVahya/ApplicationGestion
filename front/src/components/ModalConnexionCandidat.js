@@ -12,6 +12,7 @@ const ModalConnexionCandidat = ({ isOpen, onClose, onSuccess, selectedAnnonce })
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -22,6 +23,7 @@ const ModalConnexionCandidat = ({ isOpen, onClose, onSuccess, selectedAnnonce })
     setErreur('');
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setShowSuccessMessage(false);
   };
 
   const handleClose = () => {
@@ -73,10 +75,12 @@ const ModalConnexionCandidat = ({ isOpen, onClose, onSuccess, selectedAnnonce })
         setMode('login');
         setErreur('');
         setFormData({ email: formData.email, motDePasse: '', confirmMotDePasse: '' });
-        // Afficher un message de succès temporaire
+        // Afficher un message de succès
+        setShowSuccessMessage(true);
+        // Masquer le message après 5 secondes
         setTimeout(() => {
-          setErreur('');
-        }, 3000);
+          setShowSuccessMessage(false);
+        }, 5000);
         return;
       }
 
@@ -117,7 +121,7 @@ const ModalConnexionCandidat = ({ isOpen, onClose, onSuccess, selectedAnnonce })
             </div>
           )}
 
-          {mode === 'login' && formData.email && (
+          {showSuccessMessage && (
             <div style={styles.succes}>
               Inscription réussie ! Connectez-vous avec votre email.
             </div>

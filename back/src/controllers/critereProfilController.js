@@ -1,4 +1,3 @@
-
 const CritereProfilService = require('../services/critereProfilService');
 
 class CritereProfilController {
@@ -11,6 +10,51 @@ class CritereProfilController {
                                 message: "Liste des associations Critere-Profil récupérée avec succès",
                                 data: associations,
                                 total: associations.length
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur interne du serveur",
+                                error: error.message
+                        });
+                }
+        }
+
+        static async getAllWithDetails(req, res) {
+                try {
+                        const associations = await CritereProfilService.getAllWithDetails();
+                        res.status(200).json({
+                                success: true,
+                                message: "Liste détaillée des associations Critere-Profil récupérée avec succès",
+                                data: associations,
+                                total: associations.length
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur interne du serveur",
+                                error: error.message
+                        });
+                }
+        }
+
+        static async getFiltered(req, res) {
+                try {
+                        const filters = {
+                                idProfil: req.query.idProfil,
+                                idCritere: req.query.idCritere,
+                                estObligatoire: req.query.estObligatoire === 'true' ? true : req.query.estObligatoire === 'false' ? false : undefined,
+                                hasValue: req.query.hasValue === 'true',
+                                search: req.query.search
+                        };
+                        
+                        const associations = await CritereProfilService.getFiltered(filters);
+                        res.status(200).json({
+                                success: true,
+                                message: "Associations filtrées récupérées avec succès",
+                                data: associations,
+                                total: associations.length,
+                                filters: filters
                         });
                 } catch (error) {
                         res.status(500).json({

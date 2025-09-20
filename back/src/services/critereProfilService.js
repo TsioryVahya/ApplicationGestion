@@ -7,6 +7,68 @@ class CritereProfilService {
 		return rows;
 	}
 
+	// Récupérer les associations avec détails des profils et critères
+	static async getAllWithDetails() {
+		const query = `
+			SELECT 
+				cp.*,
+				p.nom as profilNom,
+				c.nom as critereNom
+			FROM CritereProfil cp
+			LEFT JOIN Profil p ON cp.idProfil = p.id
+			LEFT JOIN Critere c ON cp.idCritere = c.id
+			ORDER BY p.nom, c.nom
+		`;
+		const [rows] = await pool.execute(query);
+		return rows;
+	}
+
+	// Récupérer les associations filtrées
+	static async getFiltered(filters = {}) {
+		let query = `
+			SELECT 
+				cp.*,
+				p.nom as profilNom,
+				c.nom as critereNom
+			FROM CritereProfil cp
+			LEFT JOIN Profil p ON cp.idProfil = p.id
+			LEFT JOIN Critere c ON cp.idCritere = c.id
+			WHERE 1=1
+		`;
+		
+		const params = [];
+		
+		if (filters.idProfil) {
+			query += ' AND cp.idProfil = ?';
+			params.push(filters.idProfil);
+		}
+		
+		if (filters.idCritere) {
+			query += ' AND cp.idCritere = ?';
+			params.push(filters.idCritere);
+		}
+		
+		if (filters.estObligatoire !== undefined) {
+			query += ' AND cp.estObligatoire = ?';
+			params.push(filters.estObligatoire);
+		}
+		
+		if (filters.hasValue) {
+			query += ' AND (cp.valeurDouble IS NOT NULL OR cp.valeurVarchar IS NOT NULL OR cp.valeurBool IS NOT NULL)';
+		}
+		
+		if (filters.search) {
+			query += ' AND (p.nom LIKE ? OR c.nom LIKE ? OR cp.valeurVarchar LIKE ?)';
+			const searchTerm = `%${filters.search}%`;
+			params.push(searchTerm, searchTerm, searchTerm);
+		}
+		
+		query += ' ORDER BY p.nom, c.nom';
+		
+		const [rows] = await pool.execute(query, params);
+		return rows;
+	}
+
 	// Récupérer un CritereProfil par ID
 	static async getById(id) {
 		const [rows] = await pool.execute('SELECT * FROM CritereProfil WHERE id = ?', [id]);

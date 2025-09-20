@@ -2,20 +2,24 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   FiHome, 
   FiUsers, 
-  FiSettings, 
-  FiBarChart2, 
   FiLogOut, 
   FiUser,
   FiMenu,
   FiX,
   FiEdit3,
-  FiBriefcase
+  FiBriefcase,
+  FiTarget,
+  FiFilter,
+  FiLayers,
+  FiChevronDown,
+  FiChevronUp
 } from 'react-icons/fi';
 import { useState } from 'react';
 
 const Sidebar = ({ user, onLogout }) => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isProfilDropdownOpen, setIsProfilDropdownOpen] = useState(false);
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -25,13 +29,18 @@ const Sidebar = ({ user, onLogout }) => {
     { path: '/', icon: FiHome, label: 'Tableau de bord', color: '#3B82F6' },
     { path: '/utilisateurs', icon: FiUsers, label: 'Utilisateurs', color: '#10B981' },
     { path: '/annonces', icon: FiBriefcase, label: 'Annonces', color: '#DC2626' },
-    { path: '/qcm', icon: FiEdit3, label: 'Tests QCM', color: '#8B5CF6' },
-    { path: '/profils', icon: FiBarChart2, label: 'Profils', color: '#F59E0B' },
-    { path: '/criteres', icon: FiBarChart2, label: 'Criteres', color: '#F59E0B' },
-    { path: '/critereprofils', icon: FiBarChart2, label: 'Critère-Profils', color: '#F59E0B' },
-    { path: '/rapports', icon: FiBarChart2, label: 'Rapports', color: '#F59E0B' },
-    { path: '/parametres', icon: FiSettings, label: 'Paramètres', color: '#6B7280' }
+    { path: '/qcm', icon: FiEdit3, label: 'Tests QCM', color: '#8B5CF6' }
   ];
+
+  const profilMenuItems = [
+    { path: '/profils', icon: FiTarget, label: 'Profils', color: '#F59E0B' },
+    { path: '/criteres', icon: FiFilter, label: 'Critères', color: '#059669' },
+    { path: '/critereprofils', icon: FiLayers, label: 'Critère-Profils', color: '#8B5CF6' }
+  ];
+
+  const isProfilSectionActive = () => {
+    return profilMenuItems.some(item => location.pathname === item.path);
+  };
 
   return (
     <div style={{...styles.sidebar, width: isCollapsed ? '80px' : '280px'}}>
@@ -91,6 +100,70 @@ const Sidebar = ({ user, onLogout }) => {
               </Link>
             );
           })}
+          
+          {/* Profil Dropdown */}
+          <div style={styles.dropdownContainer}>
+            <button
+              onClick={() => setIsProfilDropdownOpen(!isProfilDropdownOpen)}
+              style={{
+                ...styles.menuItem,
+                ...(isProfilSectionActive() ? styles.activeMenuItem : {}),
+                justifyContent: isCollapsed ? 'center' : 'space-between',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                justifyContent: isCollapsed ? 'center' : 'flex-start'
+              }}>
+                <div style={{...styles.menuIcon, color: isProfilSectionActive() ? '#ffffff' : '#F59E0B'}}>
+                  <FiLayers size={20} />
+                </div>
+                {!isCollapsed && (
+                  <span style={{...styles.menuLabel, color: isProfilSectionActive() ? '#ffffff' : '#64748B'}}>
+                    Profil
+                  </span>
+                )}
+              </div>
+              {!isCollapsed && (
+                <div style={{...styles.menuIcon, color: isProfilSectionActive() ? '#ffffff' : '#64748B'}}>
+                  {isProfilDropdownOpen ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+                </div>
+              )}
+            </button>
+            
+            {isProfilDropdownOpen && !isCollapsed && (
+              <div style={styles.dropdownMenu}>
+                {profilMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+                  
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      style={{
+                        ...styles.dropdownItem,
+                        ...(active ? styles.activeDropdownItem : {})
+                      }}
+                    >
+                      <div style={{...styles.menuIcon, color: active ? '#ffffff' : item.color}}>
+                        <Icon size={18} />
+                      </div>
+                      <span style={{...styles.menuLabel, color: active ? '#ffffff' : '#64748B', fontSize: '14px'}}>
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -232,6 +305,30 @@ const styles = {
   menuLabel: {
     fontSize: '15px',
     fontWeight: '500'
+  },
+  dropdownContainer: {
+    position: 'relative'
+  },
+  dropdownMenu: {
+    marginLeft: '12px',
+    marginTop: '4px',
+    borderLeft: '2px solid #334155',
+    paddingLeft: '16px'
+  },
+  dropdownItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '8px 12px',
+    margin: '2px 0',
+    borderRadius: '8px',
+    textDecoration: 'none',
+    transition: 'all 0.2s ease',
+    cursor: 'pointer'
+  },
+  activeDropdownItem: {
+    backgroundColor: '#1e40af',
+    transform: 'translateX(2px)'
   },
   sidebarFooter: {
     padding: '20px',

@@ -67,9 +67,10 @@ router.post('/criteres', CritereController.create);
 router.put('/criteres/:id', CritereController.update);
 router.delete('/criteres/:id', CritereController.delete);
 
-
 // CRUD CritereProfil (association)
 router.get('/critereprofils', CritereProfilController.getAll);
+router.get('/critereprofils/details', CritereProfilController.getAllWithDetails);
+router.get('/critereprofils/filter', CritereProfilController.getFiltered);
 router.get('/critereprofils/:id', CritereProfilController.getById);
 router.post('/critereprofils', CritereProfilController.create);
 router.put('/critereprofils/:id', CritereProfilController.update);

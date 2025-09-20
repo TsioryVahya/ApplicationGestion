@@ -10,6 +10,7 @@ const CritereController = require('../controllers/critereController');
 const CritereProfilController = require('../controllers/critereProfilController');
 const CandidatController = require('../controllers/candidatController');
 const EntretienController = require('../controllers/entretienController');
+const CompteCandidatController = require('../controllers/compteCandidatController');
 
 // Routes d'authentification
 router.post('/auth/inscription', AuthController.inscription);
@@ -36,6 +37,10 @@ router.delete('/qcm/tests/:id', AuthController.verifierToken, QcmController.supp
 router.get('/utilisateurs', AuthController.verifierToken, UtilisateursController.obtenirTousLesUtilisateurs);
 router.get('/utilisateurs/:id', AuthController.verifierToken, UtilisateursController.obtenirUtilisateurParId);
 router.post('/utilisateurs', AuthController.verifierToken, UtilisateursController.creerUtilisateur);
+
+// Routes publiques pour les clients (sans authentification)
+router.get('/client/annonce', AnnonceController.obtenirAnnoncesActives);
+router.get('/client/annonce/:id', AnnonceController.obtenirAnnonceParId);
 
 // Routes pour les annonces (protégées)
 router.get('/annonces', AuthController.verifierToken, AnnonceController.obtenirToutesLesAnnonces);
@@ -98,5 +103,17 @@ router.get('/candidats/:id', AuthController.verifierToken, CandidatController.ob
 router.post('/candidats', AuthController.verifierToken, CandidatController.creerCandidat);
 router.put('/candidats/:id/statut', AuthController.verifierToken, CandidatController.mettreAJourStatutCandidat);
 router.delete('/candidats/:id', AuthController.verifierToken, CandidatController.supprimerCandidat);
+
+// Routes pour les comptes candidats
+router.post('/candidats/inscription', CompteCandidatController.inscription);
+router.post('/candidats/connexion', CompteCandidatController.connexion);
+router.get('/candidats/profil', CompteCandidatController.verifierTokenCandidat, CompteCandidatController.obtenirProfil);
+router.put('/candidats/mot-de-passe', CompteCandidatController.verifierTokenCandidat, CompteCandidatController.mettreAJourMotDePasse);
+router.delete('/candidats/compte', CompteCandidatController.verifierTokenCandidat, CompteCandidatController.supprimerCompte);
+router.post('/candidats/candidature', CompteCandidatController.verifierTokenCandidat, CompteCandidatController.soumettreCandidat);
+
+// Routes d'administration pour les comptes candidats
+router.get('/candidats/admin/comptes', AuthController.verifierToken, CompteCandidatController.obtenirTousLesComptes);
+router.get('/candidats/admin/statistiques', AuthController.verifierToken, CompteCandidatController.obtenirStatistiques);
 
 module.exports = router;

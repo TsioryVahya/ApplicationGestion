@@ -48,14 +48,19 @@ class AnnonceService {
   // Récupérer les annonces actives (date fin >= aujourd'hui)
   static async obtenirAnnoncesActives() {
     try {
-      const [rows] = await pool.execute(
-        `SELECT a.id, a.description, a.dateDebut, a.dateFin, a.nomPoste,
-                a.idDepartement, a.idProfil,
-                d.nom as nomDepartement,
-                p.nom as nomProfil
-         FROM Annonce a 
-         LEFT JOIN Departement d ON a.idDepartement = d.id 
+      const [rows] = await pool.execute(`SELECT a.id,
+                a.description,
+                a.dateDebut,
+                a.dateFin,
+                a.idDepartement,
+                a.idProfil,
+                d.nom AS nomDepartement,
+                p.nom AS nomProfil,
+                t.libelle AS typeAnnonce
+         FROM Annonce a
+         LEFT JOIN Departement d ON a.idDepartement = d.id
          LEFT JOIN Profil p ON a.idProfil = p.id
+         LEFT JOIN TypeAnnonce t ON a.idTypeAnnonce = t.id
          WHERE a.dateFin >= CURDATE()
          ORDER BY a.dateDebut DESC`
       );

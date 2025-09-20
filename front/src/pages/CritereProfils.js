@@ -172,32 +172,39 @@ const GestionCritereProfils = () => {
         </button>
       </div>
 
-      <div style={styles.tableContainer}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>ID</th>
-              <th style={styles.th}>Profil</th>
-              <th style={styles.th}>Critère</th>
-              <th style={styles.th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {associations.map(a => (
-              <tr key={a.id} style={styles.tr}>
-                <td style={styles.td}>{a.id}</td>
-                <td style={styles.td}>{profils.find(p => p.id === a.idProfil)?.nom || a.idProfil}</td>
-                <td style={styles.td}>{criteres.find(c => c.id === a.idCritere)?.nom || a.idCritere}</td>
-                <td style={styles.td}>
-                  <div style={styles.actions}>
-                    <button style={styles.editButton} onClick={() => openEditModal(a)}><FiEdit3 size={16} /></button>
-                    <button style={styles.deleteButton} onClick={() => handleDelete(a.id)}><FiTrash2 size={16} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={styles.cardGrid}>
+        {/* Regrouper les associations par profil */}
+        {profils.map(profil => {
+          const assocProfil = associations.filter(a => a.idProfil === profil.id);
+          if (assocProfil.length === 0) return null;
+          return (
+            <div key={profil.id} style={styles.card}>
+              <div style={styles.cardHeader}>
+                <div style={styles.cardTitle}>{profil.nom}</div>
+              </div>
+              <div style={styles.cardBody}>
+                {assocProfil.map(a => {
+                  const critere = criteres.find(c => c.id === a.idCritere);
+                  return (
+                    <div key={a.id} style={styles.critereRow}>
+                      <div style={{fontWeight:'600', color:'#1e293b'}}>{critere?.nom || a.idCritere}</div>
+                      <div style={{fontSize:'14px', color:'#64748b'}}>
+                        <span><b>Valeur Double:</b> {a.valeurDouble !== null && a.valeurDouble !== undefined ? a.valeurDouble : <span style={{color:'#b6bcc8'}}>N/A</span>}</span> |{' '}
+                        <span><b>Valeur Varchar:</b> {a.valeurVarchar || <span style={{color:'#b6bcc8'}}>N/A</span>}</span> |{' '}
+                        <span><b>Booléen:</b> {a.valeurBool === true ? 'Oui' : a.valeurBool === false ? 'Non' : <span style={{color:'#b6bcc8'}}>N/A</span>}</span> |{' '}
+                        <span><b>Obligatoire:</b> {a.estObligatoire ? 'Oui' : 'Non'}</span>
+                      </div>
+                      <div style={styles.cardActions}>
+                        <button style={styles.editButton} onClick={() => openEditModal(a)}><FiEdit3 size={16} /></button>
+                        <button style={styles.deleteButton} onClick={() => handleDelete(a.id)}><FiTrash2 size={16} /></button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {showModal && (
@@ -368,36 +375,62 @@ const styles = {
     transition: 'all 0.2s ease',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
-  tableContainer: {
-    backgroundColor: '#ffffff',
+  cardGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+    gap: '24px',
+    marginBottom: '32px'
+  },
+  card: {
+    backgroundColor: '#fff',
     borderRadius: '12px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
     border: '1px solid #e2e8f0',
-    overflow: 'hidden'
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    minHeight: '180px',
+    position: 'relative'
   },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse'
+  cardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '8px'
   },
-  th: {
-    padding: '16px',
-    textAlign: 'left',
-    backgroundColor: '#f8fafc',
-    color: '#64748b',
+  cardTitle: {
+    fontSize: '18px',
     fontWeight: '600',
-    fontSize: '14px',
-    borderBottom: '1px solid #e2e8f0'
+    color: '#1e293b'
   },
-  tr: {
-    borderBottom: '1px solid #e2e8f0',
-    '&:last-child': {
-      borderBottom: 'none'
-    }
+  cardSubTitle: {
+    fontSize: '15px',
+    color: '#64748b',
+    fontWeight: '400',
+    marginLeft: '8px'
   },
-  td: {
-    padding: '16px',
-    fontSize: '14px',
-    color: '#334155'
+  cardActions: {
+    display: 'flex',
+    gap: '8px'
+  },
+  cardBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    fontSize: '15px',
+    color: '#334155',
+    marginTop: '8px'
+  },
+  critereRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '12px',
+    background: '#f8fafc',
+    borderRadius: '8px',
+    padding: '8px 12px',
+    marginBottom: '4px'
   },
   actions: {
     display: 'flex',

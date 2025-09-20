@@ -56,8 +56,13 @@ const DetailsAnnonce = () => {
       });
       const data = await response.json();
       
+      console.log('Réponse API candidats:', data); // Debug
+      
       if (data.success) {
         setCandidats(data.data);
+        console.log('Candidats chargés:', data.data); // Debug
+      } else {
+        console.error('Erreur API candidats:', data.message);
       }
       setLoading(false);
     } catch (err) {
@@ -191,15 +196,9 @@ const DetailsAnnonce = () => {
                     </div>
                     <div style={styles.candidatContact}>
                       <div style={styles.contactItem}>
-                        <FiMail size={14} color="#6b7280" />
-                        <span>{candidat.email}</span>
+                        <FiUser size={14} color="#6b7280" />
+                        <span>ID: {candidat.id}</span>
                       </div>
-                      {candidat.telephone && (
-                        <div style={styles.contactItem}>
-                          <FiPhone size={14} color="#6b7280" />
-                          <span>{candidat.telephone}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                   <div style={styles.candidatStatut}>
@@ -223,28 +222,18 @@ const DetailsAnnonce = () => {
                       <span>{candidat.adresse}</span>
                     </div>
                   )}
-                  {candidat.diplomeNom && (
-                    <div style={styles.detailItem}>
-                      <span style={styles.detailLabel}>Diplôme:</span>
-                      <span>{candidat.diplomeNom}</span>
-                    </div>
-                  )}
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>Date de candidature:</span>
-                    <span>{formatDate(candidat.dateCreation || candidat.dateCandidature)}</span>
-                  </div>
                 </div>
 
-                {candidat.lettreMotivation && (
+                {candidat.cv && (
                   <div style={styles.motivationSection}>
                     <div style={styles.motivationHeader}>
                       <FiFileText size={16} color="#6b7280" />
-                      <span>Lettre de motivation</span>
+                      <span>CV / Profil</span>
                     </div>
                     <p style={styles.motivationText}>
-                      {candidat.lettreMotivation.length > 200 
-                        ? candidat.lettreMotivation.substring(0, 200) + '...'
-                        : candidat.lettreMotivation
+                      {candidat.cv.length > 200 
+                        ? candidat.cv.substring(0, 200) + '...'
+                        : candidat.cv
                       }
                     </p>
                   </div>

@@ -301,6 +301,17 @@ class AnnonceService {
       throw error;
     }
   }
+
+  // Obtenir tous les types d'annonce
+  static async obtenirTypesAnnonce() {
+    try {
+      const [rows] = await pool.execute('SELECT id, libelle FROM TypeAnnonce ORDER BY libelle');
+      return rows;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des types d\'annonce:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AnnonceService;

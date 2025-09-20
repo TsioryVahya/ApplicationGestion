@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   FiBriefcase, 
   FiCalendar, 
@@ -11,35 +12,66 @@ import {
   FiX
 } from 'react-icons/fi';
 
-const CreerAnnonce = ({ onRetour }) => {
+const ModifierAnnonce = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     reference: '',
     description: '',
     dateDebut: '',
     dateFin: '',
     idDepartement: '',
-    idProfil: '',
-    idTypeAnnonce: ''
+    idProfil: ''
   });
 
   const [profils, setProfils] = useState([]);
   const [departements, setDepartements] = useState([]);
-  const [typesAnnonce, setTypesAnnonce] = useState([]);
   const [criteresDisponibles, setCriteresDisponibles] = useState([]);
   const [tousLesCriteres, setTousLesCriteres] = useState([]);
   const [criteresSelectionnes, setCriteresSelectionnes] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     chargerDonneesInitiales();
-  }, []);
+    chargerAnnonce();
+  }, [id]);
 
   useEffect(() => {
     if (formData.idProfil) {
       chargerCriteresProfil(formData.idProfil);
     }
   }, [formData.idProfil]);
+
+  const chargerAnnonce = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/annonces/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        const annonce = data.data;
+        setFormData({
+          reference: annonce.reference || '',
+          description: annonce.description || '',
+          dateDebut: annonce.dateDebut ? annonce.dateDebut.split('T')[0] : '',
+          dateFin: annonce.dateFin ? annonce.dateFin.split('T')[0] : '',
+          idDepartement: annonce.idDepartement || '',
+          idProfil: annonce.idProfil || ''
+        });
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      setError('Erreur lors du chargement de l\'annonce');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const chargerDonneesInitiales = async () => {
     try {
@@ -70,15 +102,6 @@ const CreerAnnonce = ({ onRetour }) => {
       const criteresData = await criteresResponse.json();
       if (criteresData.success) {
         setTousLesCriteres(criteresData.data);
-      }
-
-      // Charger les types d'annonce
-      const typesResponse = await fetch('/api/annonces/types', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const typesData = await typesResponse.json();
-      if (typesData.success) {
-        setTypesAnnonce(typesData.data);
       }
     } catch (err) {
       setError('Erreur lors du chargement des données');
@@ -142,11 +165,11 @@ const CreerAnnonce = ({ onRetour }) => {
   };
 
   const modifierValeurCritere = (idCritere, champ, valeur) => {
-    setCriteresSelectionnes(prev =>
-      prev.map(c => 
-        c.idCritere === idCritere 
-          ? { ...c, [champ]: valeur }
-          : c
+    setCriteresSelectionnes(prev => 
+      prev.map(critere => 
+        critere.idCritere === idCritere 
+          ? { ...critere, [champ]: valeur }
+          : critere
       )
     );
   };
@@ -156,16 +179,15 @@ const CreerAnnonce = ({ onRetour }) => {
     
     if (critereOriginal?.valeurBool !== null) {
       return (
-        <div style={styles.checkboxContainer}>
-          <input
-            type="checkbox"
-            id={`critere-${critere.idCritere}`}
-            checked={critere.valeurBool}
-            onChange={(e) => modifierValeurCritere(critere.idCritere, 'valeurBool', e.target.checked)}
-            style={styles.checkbox}
-          />
-          <label htmlFor={`critere-${critere.idCritere}`} style={styles.checkboxLabel}>
-            {critere.nom}
+        <div style={styles.inputGroup}>
+          <label style={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={critere.valeurBool}
+              onChange={(e) => modifierValeurCritere(critere.idCritere, 'valeurBool', e.target.checked)}
+              style={styles.checkbox}
+            />
+            <span>{critere.nom}</span>
           </label>
         </div>
       );
@@ -208,8 +230,8 @@ const CreerAnnonce = ({ onRetour }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/annonces', {
-        method: 'POST',
+      const response = await fetch(`/api/annonces/${id}`, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -223,50 +245,40 @@ const CreerAnnonce = ({ onRetour }) => {
       const data = await response.json();
       
       if (data.success) {
-        alert('Annonce créée avec succès !');
-        if (onRetour) onRetour();
+        alert('Annonce modifiée avec succès !');
+        navigate('/annonces');
       } else {
-        setError(data.message || 'Erreur lors de la création');
+        setError(data.message);
       }
     } catch (err) {
-      setError('Erreur lors de la création de l\'annonce');
+      setError('Erreur lors de la modification de l\'annonce');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading) return <div style={styles.loading}>Chargement...</div>;
+  if (error) return <div style={styles.error}>Erreur: {error}</div>;
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <button onClick={onRetour} style={styles.backButton}>
+        <button onClick={() => navigate('/annonces')} style={styles.backButton}>
           <FiArrowLeft size={20} />
-          <span>Retour</span>
+          <span>Retour aux annonces</span>
         </button>
-        <div style={styles.headerContent}>
-          <h1 style={styles.title}>Créer une Nouvelle Annonce</h1>
-          <p style={styles.subtitle}>
-            Sélectionnez un profil et configurez les critères pour votre annonce
-          </p>
-        </div>
+        <h1 style={styles.title}>Modifier l'Annonce</h1>
       </div>
 
-      {error && (
-        <div style={styles.errorAlert}>
-          <FiX size={20} />
-          <span>{error}</span>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.formGrid}>
-          {/* Informations de base */}
-          <div style={styles.section}>
-            <h3 style={styles.sectionTitle}>
-              <FiBriefcase size={20} />
-              Informations de Base
-            </h3>
-            
+        <div style={styles.formSection}>
+          <h2 style={styles.sectionTitle}>
+            <FiBriefcase size={20} />
+            Informations Générales
+          </h2>
+
+          <div style={styles.inputRow}>
             <div style={styles.inputGroup}>
               <label style={styles.label}>Référence de l'annonce *</label>
               <input
@@ -279,120 +291,102 @@ const CreerAnnonce = ({ onRetour }) => {
                 placeholder="Ex: REF-2024-001"
               />
             </div>
+          </div>
 
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              style={styles.textarea}
+              rows={4}
+              placeholder="Décrivez le poste et les responsabilités..."
+            />
+          </div>
+
+          <div style={styles.inputRow}>
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
+              <label style={styles.label}>Date de début *</label>
+              <input
+                type="date"
+                name="dateDebut"
+                value={formData.dateDebut}
                 onChange={handleInputChange}
-                style={styles.textarea}
-                rows={4}
-                placeholder="Décrivez le poste et les responsabilités..."
+                style={styles.input}
+                required
               />
             </div>
-
-            <div style={styles.inputRow}>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Date de début *</label>
-                <input
-                  type="date"
-                  name="dateDebut"
-                  value={formData.dateDebut}
-                  onChange={handleInputChange}
-                  style={styles.input}
-                  required
-                />
-              </div>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Date de fin *</label>
-                <input
-                  type="date"
-                  name="dateFin"
-                  value={formData.dateFin}
-                  onChange={handleInputChange}
-                  style={styles.input}
-                  required
-                />
-              </div>
-            </div>
-
-            <div style={styles.inputRow}>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Département *</label>
-                <select
-                  name="idDepartement"
-                  value={formData.idDepartement}
-                  onChange={handleInputChange}
-                  style={styles.select}
-                  required
-                >
-                  <option value="">Sélectionnez un département</option>
-                  {departements.map(dept => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.nom}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Profil recherché *</label>
-                <select
-                  name="idProfil"
-                  value={formData.idProfil}
-                  onChange={handleInputChange}
-                  style={styles.select}
-                  required
-                >
-                  <option value="">Sélectionnez un profil</option>
-                  {profils.map(profil => (
-                    <option key={profil.id} value={profil.id}>
-                      {profil.nom}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Type d'annonce *</label>
+              <label style={styles.label}>Date de fin *</label>
+              <input
+                type="date"
+                name="dateFin"
+                value={formData.dateFin}
+                onChange={handleInputChange}
+                style={styles.input}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={styles.inputRow}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Département *</label>
               <select
-                name="idTypeAnnonce"
-                value={formData.idTypeAnnonce}
+                name="idDepartement"
+                value={formData.idDepartement}
                 onChange={handleInputChange}
                 style={styles.select}
                 required
               >
-                <option value="">Sélectionnez un type d'annonce</option>
-                {typesAnnonce.map(type => (
-                  <option key={type.id} value={type.id}>
-                    {type.libelle}
-                  </option>
+                <option value="">Sélectionnez un département</option>
+                {departements.map(dept => (
+                  <option key={dept.id} value={dept.id}>{dept.nom}</option>
+                ))}
+              </select>
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Profil recherché *</label>
+              <select
+                name="idProfil"
+                value={formData.idProfil}
+                onChange={handleInputChange}
+                style={styles.select}
+                required
+              >
+                <option value="">Sélectionnez un profil</option>
+                {profils.map(profil => (
+                  <option key={profil.id} value={profil.id}>{profil.nom}</option>
                 ))}
               </select>
             </div>
           </div>
+        </div>
 
-          {/* Critères dynamiques */}
+        {/* Section Critères */}
+        <div style={styles.formSection}>
+          <h2 style={styles.sectionTitle}>
+            <FiCheckCircle size={20} />
+            Critères de Sélection
+          </h2>
+
           {formData.idProfil && (
-            <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>
-                <FiCheckCircle size={20} />
-                Critères du Profil
-              </h3>
-
+            <div style={styles.criteresContainer}>
               {/* Critères sélectionnés */}
-              <div style={styles.criteresContainer}>
+              <div style={styles.criteresSelectionnes}>
+                <h3 style={styles.subTitle}>Critères configurés :</h3>
                 {criteresSelectionnes.map(critere => (
-                  <div key={critere.idCritere} style={styles.critereCard}>
+                  <div key={critere.idCritere} style={styles.critereItem}>
                     <div style={styles.critereHeader}>
+                      <span style={styles.critereNom}>{critere.nom}</span>
                       {!critere.estObligatoire && (
                         <button
                           type="button"
                           onClick={() => supprimerCritere(critere.idCritere)}
                           style={styles.removeCritereButton}
                         >
-                          <FiTrash2 size={16} />
+                          <FiX size={16} />
                         </button>
                       )}
                       {critere.estObligatoire && (
@@ -430,7 +424,7 @@ const CreerAnnonce = ({ onRetour }) => {
         <div style={styles.formActions}>
           <button
             type="button"
-            onClick={onRetour}
+            onClick={() => navigate('/annonces')}
             style={styles.cancelButton}
           >
             Annuler
@@ -440,8 +434,8 @@ const CreerAnnonce = ({ onRetour }) => {
             disabled={loading}
             style={styles.submitButton}
           >
-            <FiSave size={20} />
-            <span>{loading ? 'Création...' : 'Créer l\'Annonce'}</span>
+            <FiSave size={16} />
+            <span>{loading ? 'Modification...' : 'Modifier l\'Annonce'}</span>
           </button>
         </div>
       </form>
@@ -451,68 +445,44 @@ const CreerAnnonce = ({ onRetour }) => {
 
 const styles = {
   container: {
-    padding: '32px',
-    backgroundColor: '#f1f5f9',
-    minHeight: '100vh'
+    padding: '20px',
+    maxWidth: '1000px',
+    margin: '0 auto',
+    backgroundColor: '#f8fafc'
   },
   header: {
     display: 'flex',
-    alignItems: 'flex-start',
-    gap: '20px',
-    marginBottom: '32px'
+    alignItems: 'center',
+    marginBottom: '30px',
+    gap: '20px'
   },
   backButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '12px 16px',
-    backgroundColor: '#ffffff',
+    padding: '10px 16px',
+    backgroundColor: '#fff',
     border: '1px solid #e2e8f0',
-    borderRadius: '10px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: '500',
     color: '#475569',
     transition: 'all 0.2s ease'
   },
-  headerContent: {
-    flex: 1
-  },
   title: {
-    fontSize: '32px',
+    fontSize: '28px',
     fontWeight: '700',
     color: '#1e293b',
-    marginBottom: '8px'
-  },
-  subtitle: {
-    fontSize: '16px',
-    color: '#64748b',
-    lineHeight: '1.6'
-  },
-  errorAlert: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '16px',
-    backgroundColor: '#fef2f2',
-    border: '1px solid #fecaca',
-    borderRadius: '12px',
-    color: '#dc2626',
-    marginBottom: '24px'
+    margin: 0
   },
   form: {
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    padding: '32px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e2e8f0'
+    backgroundColor: '#fff',
+    borderRadius: '12px',
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
-  formGrid: {
-    display: 'grid',
-    gap: '32px'
-  },
-  section: {
-    marginBottom: '24px'
+  formSection: {
+    marginBottom: '32px'
   },
   sectionTitle: {
     display: 'flex',
@@ -521,117 +491,113 @@ const styles = {
     fontSize: '20px',
     fontWeight: '600',
     color: '#1e293b',
-    marginBottom: '24px',
+    marginBottom: '20px',
     paddingBottom: '12px',
     borderBottom: '2px solid #e2e8f0'
   },
-  inputGroup: {
-    marginBottom: '20px'
-  },
   inputRow: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '20px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '20px',
+    marginBottom: '20px'
+  },
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
   },
   label: {
-    display: 'block',
     fontSize: '14px',
     fontWeight: '500',
-    color: '#374151',
-    marginBottom: '8px'
+    color: '#374151'
   },
   input: {
-    width: '100%',
-    padding: '12px 16px',
+    padding: '12px',
     border: '1px solid #d1d5db',
     borderRadius: '8px',
     fontSize: '14px',
-    color: '#1f2937',
-    backgroundColor: '#ffffff',
-    transition: 'border-color 0.2s ease'
+    transition: 'border-color 0.2s ease',
+    ':focus': {
+      outline: 'none',
+      borderColor: '#3b82f6'
+    }
   },
   textarea: {
-    width: '100%',
-    padding: '12px 16px',
+    padding: '12px',
     border: '1px solid #d1d5db',
     borderRadius: '8px',
     fontSize: '14px',
-    color: '#1f2937',
-    backgroundColor: '#ffffff',
     resize: 'vertical',
-    fontFamily: 'inherit'
+    minHeight: '100px',
+    transition: 'border-color 0.2s ease'
   },
   select: {
-    width: '100%',
-    padding: '12px 16px',
+    padding: '12px',
     border: '1px solid #d1d5db',
     borderRadius: '8px',
     fontSize: '14px',
-    color: '#1f2937',
-    backgroundColor: '#ffffff'
+    backgroundColor: '#fff',
+    cursor: 'pointer'
   },
   criteresContainer: {
     display: 'grid',
-    gap: '16px',
-    marginBottom: '24px'
+    gap: '24px'
   },
-  critereCard: {
-    padding: '20px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    position: 'relative'
-  },
-  critereHeader: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    marginBottom: '12px'
-  },
-  removeCritereButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '32px',
-    height: '32px',
-    backgroundColor: '#ef4444',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  obligatoireTag: {
-    padding: '4px 8px',
-    backgroundColor: '#1e40af',
-    color: '#ffffff',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '500'
-  },
-  checkboxContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
-  },
-  checkbox: {
-    width: '18px',
-    height: '18px',
-    cursor: 'pointer'
-  },
-  checkboxLabel: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#374151',
-    cursor: 'pointer'
-  },
-  criteresDisponibles: {
-    marginTop: '24px'
+  criteresSelectionnes: {
+    display: 'grid',
+    gap: '16px'
   },
   subTitle: {
     fontSize: '16px',
     fontWeight: '600',
     color: '#374151',
-    marginBottom: '16px'
+    marginBottom: '12px'
+  },
+  critereItem: {
+    padding: '16px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    backgroundColor: '#f9fafb'
+  },
+  critereHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '12px'
+  },
+  critereNom: {
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#374151'
+  },
+  removeCritereButton: {
+    padding: '4px',
+    backgroundColor: '#fee2e2',
+    border: '1px solid #fecaca',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    color: '#dc2626'
+  },
+  obligatoireTag: {
+    fontSize: '12px',
+    padding: '4px 8px',
+    backgroundColor: '#dbeafe',
+    color: '#1d4ed8',
+    borderRadius: '12px',
+    fontWeight: '500'
+  },
+  checkboxLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    cursor: 'pointer'
+  },
+  checkbox: {
+    width: '16px',
+    height: '16px'
+  },
+  criteresDisponibles: {
+    marginTop: '20px'
   },
   criteresGrid: {
     display: 'grid',
@@ -642,49 +608,56 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '12px 16px',
-    backgroundColor: '#ffffff',
-    border: '2px dashed #d1d5db',
+    padding: '12px',
+    backgroundColor: '#f0f9ff',
+    border: '1px solid #bae6fd',
     borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: '500',
-    color: '#6b7280',
+    color: '#0369a1',
     transition: 'all 0.2s ease'
   },
   formActions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    gap: '16px',
-    marginTop: '32px',
+    gap: '12px',
     paddingTop: '24px',
     borderTop: '1px solid #e2e8f0'
   },
   cancelButton: {
     padding: '12px 24px',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     border: '1px solid #d1d5db',
     borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: '500',
-    color: '#374151',
-    transition: 'all 0.2s ease'
+    color: '#374151'
   },
   submitButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     padding: '12px 24px',
-    backgroundColor: '#1e40af',
-    color: '#ffffff',
+    backgroundColor: '#3b82f6',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: '500',
-    transition: 'all 0.2s ease'
+    color: '#fff',
+    fontWeight: '500'
+  },
+  loading: {
+    textAlign: 'center',
+    padding: '60px',
+    fontSize: '16px',
+    color: '#64748b'
+  },
+  error: {
+    textAlign: 'center',
+    padding: '60px',
+    fontSize: '16px',
+    color: '#ef4444'
   }
 };
 
-export default CreerAnnonce;
+export default ModifierAnnonce;

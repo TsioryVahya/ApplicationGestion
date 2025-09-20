@@ -31,8 +31,6 @@ INSERT INTO Profil (nom) VALUES
 ('Commercial'),
 ('Technicien');
 
-
-
 -- Insertion des critères
 INSERT INTO Critere (nom) VALUES 
 ('Expérience (années)'),
@@ -46,14 +44,19 @@ INSERT INTO StatutCandidat (nom) VALUES
 ('En attente'),
 ('Accepté'),
 ('Refusé'),
-('En cours d\'évaluation');
+('En cours d\'évaluation'),
+('Candidature reçue'),
+('QCM en cours'),
+('QCM terminé'),
+('Entretien programmé'),
+('Entretien terminé');
 
 -- Insertion des statuts entretien
 INSERT INTO StatutEntretien (nom) VALUES 
-('Programmé'),
-('Terminé'),
-('Annulé'),
-('Reporté');
+('En attente'),
+('Confirmé'),
+('Reporté'),
+('Annulé');
 
 -- Insertion des diplômes
 INSERT INTO Diplome (nom) VALUES 
@@ -109,8 +112,7 @@ UPDATE Annonce SET idTypeAnnonce = 2 WHERE id = 3; -- CDD
 UPDATE Annonce SET idTypeAnnonce = 1 WHERE id = 4; -- CDI
 UPDATE Annonce SET idTypeAnnonce = 2 WHERE id = 5; -- CDD;
 
-
--- Insertion de critères supplémentaires pour les annonces
+-- Insertion des critères supplémentaires pour les annonces
 INSERT INTO CritereProfil (idProfil, idCritere, valeurVarchar, estObligatoire) VALUES 
 -- Pour le profil Développeur (id=1)
 (1, 3, 'React, Node.js, MySQL', TRUE),
@@ -192,3 +194,127 @@ INSERT INTO Entretien (idCandidat, dateHeure, idStatut, idResultat) VALUES
 (3, '2024-02-18 16:00:00', 1, NULL),
 (4, '2024-02-22 09:00:00', 2, 4),
 (5, '2024-02-25 11:00:00', 1, NULL);
+
+-- Insertion des statuts entretien
+INSERT INTO StatutEntretien (nom) VALUES 
+('En attente'),
+('Confirmé'),
+('Reporté'),
+('Annulé');
+
+-- Insertion des diplômes
+INSERT INTO Diplome (nom) VALUES 
+('Baccalauréat'),
+('Licence'),
+('Master'),
+('Doctorat'),
+('BTS'),
+('DUT');
+
+-- Insertion des départements
+INSERT INTO Departement (nom) VALUES 
+('Ressources Humaines'),
+('Informatique'),
+('Marketing'),
+('Finance'),
+('Production');
+
+-- Insertion des statuts candidat
+INSERT INTO StatutCandidat (nom) VALUES 
+('Candidature reçue'),
+('QCM en cours'),
+('QCM terminé'),
+('Entretien programmé'),
+('Entretien terminé'),
+('Accepté'),
+('Refusé');
+
+-- Insertion des annonces
+INSERT INTO Annonce (reference, titre, description, datePublication, dateLimite, idDept) VALUES 
+('DEV001', 'Développeur Full Stack', 'Recherche développeur expérimenté en React et Node.js', '2024-01-15', '2024-02-15', 2),
+('MKT001', 'Chef de produit Marketing', 'Responsable marketing digital avec 3 ans d\'expérience', '2024-01-20', '2024-02-20', 3),
+('RH001', 'Assistant RH', 'Assistant en ressources humaines pour gestion administrative', '2024-01-10', '2024-02-10', 1);
+
+-- Insertion des candidats avec différents statuts
+INSERT INTO Candidat (nom, prenom, dateNaissance, adresse, cv, idAnnonce, idStatut) VALUES 
+('Dupont', 'Jean', '1990-05-15', '123 Rue de la Paix, Paris', 'Développeur avec 5 ans d\'expérience en JavaScript, React, Node.js. Diplômé d\'une école d\'ingénieur.', 1, 3),
+('Martin', 'Sophie', '1988-03-22', '456 Avenue des Champs, Lyon', 'Marketing manager avec expertise en digital. Master en marketing, 4 ans d\'expérience.', 2, 3),
+('Durand', 'Pierre', '1992-11-08', '789 Boulevard Saint-Michel, Marseille', 'Assistant administratif polyvalent, BTS Assistant de gestion, 2 ans d\'expérience.', 3, 3),
+('Leroy', 'Marie', '1991-07-12', '321 Rue Victor Hugo, Toulouse', 'Développeuse frontend spécialisée React, portfolio impressionnant.', 1, 2),
+('Bernard', 'Paul', '1989-09-30', '654 Place de la République, Nice', 'Expert en marketing digital et réseaux sociaux.', 2, 1);
+
+-- Insertion des tests QCM
+INSERT INTO QcmTest (nom, description, dureeMinutes, noteMinimale, idAnnonce) VALUES 
+('Test Technique Développeur', 'Évaluation des compétences en programmation', 60, 12, 1),
+('Test Marketing Digital', 'Connaissances en marketing et communication', 45, 10, 2),
+('Test Compétences RH', 'Évaluation des connaissances RH de base', 30, 8, 3);
+
+-- Insertion des questions QCM
+INSERT INTO QcmQuestion (idTest, numero, question, points) VALUES 
+(1, 1, 'Quelle est la différence entre let et var en JavaScript ?', 2),
+(1, 2, 'Comment créer un composant React fonctionnel ?', 3),
+(1, 3, 'Qu\'est-ce qu\'une API REST ?', 2),
+(2, 1, 'Qu\'est-ce que le SEO ?', 2),
+(2, 2, 'Définissez le marketing mix (4P)', 3),
+(3, 1, 'Qu\'est-ce que la GPEC ?', 2),
+(3, 2, 'Citez 3 étapes du processus de recrutement', 3);
+
+-- Insertion des choix de réponses
+INSERT INTO QcmChoix (idQuestion, texte, estCorrect) VALUES 
+-- Question 1 (let vs var)
+(1, 'let a une portée de bloc, var a une portée de fonction', TRUE),
+(1, 'let et var sont identiques', FALSE),
+(1, 'var est plus récent que let', FALSE),
+-- Question 2 (Composant React)
+(2, 'function MonComposant() { return <div>Hello</div>; }', TRUE),
+(2, 'class MonComposant extends Component', FALSE),
+(2, 'const MonComposant = new React.Component()', FALSE),
+-- Question 3 (API REST)
+(3, 'Architecture pour services web utilisant HTTP', TRUE),
+(3, 'Base de données relationnelle', FALSE),
+-- Question 4 (SEO)
+(4, 'Search Engine Optimization', TRUE),
+(4, 'Social Engine Optimization', FALSE),
+-- Question 5 (Marketing mix)
+(5, 'Product, Price, Place, Promotion', TRUE),
+(5, 'People, Process, Physical, Performance', FALSE),
+-- Question 6 (GPEC)
+(6, 'Gestion Prévisionnelle des Emplois et Compétences', TRUE),
+(6, 'Gestion des Processus et Contrôles', FALSE),
+-- Question 7 (Recrutement)
+(7, 'Définition du poste, Sourcing, Entretiens', TRUE),
+(7, 'Formation, Évaluation, Promotion', FALSE);
+
+-- Insertion des réponses QCM (candidats ayant terminé)
+INSERT INTO QcmReponse (idCandidat, idTest, idQuestion, idChoix, pointsObtenus) VALUES 
+-- Jean Dupont (candidat 1) - Test développeur - Score: 15/20
+(1, 1, 1, 1, 2), -- Bonne réponse
+(1, 1, 2, 2, 3), -- Bonne réponse  
+(1, 1, 3, 4, 2), -- Bonne réponse
+-- Sophie Martin (candidat 2) - Test marketing - Score: 12/20
+(2, 2, 4, 6, 2), -- Bonne réponse
+(2, 2, 5, 8, 3), -- Bonne réponse
+-- Pierre Durand (candidat 3) - Test RH - Score: 10/20
+(3, 3, 6, 10, 2), -- Bonne réponse
+(3, 3, 7, 12, 3); -- Bonne réponse
+
+-- Insertion des résultats d'entretien
+INSERT INTO Resultat (note, appreciation) VALUES 
+(16, 'Excellent candidat, compétences techniques solides'),
+(14, 'Bon profil, expérience intéressante'),
+(12, 'Candidat correct, à former'),
+(8, 'Profil insuffisant pour le poste');
+
+-- Insertion des entretiens
+INSERT INTO Entretien (idCandidat, dateHeure, idStatut, idResultat) VALUES 
+(1, '2024-02-20 10:00:00', 2, 1), -- Jean Dupont - Confirmé
+(2, '2024-02-21 14:30:00', 1, NULL), -- Sophie Martin - En attente
+(3, '2024-02-22 09:00:00', 2, 2); -- Pierre Durand - Confirmé
+
+-- Insertion de l'historique des entretiens
+INSERT INTO HistoriqueEntretien (idEntretien, idStatut) VALUES 
+(1, 1), -- Jean: En attente -> Confirmé
+(1, 2), -- Jean: Confirmé
+(2, 1), -- Sophie: En attente
+(3, 1), -- Pierre: En attente -> Confirmé  
+(3, 2); -- Pierre: Confirmé

@@ -32,7 +32,7 @@ CREATE TABLE CritereProfil (
     FOREIGN KEY (idProfil) REFERENCES Profil(id),
     FOREIGN KEY (idCritere) REFERENCES Critere(id)
 );
-    ALTER TABLE CritereProfil ADD COLUMN estObligatoire BOOLEAN DEFAULT TRUE;
+
 
 -- Table Annonce
 CREATE TABLE Annonce (

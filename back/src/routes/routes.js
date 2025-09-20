@@ -9,6 +9,7 @@ const ProfilController = require('../controllers/profilController');
 const CritereController = require('../controllers/critereController');
 const CritereProfilController = require('../controllers/critereProfilController');
 const CandidatController = require('../controllers/candidatController');
+const EntretienController = require('../controllers/entretienController');
 
 // Routes d'authentification
 router.post('/auth/inscription', AuthController.inscription);
@@ -76,7 +77,18 @@ router.post('/critereprofils', CritereProfilController.create);
 router.put('/critereprofils/:id', CritereProfilController.update);
 router.delete('/critereprofils/:id', CritereProfilController.delete);
 
-// ...existing code...
+// Routes pour les entretiens (ordre important : routes spécifiques avant routes avec paramètres)
+router.get('/entretiens/candidats/eligibles', AuthController.verifierToken, EntretienController.obtenirCandidatsEligiblesEntretien);
+router.get('/entretiens/candidats/disponibles', AuthController.verifierToken, EntretienController.obtenirCandidatsDisponibles);
+router.get('/entretiens/candidats/tous', AuthController.verifierToken, EntretienController.obtenirTousLesCandidats);
+router.get('/entretiens/statuts/tous', AuthController.verifierToken, EntretienController.obtenirStatutsEntretien);
+router.get('/entretiens/:id/historique', AuthController.verifierToken, EntretienController.obtenirHistoriqueEntretien);
+router.get('/entretiens', AuthController.verifierToken, EntretienController.obtenirTousLesEntretiens);
+router.get('/entretiens/:id', AuthController.verifierToken, EntretienController.obtenirEntretienParId);
+router.post('/entretiens', AuthController.verifierToken, EntretienController.creerEntretien);
+router.put('/entretiens/:id', AuthController.verifierToken, EntretienController.mettreAJourEntretien);
+router.delete('/entretiens/:id', AuthController.verifierToken, EntretienController.supprimerEntretien);
+
 // Routes pour les candidats (protégées)
 router.get('/candidats', AuthController.verifierToken, CandidatController.obtenirTousLesCandidats);
 router.get('/candidats/annonce/:idAnnonce', AuthController.verifierToken, CandidatController.obtenirCandidatsParAnnonce);

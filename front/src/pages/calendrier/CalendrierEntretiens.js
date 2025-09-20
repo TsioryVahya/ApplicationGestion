@@ -53,18 +53,17 @@ const CalendrierEntretiens = () => {
         'Content-Type': 'application/json'
       };
 
-      // Charger les entretiens, candidats éligibles et statuts en parallèle
-      const [entretiensRes, candidatsRes, statutsRes] = await Promise.all([
-        fetch('/api/entretiens', { headers }),
-        chargerCandidatsEligibles(headers),
-        fetch('/api/entretiens/statuts/tous', { headers })
-      ]);
+  // Charger les entretiens, candidats éligibles et statuts en parallèle
+  const [entretiensRes, candidatsData, statutsRes] = await Promise.all([
+    fetch('/api/entretiens', { headers }),
+    chargerCandidatsEligibles(headers),
+    fetch('/api/entretiens/statuts/tous', { headers })
+  ]);
 
-      const [entretiensData, candidatsData, statutsData] = await Promise.all([
-        entretiensRes.json(),
-        candidatsRes.json(), // Add .json() to properly handle the Promise resolution
-        statutsRes.json()
-      ]);
+  const [entretiensData, statutsData] = await Promise.all([
+    entretiensRes.json(),
+    statutsRes.json()
+  ]);
 
       if (entretiensData.success) setEntretiens(entretiensData.data || []);
       if (candidatsData) setCandidats(candidatsData || []);

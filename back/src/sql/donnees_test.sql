@@ -15,13 +15,9 @@ INSERT INTO Employe (nom, prenom, adresse, idDept) VALUES
 ('Dupont', 'Jean', '123 Rue de la Paix, Paris', 2),
 ('Martin', 'Marie', '456 Avenue des Champs, Lyon', 1),
 ('Bernard', 'Pierre', '789 Boulevard Saint-Germain, Marseille', 3),
-('Durand', 'Sophie', '321 Rue de Rivoli, Toulouse', 4),
-('Moreau', 'Lucas', '654 Avenue Montaigne, Nice', 5),
 ('Leroy', 'Emma', '987 Rue du Faubourg, Bordeaux', 2),
 ('Roux', 'Thomas', '147 Place Vendôme, Strasbourg', 1),
-('Fournier', 'Julie', '258 Rue de la République, Lille', 3),
-('Girard', 'Antoine', '369 Boulevard Haussmann, Nantes', 4),
-('Bonnet', 'Camille', '741 Avenue Victor Hugo, Rennes', 5);
+('Fournier', 'Julie', '258 Rue de la République, Lille', 3);
 
 -- Insertion des profils
 INSERT INTO Profil (nom) VALUES 

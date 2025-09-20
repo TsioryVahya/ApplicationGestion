@@ -149,6 +149,31 @@ class EntretienService {
   // Récupérer les candidats éligibles pour entretien (QCM terminé avec succès)
   static async obtenirCandidatsEligiblesEntretien() {
     try {
+      // Debug: Vérifier les candidats et leurs statuts
+      const debugQuery1 = `
+        SELECT c.id, c.nom, c.prenom, sc.nom as statut
+        FROM Candidat c
+        INNER JOIN StatutCandidat sc ON c.idStatut = sc.id
+        ORDER BY c.id
+      `;
+      
+      console.log('🔍 Debug - Vérification des candidats et statuts...');
+      const [debugRows1] = await pool.execute(debugQuery1);
+      console.log('📊 Candidats dans la base:', debugRows1);
+      
+      // Debug: Vérifier les réponses QCM
+      const debugQuery2 = `
+        SELECT qr.idCandidat, c.nom, c.prenom, AVG(qr.pointsObtenus) as moyenne
+        FROM QcmReponse qr
+        INNER JOIN Candidat c ON qr.idCandidat = c.id
+        GROUP BY qr.idCandidat, c.nom, c.prenom
+        ORDER BY moyenne DESC
+      `;
+      
+      console.log('🔍 Debug - Vérification des scores QCM...');
+      const [debugRows2] = await pool.execute(debugQuery2);
+      console.log('📊 Scores QCM:', debugRows2);
+
       const query = `
         SELECT DISTINCT 
           c.id,
@@ -159,21 +184,26 @@ class EntretienService {
           c.cv,
           c.idAnnonce,
           a.reference as annonceReference,
-          a.titre as annonceTitle,
+          a.description as annonceDescription,
           sc.nom as statutNom,
-          AVG(rc.pointsObtenus) as moyenneQcm,
-          COUNT(rc.id) as nombreReponses
+          AVG(qr.pointsObtenus) as moyenneQcm,
+          COUNT(qr.id) as nombreReponses
         FROM Candidat c
         INNER JOIN StatutCandidat sc ON c.idStatut = sc.id
         INNER JOIN Annonce a ON c.idAnnonce = a.id
-        INNER JOIN ReponseCandidat rc ON c.id = rc.idCandidat
+        INNER JOIN QcmReponse qr ON c.id = qr.idCandidat
         WHERE sc.nom = 'QCM terminé'
-        GROUP BY c.id, c.nom, c.prenom, c.dateNaissance, c.adresse, c.cv, c.idAnnonce, a.reference, a.titre, sc.nom
-        HAVING moyenneQcm >= 10
+        GROUP BY c.id, c.nom, c.prenom, c.dateNaissance, c.adresse, c.cv, c.idAnnonce, a.reference, a.description, sc.nom
         ORDER BY moyenneQcm DESC
       `;
       
+      console.log('🔍 Exécution de la requête candidats éligibles...');
+      console.log('📝 Requête SQL:', query);
+      
       const [rows] = await pool.execute(query);
+      console.log('✅ Résultats trouvés:', rows.length);
+      console.log('📊 Données:', rows);
+      
       return rows;
     } catch (error) {
       console.error('Erreur dans obtenirCandidatsEligiblesEntretien:', error);

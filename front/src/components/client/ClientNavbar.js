@@ -19,6 +19,11 @@ const ClientNavbar = () => {
     return location.pathname === path;
   };
 
+  // Vérifier si l'utilisateur est connecté
+  const isLoggedIn = () => {
+    return localStorage.getItem('candidatToken') !== null;
+  };
+
   const menuItems = [
     { path: '/HireHub', icon: FiHome, label: 'Accueil' },
     { path: '/HireHub/annonces', icon: FiBriefcase, label: 'Annonces' },
@@ -58,14 +63,30 @@ const ClientNavbar = () => {
 
         {/* Auth Buttons */}
         <div style={styles.authButtons}>
-          <Link to="/HireHub/connexion" style={styles.loginButton}>
-            <FiLogIn size={18} />
-            <span>Connexion</span>
-          </Link>
-          <Link to="/HireHub/inscription" style={styles.signupButton}>
-            <FiUserPlus size={18} />
-            <span>Inscription</span>
-          </Link>
+          {!isLoggedIn() ? (
+            <>
+              <Link to="/HireHub/connexion" style={styles.loginButton}>
+                <FiLogIn size={18} />
+                <span>Connexion</span>
+              </Link>
+              <Link to="/HireHub/inscription" style={styles.signupButton}>
+                <FiUserPlus size={18} />
+                <span>Inscription</span>
+              </Link>
+            </>
+          ) : (
+            <button 
+              onClick={() => {
+                localStorage.removeItem('candidatToken');
+                localStorage.removeItem('candidatData');
+                window.location.href = '/HireHub';
+              }}
+              style={styles.logoutButton}
+            >
+              <FiLogIn size={18} />
+              <span>Déconnexion</span>
+            </button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -100,22 +121,39 @@ const ClientNavbar = () => {
             );
           })}
           <div style={styles.mobileAuthButtons}>
-            <Link 
-              to="/HireHub/connexion" 
-              style={styles.mobileLoginButton}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <FiLogIn size={18} />
-              <span>Connexion</span>
-            </Link>
-            <Link 
-              to="/HireHub/inscription" 
-              style={styles.mobileSignupButton}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <FiUserPlus size={18} />
-              <span>Inscription</span>
-            </Link>
+            {!isLoggedIn() ? (
+              <>
+                <Link 
+                  to="/HireHub/connexion" 
+                  style={styles.mobileLoginButton}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <FiLogIn size={18} />
+                  <span>Connexion</span>
+                </Link>
+                <Link 
+                  to="/HireHub/inscription" 
+                  style={styles.mobileSignupButton}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <FiUserPlus size={18} />
+                  <span>Inscription</span>
+                </Link>
+              </>
+            ) : (
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('candidatToken');
+                  localStorage.removeItem('candidatData');
+                  setIsMenuOpen(false);
+                  window.location.href = '/HireHub';
+                }}
+                style={styles.mobileLogoutButton}
+              >
+                <FiLogIn size={18} />
+                <span>Déconnexion</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -294,6 +332,35 @@ const styles = {
     fontSize: '16px',
     fontWeight: '500',
     backgroundColor: '#1e3a8a',
+    textAlign: 'center'
+  },
+  logoutButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '10px 16px',
+    fontSize: '16px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  mobileLogoutButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '12px',
+    borderRadius: '8px',
+    color: '#ffffff',
+    fontSize: '16px',
+    fontWeight: '500',
+    backgroundColor: '#ef4444',
+    border: 'none',
+    cursor: 'pointer',
     textAlign: 'center'
   }
 };

@@ -13,6 +13,7 @@ const OffresClient = () => {
   const [filtreType, setFiltreType] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAnnonce, setSelectedAnnonce] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('candidatToken'));
 
   useEffect(() => {
     const charger = async () => {
@@ -31,6 +32,23 @@ const OffresClient = () => {
     charger();
   }, []);
 
+  // Écouter les changements de connexion
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      setIsLoggedIn(!!localStorage.getItem('candidatToken'));
+    };
+
+    // Vérifier au montage
+    checkLoginStatus();
+
+    // Écouter les changements de localStorage
+    window.addEventListener('storage', checkLoginStatus);
+    
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+    };
+  }, []);
+
   const annoncesFiltrees = useMemo(() => {
     return annonces.filter(a => {
       const txt = `${a.reference || ''} ${a.nomPoste || a.titre || ''} ${a.description || ''} ${a.nomDepartement || ''} ${a.nomProfil || ''}`.toLowerCase();
@@ -47,8 +65,25 @@ const OffresClient = () => {
   };
 
   const handlePostuler = (annonce) => {
-    setSelectedAnnonce(annonce);
-    setModalOpen(true);
+    // Vérifier si l'utilisateur est déjà connecté
+    const candidatToken = localStorage.getItem('candidatToken');
+    
+    if (candidatToken) {
+      // Si connecté, aller directement au formulaire de candidature
+      const id = annonce.idAnnonce || annonce.id || annonce.annonceId;
+      if (id) {
+        navigate(`/candidature/${id}`, { 
+          state: { 
+            idAnnonce: id, 
+            annonce: annonce 
+          } 
+        });
+      }
+    } else {
+      // Si pas connecté, ouvrir le modal de connexion
+      setSelectedAnnonce(annonce);
+      setModalOpen(true);
+    }
   };
 
   const handleLoginSuccess = (data) => {
@@ -192,7 +227,7 @@ const OffresClient = () => {
                         onClick={() => handlePostuler(a)}
                         disabled={statut === 'Expirée'}
                       >
-                        Postuler
+                        {localStorage.getItem('candidatToken') ? 'Candidater' : 'Postuler'}
                       </button>
                     </div>
                   </div>

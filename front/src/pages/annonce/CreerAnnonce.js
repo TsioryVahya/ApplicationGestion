@@ -5,10 +5,8 @@ import {
   FiMapPin, 
   FiSave, 
   FiArrowLeft,
-  FiPlus,
-  FiTrash2,
   FiCheckCircle,
-  FiX
+  FiAlertCircle
 } from 'react-icons/fi';
 
 const CreerAnnonce = ({ onRetour }) => {
@@ -26,7 +24,6 @@ const CreerAnnonce = ({ onRetour }) => {
   const [departements, setDepartements] = useState([]);
   const [typesAnnonce, setTypesAnnonce] = useState([]);
   const [criteresDisponibles, setCriteresDisponibles] = useState([]);
-  const [tousLesCriteres, setTousLesCriteres] = useState([]);
   const [criteresSelectionnes, setCriteresSelectionnes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -63,14 +60,6 @@ const CreerAnnonce = ({ onRetour }) => {
         setDepartements(deptsData.data);
       }
 
-      // Charger tous les critères disponibles
-      const criteresResponse = await fetch('/api/annonces/criteres', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const criteresData = await criteresResponse.json();
-      if (criteresData.success) {
-        setTousLesCriteres(criteresData.data);
-      }
 
       // Charger les types d'annonce
       const typesResponse = await fetch('/api/annonces/types', {
@@ -95,19 +84,25 @@ const CreerAnnonce = ({ onRetour }) => {
       const data = await response.json();
       
       if (data.success) {
-        setCriteresDisponibles(data.data);
-        // Pré-remplir les critères obligatoires
-        const criteresObligatoires = data.data
-          .filter(critere => critere.estObligatoire)
-          .map(critere => ({
-            idCritere: critere.idCritere,
-            nom: critere.nom,
-            valeurDouble: critere.valeurDouble || '',
-            valeurVarchar: critere.valeurVarchar || '',
-            valeurBool: critere.valeurBool || false,
-            estObligatoire: true
-          }));
-        setCriteresSelectionnes(criteresObligatoires);
+        // Filtrer les critères qui ont des valeurs définies (pas N/A, null ou 0)
+        const criteresAvecValeurs = data.data.filter(critere => {
+          return (critere.valeurDouble !== null && critere.valeurDouble !== undefined && critere.valeurDouble !== 0) ||
+                 (critere.valeurVarchar !== null && critere.valeurVarchar !== undefined && critere.valeurVarchar !== 'N/A') ||
+                 (critere.valeurBool !== null && critere.valeurBool !== undefined);
+        });
+        
+        setCriteresDisponibles(criteresAvecValeurs);
+        
+        // Afficher tous les critères avec valeurs (pas seulement les obligatoires)
+        const criteresAffichage = criteresAvecValeurs.map(critere => ({
+          idCritere: critere.idCritere,
+          nom: critere.nom,
+          valeurDouble: critere.valeurDouble,
+          valeurVarchar: critere.valeurVarchar,
+          valeurBool: critere.valeurBool,
+          estObligatoire: critere.estObligatoire
+        }));
+        setCriteresSelectionnes(criteresAffichage);
       }
     } catch (err) {
       console.error('Erreur lors du chargement des critères:', err);
@@ -122,83 +117,37 @@ const CreerAnnonce = ({ onRetour }) => {
     }));
   };
 
-  const ajouterCritere = (critere) => {
-    if (!criteresSelectionnes.find(c => c.idCritere === critere.idCritere)) {
-      setCriteresSelectionnes(prev => [...prev, {
-        idCritere: critere.idCritere,
-        nom: critere.nom,
-        valeurDouble: critere.valeurDouble || '',
-        valeurVarchar: critere.valeurVarchar || '',
-        valeurBool: critere.valeurBool || false,
-        estObligatoire: false
-      }]);
-    }
-  };
-
-  const supprimerCritere = (idCritere) => {
-    setCriteresSelectionnes(prev => 
-      prev.filter(c => c.idCritere !== idCritere || c.estObligatoire)
-    );
-  };
-
-  const modifierValeurCritere = (idCritere, champ, valeur) => {
-    setCriteresSelectionnes(prev =>
-      prev.map(c => 
-        c.idCritere === idCritere 
-          ? { ...c, [champ]: valeur }
-          : c
-      )
-    );
-  };
 
   const renderChampCritere = (critere) => {
-    const critereOriginal = criteresDisponibles.find(c => c.idCritere === critere.idCritere);
-    
-    if (critereOriginal?.valeurBool !== null) {
+    // Afficher la valeur selon le type défini
+    if (critere.valeurDouble !== null && critere.valeurDouble !== undefined && critere.valeurDouble !== 0) {
       return (
-        <div style={styles.checkboxContainer}>
-          <input
-            type="checkbox"
-            id={`critere-${critere.idCritere}`}
-            checked={critere.valeurBool}
-            onChange={(e) => modifierValeurCritere(critere.idCritere, 'valeurBool', e.target.checked)}
-            style={styles.checkbox}
-          />
-          <label htmlFor={`critere-${critere.idCritere}`} style={styles.checkboxLabel}>
-            {critere.nom}
-          </label>
+        <div style={styles.critereDisplay}>
+          <span style={styles.critereLabel}>{critere.nom}:</span>
+          <span style={styles.critereValue}>{critere.valeurDouble}</span>
         </div>
       );
     }
     
-    if (critereOriginal?.valeurDouble !== null) {
+    if (critere.valeurVarchar !== null && critere.valeurVarchar !== undefined && critere.valeurVarchar !== 'N/A') {
       return (
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>{critere.nom}</label>
-          <input
-            type="number"
-            step="0.01"
-            value={critere.valeurDouble}
-            onChange={(e) => modifierValeurCritere(critere.idCritere, 'valeurDouble', e.target.value)}
-            style={styles.input}
-            placeholder="Entrez une valeur numérique"
-          />
+        <div style={styles.critereDisplay}>
+          <span style={styles.critereLabel}>{critere.nom}:</span>
+          <span style={styles.critereValue}>{critere.valeurVarchar}</span>
         </div>
       );
     }
     
-    return (
-      <div style={styles.inputGroup}>
-        <label style={styles.label}>{critere.nom}</label>
-        <input
-          type="text"
-          value={critere.valeurVarchar}
-          onChange={(e) => modifierValeurCritere(critere.idCritere, 'valeurVarchar', e.target.value)}
-          style={styles.input}
-          placeholder="Entrez une valeur"
-        />
-      </div>
-    );
+    if (critere.valeurBool !== null && critere.valeurBool !== undefined) {
+      return (
+        <div style={styles.critereDisplay}>
+          <span style={styles.critereLabel}>{critere.nom}:</span>
+          <span style={styles.critereValue}>{critere.valeurBool ? 'Oui' : 'Non'}</span>
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   const handleSubmit = async (e) => {
@@ -214,10 +163,7 @@ const CreerAnnonce = ({ onRetour }) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...formData,
-          criteres: criteresSelectionnes
-        })
+        body: JSON.stringify(formData)
       });
 
       const data = await response.json();
@@ -253,7 +199,7 @@ const CreerAnnonce = ({ onRetour }) => {
 
       {error && (
         <div style={styles.errorAlert}>
-          <FiX size={20} />
+          <FiAlertCircle size={20} />
           <span>{error}</span>
         </div>
       )}
@@ -378,51 +324,27 @@ const CreerAnnonce = ({ onRetour }) => {
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>
                 <FiCheckCircle size={20} />
-                Critères du Profil
+                Critères Requis pour ce Profil
               </h3>
 
-              {/* Critères sélectionnés */}
+              {/* Critères du profil */}
               <div style={styles.criteresContainer}>
-                {criteresSelectionnes.map(critere => (
-                  <div key={critere.idCritere} style={styles.critereCard}>
-                    <div style={styles.critereHeader}>
-                      {!critere.estObligatoire && (
-                        <button
-                          type="button"
-                          onClick={() => supprimerCritere(critere.idCritere)}
-                          style={styles.removeCritereButton}
-                        >
-                          <FiTrash2 size={16} />
-                        </button>
-                      )}
+                {criteresSelectionnes.length > 0 ? (
+                  criteresSelectionnes.map(critere => (
+                    <div key={critere.idCritere} style={styles.critereCard}>
+                      {renderChampCritere(critere)}
                       {critere.estObligatoire && (
                         <span style={styles.obligatoireTag}>Obligatoire</span>
                       )}
                     </div>
-                    {renderChampCritere(critere)}
+                  ))
+                ) : (
+                  <div style={styles.noCriteres}>
+                    <p>Aucun critère défini pour ce profil</p>
                   </div>
-                ))}
+                )}
               </div>
 
-              {/* Critères disponibles à ajouter */}
-              <div style={styles.criteresDisponibles}>
-                <h4 style={styles.subTitle}>Ajouter des critères supplémentaires :</h4>
-                <div style={styles.criteresGrid}>
-                  {tousLesCriteres
-                    .filter(critere => !criteresSelectionnes.find(c => c.idCritere === critere.idCritere))
-                    .map(critere => (
-                      <button
-                        key={critere.idCritere}
-                        type="button"
-                        onClick={() => ajouterCritere(critere)}
-                        style={styles.addCritereButton}
-                      >
-                        <FiPlus size={16} />
-                        <span>{critere.nom}</span>
-                      </button>
-                    ))}
-                </div>
-              </div>
             </div>
           )}
         </div>
@@ -638,19 +560,38 @@ const styles = {
     gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
     gap: '12px'
   },
-  addCritereButton: {
+  critereDisplay: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     padding: '12px 16px',
-    backgroundColor: '#ffffff',
-    border: '2px dashed #d1d5db',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
     borderRadius: '8px',
-    cursor: 'pointer',
+    marginBottom: '8px'
+  },
+  critereLabel: {
     fontSize: '14px',
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#374151',
+    minWidth: '120px'
+  },
+  critereValue: {
+    fontSize: '14px',
+    color: '#1f2937',
+    backgroundColor: '#ffffff',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    border: '1px solid #d1d5db'
+  },
+  noCriteres: {
+    textAlign: 'center',
+    padding: '40px 20px',
     color: '#6b7280',
-    transition: 'all 0.2s ease'
+    fontStyle: 'italic',
+    backgroundColor: '#f9fafb',
+    borderRadius: '8px',
+    border: '1px dashed #d1d5db'
   },
   formActions: {
     display: 'flex',

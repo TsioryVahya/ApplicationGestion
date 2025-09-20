@@ -156,7 +156,7 @@ class AnnonceController {
   // Créer une nouvelle annonce
   static async creerAnnonce(req, res) {
     try {
-      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, criteres } = req.body;
+      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce } = req.body;
       
       // Validation des données
       if (!reference || !dateDebut || !dateFin || !idDepartement || !idProfil) {
@@ -181,7 +181,7 @@ class AnnonceController {
         reference,
         idDepartement,
         idProfil,
-        criteres
+        idTypeAnnonce
       });
 
       res.status(201).json({

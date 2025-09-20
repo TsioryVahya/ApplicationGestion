@@ -92,7 +92,7 @@ const GestionCritereProfils = () => {
       const dataToSend = {
         idProfil: formData.idProfil,
         idCritere: formData.idCritere,
-        valeurDouble: formData.valeurDouble === '' ? null : parseFloat(formData.valeurDouble),
+        valeurDouble: !formData.valeurDouble || formData.valeurDouble === '' || formData.valeurDouble === '0' || parseFloat(formData.valeurDouble) === 0 || isNaN(parseFloat(formData.valeurDouble)) ? null : parseFloat(formData.valeurDouble),
         valeurVarchar: formData.valeurVarchar === '' ? null : formData.valeurVarchar,
         valeurBool: !!formData.valeurBool,
         estObligatoire: !!formData.estObligatoire
@@ -134,6 +134,42 @@ const GestionCritereProfils = () => {
       fetchAll();
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleCleanupDuplicates = async () => {
+    if (!window.confirm('Nettoyer les doublons ? Cette action supprimera les critères en double en gardant les plus récents.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/critereprofils/duplicates/cleanup', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Erreur nettoyage');
+      const result = await response.json();
+      alert(`${result.deletedCount} doublons supprimés avec succès !`);
+      fetchAll();
+    } catch (err) {
+      setError(err.message);
+      alert('Erreur lors du nettoyage : ' + err.message);
+    }
+  };
+
+  const handleFixZeroValues = async () => {
+    if (!window.confirm('Corriger les valeurs 0.00 ? Cette action convertira toutes les valeurs 0.00 en NULL.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/critereprofils/fix-zero-values', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Erreur correction');
+      const result = await response.json();
+      alert(`${result.affectedRows} valeurs 0.00 corrigées avec succès !`);
+      fetchAll();
+    } catch (err) {
+      setError(err.message);
+      alert('Erreur lors de la correction : ' + err.message);
     }
   };
 
@@ -186,7 +222,7 @@ const GestionCritereProfils = () => {
   const renderValueDisplay = (association) => {
     const values = [];
     
-    if (association.valeurDouble !== null && association.valeurDouble !== undefined) {
+    if (association.valeurDouble !== null && association.valeurDouble !== undefined && association.valeurDouble !== 0) {
       values.push(`Valeur Double: ${association.valeurDouble}`);
     }
     
@@ -244,6 +280,14 @@ const GestionCritereProfils = () => {
           <button style={styles.refreshButton} onClick={() => fetchAll(false)}>
             <FiRefreshCw size={16} />
             <span>Actualiser</span>
+          </button>
+          <button style={styles.cleanupButton} onClick={handleCleanupDuplicates}>
+            <FiTrash2 size={16} />
+            <span>Nettoyer Doublons</span>
+          </button>
+          <button style={styles.fixButton} onClick={handleFixZeroValues}>
+            <FiRefreshCw size={16} />
+            <span>Corriger Valeurs 0</span>
           </button>
         </div>
         <button style={styles.addButton} onClick={() => setShowModal(true)}>
@@ -427,7 +471,7 @@ const GestionCritereProfils = () => {
                   value={formData.valeurDouble}
                   onChange={e => setFormData({ ...formData, valeurDouble: e.target.value })}
                   style={styles.input}
-                  placeholder="Ex: 12.34"
+                  placeholder="Ex: 12.34 (0 = pas de valeur)"
                 />
               </div>
               <div style={styles.formGroup}>
@@ -571,6 +615,34 @@ const styles = {
     backgroundColor: '#f8fafc',
     color: '#64748b',
     border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.2s ease'
+  },
+  cleanupButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 16px',
+    backgroundColor: '#fef2f2',
+    color: '#dc2626',
+    border: '1px solid #fecaca',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.2s ease'
+  },
+  fixButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 16px',
+    backgroundColor: '#fff7ed',
+    color: '#ea580c',
+    border: '1px solid #fed7aa',
     borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',

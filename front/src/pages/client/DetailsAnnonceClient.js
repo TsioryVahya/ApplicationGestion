@@ -61,7 +61,21 @@ const DetailsAnnonceClient = () => {
   };
 
   const handlePostuler = () => {
-    setModalOpen(true);
+    // Vérifier si l'utilisateur est déjà connecté
+    const candidatToken = localStorage.getItem('candidatToken');
+    
+    if (candidatToken) {
+      // Si connecté, aller directement au formulaire de candidature
+      navigate(`/candidature/${id}`, { 
+        state: { 
+          idAnnonce: id, 
+          annonce: annonce 
+        } 
+      });
+    } else {
+      // Si pas connecté, ouvrir le modal de connexion
+      setModalOpen(true);
+    }
   };
 
   const handleLoginSuccess = (data) => {
@@ -206,10 +220,13 @@ const DetailsAnnonceClient = () => {
                     disabled={!isActive()}
                   >
                     <FiUser size={20} />
-                    <span>{isActive() ? 'Postuler maintenant' : 'Annonce expirée'}</span>
+                    <span>
+                      {!isActive() ? 'Annonce expirée' : 
+                       localStorage.getItem('candidatToken') ? 'Candidater maintenant' : 'Postuler maintenant'}
+                    </span>
                   </button>
                   
-                  {isActive() && (
+                  {isActive() && !localStorage.getItem('candidatToken') && (
                     <p style={styles.applyNote}>
                       Vous devrez vous connecter ou créer un compte pour postuler
                     </p>

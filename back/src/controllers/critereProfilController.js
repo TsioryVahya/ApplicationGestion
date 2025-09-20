@@ -168,6 +168,61 @@ class CritereProfilController {
                         });
                 }
         }
+
+        // Nettoyer les doublons
+        static async cleanupDuplicates(req, res) {
+                try {
+                        const result = await CritereProfilService.cleanupDuplicates();
+                        res.status(200).json({
+                                success: true,
+                                message: result.message,
+                                deletedCount: result.deletedCount
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur lors du nettoyage des doublons",
+                                error: error.message
+                        });
+                }
+        }
+
+        // Obtenir les statistiques des doublons
+        static async getDuplicatesStats(req, res) {
+                try {
+                        const duplicates = await CritereProfilService.getDuplicatesStats();
+                        res.status(200).json({
+                                success: true,
+                                message: "Statistiques des doublons récupérées avec succès",
+                                data: duplicates,
+                                total: duplicates.length
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur lors de la récupération des statistiques",
+                                error: error.message
+                        });
+                }
+        }
+
+        // Corriger les valeurs 0.00 en NULL
+        static async fixZeroValues(req, res) {
+                try {
+                        const result = await CritereProfilService.fixZeroValues();
+                        res.status(200).json({
+                                success: true,
+                                message: result.message,
+                                affectedRows: result.affectedRows
+                        });
+                } catch (error) {
+                        res.status(500).json({
+                                success: false,
+                                message: "Erreur lors de la correction des valeurs 0",
+                                error: error.message
+                        });
+                }
+        }
 }
 
 module.exports = CritereProfilController;

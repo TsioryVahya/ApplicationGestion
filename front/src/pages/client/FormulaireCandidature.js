@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FiUser, FiCalendar, FiMapPin, FiFileText, FiSend, FiArrowLeft, FiBriefcase } from 'react-icons/fi';
+import ClientNavbar from '../../components/client/ClientNavbar';
 
 const FormulaireCandidature = () => {
   const { annonceId } = useParams();
@@ -43,11 +44,26 @@ const FormulaireCandidature = () => {
       
       if (resCriteres.ok) {
         const dataCriteres = await resCriteres.json();
-        setCriteres(dataCriteres.data || dataCriteres || []);
+        const criteresData = dataCriteres.data || dataCriteres || [];
+        
+        // Debug: afficher les critères reçus
+        console.log('Critères reçus:', criteresData);
+        
+        // Dédupliquer les critères basé sur l'ID
+        const criteresUniques = criteresData.reduce((acc, critere) => {
+          const critereId = critere.idCritere || critere.id || critere.idCritereProfil;
+          if (!acc.find(c => (c.idCritere || c.id || c.idCritereProfil) === critereId)) {
+            acc.push(critere);
+          }
+          return acc;
+        }, []);
+        
+        console.log('Critères après déduplication:', criteresUniques);
+        setCriteres(criteresUniques);
         
         // Initialiser les réponses des critères
         const initReponses = {};
-        (dataCriteres.data || dataCriteres || []).forEach(critere => {
+        criteresUniques.forEach(critere => {
           const critereId = critere.idCritere || critere.id || critere.idCritereProfil;
           initReponses[critereId] = '';
         });
@@ -139,8 +155,36 @@ const FormulaireCandidature = () => {
     const critereId = critere.idCritere || critere.id || critere.idCritereProfil;
     const value = criteresReponses[critereId] || '';
     
-    // Déterminer le type de champ basé sur les valeurs du critère
-    if (critere.valeurBool !== null) {
+    // Déterminer le type de champ basé sur les valeurs définies du critère
+    // Si valeurDouble est définie (pas null et pas undefined), c'est un champ numérique
+    if (critere.valeurDouble !== null && critere.valeurDouble !== undefined) {
+      return (
+        <input
+          type="number"
+          step="0.01"
+          value={value}
+          onChange={(e) => handleCritereChange(critereId, e.target.value)}
+          style={styles.input}
+          placeholder="Entrez une valeur numérique"
+          required={critere.estObligatoire}
+        />
+      );
+    }
+    // Si valeurVarchar est définie, c'est un champ texte
+    else if (critere.valeurVarchar !== null && critere.valeurVarchar !== undefined) {
+      return (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => handleCritereChange(critereId, e.target.value)}
+          style={styles.input}
+          placeholder="Entrez votre réponse"
+          required={critere.estObligatoire}
+        />
+      );
+    }
+    // Sinon, c'est un champ booléen (par défaut)
+    else {
       return (
         <select
           value={value}
@@ -153,36 +197,16 @@ const FormulaireCandidature = () => {
           <option value="false">Non</option>
         </select>
       );
-    } else if (critere.valeurDouble !== null) {
-      return (
-        <input
-          type="number"
-          step="0.01"
-          value={value}
-          onChange={(e) => handleCritereChange(critereId, e.target.value)}
-          style={styles.input}
-          placeholder="Entrez une valeur numérique"
-          required={critere.estObligatoire}
-        />
-      );
-    } else {
-      return (
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => handleCritereChange(critereId, e.target.value)}
-          style={styles.input}
-          placeholder="Entrez votre réponse"
-          required={critere.estObligatoire}
-        />
-      );
     }
   };
 
   if (loading) {
     return (
       <div style={styles.container}>
-        <div style={styles.loading}>Chargement du formulaire...</div>
+        <ClientNavbar />
+        <div style={styles.content}>
+          <div style={styles.loading}>Chargement du formulaire...</div>
+        </div>
       </div>
     );
   }
@@ -190,11 +214,14 @@ const FormulaireCandidature = () => {
   if (erreur && !annonce) {
     return (
       <div style={styles.container}>
-        <div style={styles.erreur}>Erreur: {erreur}</div>
-        <button onClick={() => navigate('/offres')} style={styles.backBtn}>
-          <FiArrowLeft size={16} />
-          Retour aux offres
-        </button>
+        <ClientNavbar />
+        <div style={styles.content}>
+          <div style={styles.erreur}>Erreur: {erreur}</div>
+          <button onClick={() => navigate('/offres')} style={styles.backBtn}>
+            <FiArrowLeft size={16} />
+            Retour aux offres
+          </button>
+        </div>
       </div>
     );
   }
@@ -210,7 +237,9 @@ const FormulaireCandidature = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
+      <ClientNavbar />
+      <div style={styles.content}>
+        <div style={styles.header}>
         <button onClick={() => navigate('/offres')} style={styles.backBtn}>
           <FiArrowLeft size={16} />
           Retour aux offres
@@ -356,18 +385,21 @@ const FormulaireCandidature = () => {
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 };
 
 const styles = {
   container: {
+    minHeight: '100vh',
+    backgroundColor: '#f8fafc',
+    fontFamily: 'Inter, sans-serif'
+  },
+  content: {
     maxWidth: '800px',
     margin: '0 auto',
-    padding: '20px',
-    fontFamily: 'Inter, sans-serif',
-    backgroundColor: '#f8fafc',
-    minHeight: '100vh'
+    padding: '20px'
   },
   loading: {
     textAlign: 'center',

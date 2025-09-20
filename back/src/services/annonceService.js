@@ -130,12 +130,7 @@ class AnnonceService {
     try {
       await connection.beginTransaction();
       
-      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce, criteres } = annonceData;
-      
-      // Debug: afficher les données reçues
-      console.log('Données reçues pour création annonce:', {
-        description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce
-      });
+      const { description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce } = annonceData;
       
       // Convertir les undefined en null pour MySQL
       const params = [
@@ -148,9 +143,6 @@ class AnnonceService {
         idTypeAnnonce !== undefined ? idTypeAnnonce : null
       ];
       
-      // Debug: afficher les paramètres après conversion
-      console.log('Paramètres après conversion:', params);
-      
       // Créer l'annonce
       const [result] = await connection.execute(
         'INSERT INTO Annonce (description, dateDebut, dateFin, reference, idDepartement, idProfil, idTypeAnnonce) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -159,25 +151,9 @@ class AnnonceService {
       
       const annonceId = result.insertId;
       
-      // Sauvegarder les critères si fournis
-      if (criteres && criteres.length > 0) {
-        for (const critere of criteres) {
-          // Convertir les undefined en null pour MySQL
-          const critereParams = [
-            idProfil !== undefined ? idProfil : null,
-            critere.idCritere !== undefined ? critere.idCritere : null,
-            critere.valeurDouble !== undefined ? critere.valeurDouble : null,
-            critere.valeurVarchar !== undefined ? critere.valeurVarchar : null,
-            critere.valeurBool !== undefined ? critere.valeurBool : null,
-            critere.estObligatoire !== undefined ? critere.estObligatoire : false
-          ];
-          
-          await connection.execute(
-            'INSERT INTO CritereProfil (idProfil, idCritere, valeurDouble, valeurVarchar, valeurBool, estObligatoire) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE valeurDouble = VALUES(valeurDouble), valeurVarchar = VALUES(valeurVarchar), valeurBool = VALUES(valeurBool)',
-            critereParams
-          );
-        }
-      }
+      // Note: Les critères du profil sont déjà définis dans CritereProfil
+      // Une annonce utilise simplement le profil existant avec ses critères
+      // Pas besoin d'insérer à nouveau les critères ici
       
       await connection.commit();
       return await this.obtenirAnnonceParId(annonceId);

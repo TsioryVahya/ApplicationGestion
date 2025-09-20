@@ -161,12 +161,12 @@ class EntretienService {
           a.reference as annonceReference,
           a.titre as annonceTitle,
           sc.nom as statutNom,
-          AVG(rc.pointsObtenus) as moyenneQcm,
-          COUNT(rc.id) as nombreReponses
+          AVG(qr.pointsObtenus) as moyenneQcm,
+          COUNT(qr.id) as nombreReponses
         FROM Candidat c
         INNER JOIN StatutCandidat sc ON c.idStatut = sc.id
         INNER JOIN Annonce a ON c.idAnnonce = a.id
-        INNER JOIN ReponseCandidat rc ON c.id = rc.idCandidat
+        INNER JOIN QcmReponse qr ON c.id = qr.idCandidat
         WHERE sc.nom = 'QCM terminé'
         GROUP BY c.id, c.nom, c.prenom, c.dateNaissance, c.adresse, c.cv, c.idAnnonce, a.reference, a.titre, sc.nom
         HAVING moyenneQcm >= 10

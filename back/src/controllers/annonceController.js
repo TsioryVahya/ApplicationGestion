@@ -413,6 +413,26 @@ class AnnonceController {
     }
   }
 
+  // Obtenir tous les lieux
+  static async obtenirLieux(req, res) {
+    try {
+      const lieux = await AnnonceService.obtenirLieux();
+
+      res.status(200).json({
+        success: true,
+        message: "Liste des lieux récupérée avec succès",
+        data: lieux
+      });
+    } catch (error) {
+      console.error('Erreur lors de la récupération des lieux:', error);
+      res.status(500).json({
+        success: false,
+        message: "Erreur interne du serveur",
+        error: error.message
+      });
+    }
+  }
+
   // Obtenir tous les types d'annonce
   static async obtenirTypesAnnonce(req, res) {
     try {

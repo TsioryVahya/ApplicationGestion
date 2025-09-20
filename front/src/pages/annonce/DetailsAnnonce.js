@@ -13,7 +13,10 @@ import {
   FiClock,
   FiCheckCircle,
   FiXCircle,
-  FiAlertCircle
+  FiAlertCircle,
+  FiFilter,
+  FiSearch,
+  FiX
 } from 'react-icons/fi';
 
 const DetailsAnnonce = () => {
@@ -21,13 +24,31 @@ const DetailsAnnonce = () => {
   const navigate = useNavigate();
   const [annonce, setAnnonce] = useState(null);
   const [candidats, setCandidats] = useState([]);
+  const [candidatsFiltres, setCandidatsFiltres] = useState([]);
+  const [lieux, setLieux] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filtres, setFiltres] = useState({
+    statut: '',
+    recherche: '',
+    dateDebut: '',
+    dateFin: '',
+    ageMin: '',
+    ageMax: '',
+    lieu: '',
+    diplome: ''
+  });
 
   useEffect(() => {
     chargerDetailsAnnonce();
     chargerCandidatsAnnonce();
+    chargerLieux();
   }, [id]);
+
+  useEffect(() => {
+    appliquerFiltres();
+  }, [candidats, filtres]);
 
   const chargerDetailsAnnonce = async () => {
     try {
@@ -59,8 +80,9 @@ const DetailsAnnonce = () => {
       console.log('Réponse API candidats:', data); // Debug
       
       if (data.success) {
+        console.log('📊 Données candidats reçues:', data.data);
         setCandidats(data.data);
-        console.log('Candidats chargés:', data.data); // Debug
+        setCandidatsFiltres(data.data);
       } else {
         console.error('Erreur API candidats:', data.message);
       }
@@ -68,6 +90,22 @@ const DetailsAnnonce = () => {
     } catch (err) {
       console.error('Erreur lors du chargement des candidats:', err);
       setLoading(false);
+    }
+  };
+
+  const chargerLieux = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/client/lieux', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setLieux(data.data);
+      }
+    } catch (err) {
+      console.error('Erreur lors du chargement des lieux:', err);
     }
   };
 
@@ -104,6 +142,105 @@ const DetailsAnnonce = () => {
       default:
         return '#6b7280';
     }
+  };
+
+  const appliquerFiltres = () => {
+    console.log('🔍 Application des filtres:', filtres);
+    console.log('📊 Candidats avant filtrage:', candidats.length);
+    
+    let candidatsFiltres = [...candidats];
+
+    // Filtre par statut
+    if (filtres.statut) {
+      candidatsFiltres = candidatsFiltres.filter(candidat => 
+        candidat.statut?.toLowerCase() === filtres.statut.toLowerCase() ||
+        candidat.statutNom?.toLowerCase() === filtres.statut.toLowerCase()
+      );
+      console.log('📋 Après filtre statut:', candidatsFiltres.length);
+    }
+
+    // Filtre par recherche (nom, prénom, email)
+    if (filtres.recherche) {
+      const recherche = filtres.recherche.toLowerCase();
+      candidatsFiltres = candidatsFiltres.filter(candidat => 
+        candidat.nom?.toLowerCase().includes(recherche) ||
+        candidat.prenom?.toLowerCase().includes(recherche) ||
+        candidat.email?.toLowerCase().includes(recherche)
+      );
+    }
+
+    // Filtre par date de candidature
+    if (filtres.dateDebut) {
+      candidatsFiltres = candidatsFiltres.filter(candidat => 
+        new Date(candidat.dateCandidature) >= new Date(filtres.dateDebut)
+      );
+    }
+
+    if (filtres.dateFin) {
+      candidatsFiltres = candidatsFiltres.filter(candidat => 
+        new Date(candidat.dateCandidature) <= new Date(filtres.dateFin)
+      );
+    }
+
+    // Filtre par âge
+    if (filtres.ageMin) {
+      candidatsFiltres = candidatsFiltres.filter(candidat => {
+        if (!candidat.dateNaissance) return false;
+        const age = new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear();
+        return age >= parseInt(filtres.ageMin);
+      });
+    }
+
+    if (filtres.ageMax) {
+      candidatsFiltres = candidatsFiltres.filter(candidat => {
+        if (!candidat.dateNaissance) return false;
+        const age = new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear();
+        return age <= parseInt(filtres.ageMax);
+      });
+    }
+
+    // Filtre par lieu
+    if (filtres.lieu) {
+      candidatsFiltres = candidatsFiltres.filter(candidat => {
+        const lieuId = parseInt(filtres.lieu);
+        return candidat.idLieu === lieuId || 
+               candidat.nomLieu?.toLowerCase().includes(filtres.lieu.toLowerCase());
+      });
+      console.log('🏠 Après filtre lieu:', candidatsFiltres.length);
+    }
+
+    // Filtre par diplôme (recherche dans le CV)
+    if (filtres.diplome) {
+      const diplome = filtres.diplome.toLowerCase();
+      candidatsFiltres = candidatsFiltres.filter(candidat => 
+        candidat.cv?.toLowerCase().includes(diplome)
+      );
+    }
+
+    console.log('✅ Candidats après tous les filtres:', candidatsFiltres.length);
+    setCandidatsFiltres(candidatsFiltres);
+  };
+
+  const handleFiltreChange = (key, value) => {
+    setFiltres(prev => ({ ...prev, [key]: value }));
+  };
+
+  const resetFiltres = () => {
+    setFiltres({
+      statut: '',
+      recherche: '',
+      dateDebut: '',
+      dateFin: '',
+      ageMin: '',
+      ageMax: '',
+      lieu: '',
+      diplome: ''
+    });
+  };
+
+  const getStatutsUniques = () => {
+    const statuts = candidats.map(c => c.statut).filter(Boolean);
+    return [...new Set(statuts)];
   };
 
   if (loading) return <div style={styles.loading}>Chargement...</div>;
@@ -174,19 +311,149 @@ const DetailsAnnonce = () => {
             <FiUsers size={24} color="#3b82f6" />
             <h2>Candidats Associés</h2>
           </div>
-          <div style={styles.candidatsCount}>
-            {candidats.length} candidat{candidats.length > 1 ? 's' : ''}
+          <div style={styles.candidatsActions}>
+            <button 
+              style={{...styles.filterButton, ...(showFilters ? styles.filterButtonActive : {})}}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <FiFilter size={16} />
+              Filtres
+            </button>
+            <div style={styles.candidatsCount}>
+              {candidatsFiltres.length} / {candidats.length} candidat{candidats.length > 1 ? 's' : ''}
+            </div>
           </div>
         </div>
+
+        {/* Panel de filtres */}
+        {showFilters && (
+          <div style={styles.filtersPanel}>
+            <div style={styles.filtersGrid}>
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Recherche</label>
+                <div style={styles.searchContainer}>
+                  <FiSearch size={16} style={styles.searchIcon} />
+                  <input
+                    type="text"
+                    placeholder="Nom, prénom ou email..."
+                    value={filtres.recherche}
+                    onChange={(e) => handleFiltreChange('recherche', e.target.value)}
+                    style={styles.searchInput}
+                  />
+                </div>
+              </div>
+              
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Statut</label>
+                <select
+                  value={filtres.statut}
+                  onChange={(e) => handleFiltreChange('statut', e.target.value)}
+                  style={styles.filterSelect}
+                >
+                  <option value="">Tous les statuts</option>
+                  {getStatutsUniques().map(statut => (
+                    <option key={statut} value={statut}>{statut}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Date début</label>
+                <input
+                  type="date"
+                  value={filtres.dateDebut}
+                  onChange={(e) => handleFiltreChange('dateDebut', e.target.value)}
+                  style={styles.filterSelect}
+                />
+              </div>
+              
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Date fin</label>
+                <input
+                  type="date"
+                  value={filtres.dateFin}
+                  onChange={(e) => handleFiltreChange('dateFin', e.target.value)}
+                  style={styles.filterSelect}
+                />
+              </div>
+              
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Âge minimum</label>
+                <input
+                  type="number"
+                  placeholder="Ex: 25"
+                  value={filtres.ageMin}
+                  onChange={(e) => handleFiltreChange('ageMin', e.target.value)}
+                  style={styles.filterSelect}
+                  min="18"
+                  max="65"
+                />
+              </div>
+              
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Âge maximum</label>
+                <input
+                  type="number"
+                  placeholder="Ex: 45"
+                  value={filtres.ageMax}
+                  onChange={(e) => handleFiltreChange('ageMax', e.target.value)}
+                  style={styles.filterSelect}
+                  min="18"
+                  max="65"
+                />
+              </div>
+              
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Lieu</label>
+                <select
+                  value={filtres.lieu}
+                  onChange={(e) => handleFiltreChange('lieu', e.target.value)}
+                  style={styles.filterSelect}
+                >
+                  <option value="">Tous les lieux</option>
+                  {lieux.map(lieu => (
+                    <option key={lieu.id} value={lieu.id}>{lieu.nom}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Diplôme/Formation</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Master, Licence, BTS..."
+                  value={filtres.diplome}
+                  onChange={(e) => handleFiltreChange('diplome', e.target.value)}
+                  style={styles.filterSelect}
+                />
+              </div>
+            </div>
+            
+            <div style={styles.filterActions}>
+              <button style={styles.resetButton} onClick={resetFiltres}>
+                <FiX size={16} />
+                Réinitialiser
+              </button>
+              <span style={styles.resultCount}>
+                {candidatsFiltres.length} / {candidats.length} candidat{candidats.length > 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+        )}
 
         {candidats.length === 0 ? (
           <div style={styles.noCandidats}>
             <FiUsers size={48} color="#94a3b8" />
             <p>Aucun candidat n'a encore postulé pour cette annonce</p>
           </div>
+        ) : candidatsFiltres.length === 0 ? (
+          <div style={styles.noCandidats}>
+            <FiFilter size={48} color="#94a3b8" />
+            <p>Aucun candidat ne correspond aux filtres sélectionnés</p>
+          </div>
         ) : (
           <div style={styles.candidatsList}>
-            {candidats.map(candidat => (
+            {candidatsFiltres.map(candidat => (
               <div key={candidat.id} style={styles.candidatCard}>
                 <div style={styles.candidatHeader}>
                   <div style={styles.candidatInfo}>
@@ -202,24 +469,51 @@ const DetailsAnnonce = () => {
                     </div>
                   </div>
                   <div style={styles.candidatStatut}>
-                    {getStatutIcon(candidat.statutNom)}
-                    <span style={{ color: getStatutColor(candidat.statutNom) }}>
-                      {candidat.statutNom || 'En attente'}
-                    </span>
+                    <div style={{
+                      ...styles.statutBadge,
+                      backgroundColor: getStatutColor(candidat.statut || candidat.statutNom) + '20',
+                      color: getStatutColor(candidat.statut || candidat.statutNom)
+                    }}>
+                      {getStatutIcon(candidat.statut || candidat.statutNom)}
+                      <span>{candidat.statut || candidat.statutNom || 'En attente'}</span>
+                    </div>
                   </div>
                 </div>
 
                 <div style={styles.candidatDetails}>
+                  {candidat.dateCandidature && (
+                    <div style={styles.detailItem}>
+                      <FiCalendar size={14} color="#6b7280" />
+                      <span style={styles.detailLabel}>Candidature:</span>
+                      <span>{formatDate(candidat.dateCandidature)}</span>
+                    </div>
+                  )}
                   {candidat.dateNaissance && (
                     <div style={styles.detailItem}>
+                      <FiUser size={14} color="#6b7280" />
                       <span style={styles.detailLabel}>Âge:</span>
                       <span>{new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear()} ans</span>
                     </div>
                   )}
                   {candidat.adresse && (
                     <div style={styles.detailItem}>
+                      <FiMapPin size={14} color="#6b7280" />
                       <span style={styles.detailLabel}>Adresse:</span>
                       <span>{candidat.adresse}</span>
+                    </div>
+                  )}
+                  {candidat.email && (
+                    <div style={styles.detailItem}>
+                      <FiMail size={14} color="#6b7280" />
+                      <span style={styles.detailLabel}>Email:</span>
+                      <span>{candidat.email}</span>
+                    </div>
+                  )}
+                  {(candidat.nomLieu || candidat.idLieu) && (
+                    <div style={styles.detailItem}>
+                      <FiMapPin size={14} color="#6b7280" />
+                      <span style={styles.detailLabel}>Lieu:</span>
+                      <span>{candidat.nomLieu || lieux.find(l => l.id === candidat.idLieu)?.nom || 'Non spécifié'}</span>
                     </div>
                   )}
                 </div>
@@ -487,6 +781,122 @@ const styles = {
     padding: '60px',
     fontSize: '16px',
     color: '#ef4444'
+  },
+  statutBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '600',
+    border: '1px solid currentColor'
+  },
+  filterButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    backgroundColor: '#3b82f6',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '10px 16px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  filterButtonActive: {
+    backgroundColor: '#2563eb'
+  },
+  filtersPanel: {
+    marginTop: '16px',
+    padding: '20px',
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+  },
+  filtersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px',
+    marginBottom: '16px'
+  },
+  filterGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  filterLabel: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#374151',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  filterSelect: {
+    padding: '8px 12px',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    fontSize: '14px',
+    backgroundColor: '#ffffff',
+    color: '#1f2937',
+    outline: 'none',
+    transition: 'border-color 0.2s ease'
+  },
+  searchContainer: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '12px',
+    color: '#6b7280',
+    zIndex: 1
+  },
+  searchInput: {
+    paddingLeft: '36px',
+    padding: '8px 12px',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    fontSize: '14px',
+    backgroundColor: '#ffffff',
+    color: '#1f2937',
+    outline: 'none',
+    width: '100%',
+    transition: 'border-color 0.2s ease'
+  },
+  filterActions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: '16px',
+    borderTop: '1px solid #e5e7eb'
+  },
+  resetButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    backgroundColor: '#f3f4f6',
+    color: '#374151',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    fontSize: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  candidatsActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  resultCount: {
+    fontSize: '12px',
+    color: '#6b7280',
+    fontWeight: '500'
   }
 };
 

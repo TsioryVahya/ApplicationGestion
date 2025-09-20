@@ -53,6 +53,33 @@ router.get('/annonces/profils/:idProfil/criteres', AuthController.verifierToken,
 router.get('/annonces/criteres', AuthController.verifierToken, AnnonceController.obtenirTousLesCriteres);
 router.get('/annonces/departements', AuthController.verifierToken, AnnonceController.obtenirDepartements);
 router.get('/annonces/types', AuthController.verifierToken, AnnonceController.obtenirTypesAnnonce);
+
+// Endpoints publics pour le côté client
+router.get('/client/departements', AnnonceController.obtenirDepartements);
+router.get('/client/types', AnnonceController.obtenirTypesAnnonce);
+router.get('/client/lieux', AnnonceController.obtenirLieux);
+
+// Test endpoint pour vérifier les données
+router.get('/client/test-data', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const [depts] = await pool.execute('SELECT id, nom FROM Departement ORDER BY nom');
+    const [types] = await pool.execute('SELECT id, libelle FROM TypeAnnonce ORDER BY libelle');
+    
+    res.json({
+      success: true,
+      data: {
+        departements: depts,
+        typesAnnonce: types
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
 router.get('/annonces/departement/:idDepartement', AuthController.verifierToken, AnnonceController.obtenirAnnoncesParDepartement);
 router.get('/annonces/:id', AuthController.verifierToken, AnnonceController.obtenirAnnonceParId);
 router.get('/annonces/:id/candidats', AuthController.verifierToken, AnnonceController.obtenirNombreCandidats);

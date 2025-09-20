@@ -324,7 +324,9 @@ class AnnonceService {
   // Obtenir tous les départements
   static async obtenirDepartements() {
     try {
+      console.log('🏢 Chargement des départements...');
       const [rows] = await pool.execute('SELECT id, nom FROM Departement ORDER BY nom');
+      console.log('🏢 Départements trouvés:', rows.length);
       return rows;
     } catch (error) {
       console.error('Erreur lors de la récupération des départements:', error);
@@ -335,10 +337,23 @@ class AnnonceService {
   // Obtenir tous les types d'annonce
   static async obtenirTypesAnnonce() {
     try {
+      console.log('📋 Chargement des types d\'annonce...');
       const [rows] = await pool.execute('SELECT id, libelle FROM TypeAnnonce ORDER BY libelle');
+      console.log('📋 Types d\'annonce trouvés:', rows.length);
       return rows;
     } catch (error) {
       console.error('Erreur lors de la récupération des types d\'annonce:', error);
+      throw error;
+    }
+  }
+
+  // Obtenir tous les lieux
+  static async obtenirLieux() {
+    try {
+      const [rows] = await pool.execute('SELECT id, nom FROM Lieu ORDER BY nom');
+      return rows;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des lieux:', error);
       throw error;
     }
   }

@@ -7,29 +7,65 @@ import ClientNavbar from '../../components/client/ClientNavbar';
 const OffresClient = () => {
   const navigate = useNavigate();
   const [annonces, setAnnonces] = useState([]);
+  const [departements, setDepartements] = useState([]);
+  const [typesAnnonce, setTypesAnnonce] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [recherche, setRecherche] = useState('');
+  const [filtreDepartement, setFiltreDepartement] = useState('all');
   const [filtreType, setFiltreType] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAnnonce, setSelectedAnnonce] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('candidatToken'));
 
   useEffect(() => {
-    const charger = async () => {
+    const chargerDonnees = async () => {
       try {
-        const res = await fetch('/api/client/annonce');
-        if (!res.ok) throw new Error('Erreur réseau');
-        const json = await res.json();
-        if (!json.success) throw new Error(json.message || 'Erreur serveur');
-        setAnnonces(json.data || []);
+        // Charger les annonces
+        const resAnnonces = await fetch('/api/client/annonce');
+        if (!resAnnonces.ok) throw new Error('Erreur réseau');
+        const jsonAnnonces = await resAnnonces.json();
+        if (!jsonAnnonces.success) throw new Error(jsonAnnonces.message || 'Erreur serveur');
+        setAnnonces(jsonAnnonces.data || []);
+
+        // Test de diagnostic
+        const resTest = await fetch('/api/client/test-data');
+        if (resTest.ok) {
+          const jsonTest = await resTest.json();
+          console.log('🔍 Test des données:', jsonTest);
+        }
+
+        // Charger les départements
+        const resDepartements = await fetch('/api/client/departements');
+        if (resDepartements.ok) {
+          const jsonDepartements = await resDepartements.json();
+          console.log('Départements reçus:', jsonDepartements);
+          if (jsonDepartements.success) {
+            setDepartements(jsonDepartements.data || []);
+          }
+        } else {
+          console.error('Erreur chargement départements:', resDepartements.status);
+        }
+
+        // Charger les types d'annonce
+        const resTypes = await fetch('/api/client/types');
+        if (resTypes.ok) {
+          const jsonTypes = await resTypes.json();
+          console.log('Types d\'annonce reçus:', jsonTypes);
+          if (jsonTypes.success) {
+            setTypesAnnonce(jsonTypes.data || []);
+          }
+        } else {
+          console.error('Erreur chargement types:', resTypes.status);
+        }
       } catch (e) {
         setErreur(e.message);
       } finally {
         setLoading(false);
       }
     };
-    charger();
+    chargerDonnees();
   }, []);
 
   // Écouter les changements de connexion
@@ -51,17 +87,33 @@ const OffresClient = () => {
 
   const annoncesFiltrees = useMemo(() => {
     return annonces.filter(a => {
+      // Filtre par recherche
       const txt = `${a.reference || ''} ${a.nomPoste || a.titre || ''} ${a.description || ''} ${a.nomDepartement || ''} ${a.nomProfil || ''}`.toLowerCase();
       const okRecherche = txt.includes(recherche.toLowerCase());
-      const typeNorm = (a.typeAnnonce || '').toLowerCase();
-      const okType = filtreType === 'all' || typeNorm === filtreType.toLowerCase();
-      return okRecherche && okType;
+      
+      // Filtre par département
+      const okDepartement = filtreDepartement === 'all' || 
+        a.idDepartement === parseInt(filtreDepartement) ||
+        (a.nomDepartement || '').toLowerCase() === filtreDepartement.toLowerCase();
+      
+      // Filtre par type d'annonce
+      const okType = filtreType === 'all' || 
+        a.idTypeAnnonce === parseInt(filtreType) ||
+        (a.typeAnnonce || '').toLowerCase() === filtreType.toLowerCase();
+      
+      return okRecherche && okDepartement && okType;
     });
-  }, [annonces, recherche, filtreType]);
+  }, [annonces, recherche, filtreDepartement, filtreType]);
 
   const formatDate = d => {
     if (!d) return '';
     return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const resetFiltres = () => {
+    setRecherche('');
+    setFiltreDepartement('all');
+    setFiltreType('all');
   };
 
   const handlePostuler = (annonce) => {
@@ -146,21 +198,58 @@ const OffresClient = () => {
                 style={styles.input}
               />
             </div>
-            <div style={styles.filterBox}>
-              <FiFilter size={20} />
-              <select
-                value={filtreType}
-                onChange={e => setFiltreType(e.target.value)}
-                style={styles.select}
-              >
-                <option value="all">Tous les types</option>
-                <option value="cdi">CDI</option>
-                <option value="cdd">CDD</option>
-                <option value="stage">Stage</option>
-                <option value="freelance">Freelance</option>
-              </select>
-            </div>
+            <button 
+              style={{...styles.filterToggle, ...(showFilters ? styles.filterToggleActive : {})}}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <FiFilter size={18} />
+              Filtres
+            </button>
           </div>
+          
+          {/* Panel de filtres avancés */}
+          {showFilters && (
+            <div style={styles.filtersPanel}>
+              <div style={styles.filtersGrid}>
+                <div style={styles.filterGroup}>
+                  <label style={styles.filterLabel}>Département</label>
+                  <select
+                    value={filtreDepartement}
+                    onChange={e => setFiltreDepartement(e.target.value)}
+                    style={styles.filterSelect}
+                  >
+                    <option value="all">Tous les départements</option>
+                    {departements.map(dept => (
+                      <option key={dept.id} value={dept.id}>{dept.nom}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div style={styles.filterGroup}>
+                  <label style={styles.filterLabel}>Type d'annonce</label>
+                  <select
+                    value={filtreType}
+                    onChange={e => setFiltreType(e.target.value)}
+                    style={styles.filterSelect}
+                  >
+                    <option value="all">Tous les types</option>
+                    {typesAnnonce.map(type => (
+                      <option key={type.id} value={type.id}>{type.libelle}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div style={styles.filterActions}>
+                <button style={styles.resetButton} onClick={resetFiltres}>
+                  Réinitialiser
+                </button>
+                <span style={styles.resultCount}>
+                  {annoncesFiltrees.length} résultat{annoncesFiltrees.length > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -335,7 +424,7 @@ const styles = {
     backgroundColor: 'transparent',
     width: '100%'
   },
-  filterBox: {
+  filterToggle: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
@@ -346,14 +435,67 @@ const styles = {
     padding: '12px 20px',
     fontSize: '16px',
     fontWeight: '500',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
   },
-  select: {
-    border: 'none',
+  filterToggleActive: {
+    backgroundColor: '#0284c7'
+  },
+  filtersPanel: {
+    marginTop: '20px',
+    padding: '20px',
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+  },
+  filtersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '20px',
+    marginBottom: '20px'
+  },
+  filterGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  filterLabel: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151'
+  },
+  filterSelect: {
+    padding: '10px 12px',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    fontSize: '14px',
+    backgroundColor: '#ffffff',
+    color: '#1f2937',
     outline: 'none',
-    fontSize: '16px',
-    backgroundColor: 'transparent',
-    color: '#ffffff'
+    transition: 'border-color 0.2s ease'
+  },
+  filterActions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: '16px',
+    borderTop: '1px solid #e5e7eb'
+  },
+  resetButton: {
+    padding: '8px 16px',
+    backgroundColor: '#f3f4f6',
+    color: '#374151',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    fontSize: '14px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  resultCount: {
+    fontSize: '14px',
+    color: '#6b7280',
+    fontWeight: '500'
   },
   annoncesSection: {
     padding: '40px 0'

@@ -11,6 +11,7 @@ const FormulaireCandidature = () => {
   const navigate = useNavigate();
   
   const [annonce, setAnnonce] = useState(null);
+  const [lieux, setLieux] = useState([]);
   const [criteres, setCriteres] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -21,7 +22,8 @@ const FormulaireCandidature = () => {
     prenom: '',
     dateNaissance: '',
     adresse: '',
-    cv: ''
+    cv: '',
+    idLieu: ''
   });
   
   const [criteresReponses, setCriteresReponses] = useState({});
@@ -69,6 +71,15 @@ const FormulaireCandidature = () => {
         });
         setCriteresReponses(initReponses);
       }
+
+      // Charger les lieux (public)
+      try {
+        const resLieux = await fetch('/api/client/lieux');
+        if (resLieux.ok) {
+          const dataLieux = await resLieux.json();
+          setLieux(dataLieux.data || []);
+        }
+      } catch (_) { /* ignorer */ }
     } catch (error) {
       setErreur(error.message);
     } finally {
@@ -110,11 +121,15 @@ const FormulaireCandidature = () => {
     setErreur('');
 
     try {
+      if (!candidatData.idLieu) {
+        throw new Error('Veuillez sélectionner un lieu');
+      }
       const token = localStorage.getItem('candidatToken');
       
       const candidatureData = {
         ...candidatData,
         idAnnonce: parseInt(effectiveAnnonceId),
+        idLieu: parseInt(candidatData.idLieu),
         criteres: Object.entries(criteresReponses).map(([critereId, valeur]) => ({
           idCritere: parseInt(critereId),
           valeur: valeur
@@ -332,6 +347,23 @@ const FormulaireCandidature = () => {
                 placeholder="Votre adresse complète"
                 required
               />
+            </div>
+          </div>
+
+          <div style={styles.row}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Lieu *</label>
+              <select
+                value={candidatData.idLieu}
+                onChange={(e) => handleCandidatChange('idLieu', e.target.value)}
+                style={styles.input}
+                required
+              >
+                <option value="">Sélectionnez un lieu</option>
+                {lieux.map(l => (
+                  <option key={l.id} value={l.id}>{l.nom}</option>
+                ))}
+              </select>
             </div>
           </div>
 

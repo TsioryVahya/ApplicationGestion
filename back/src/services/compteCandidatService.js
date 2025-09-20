@@ -177,10 +177,29 @@ class CompteCandidatService {
   // Créer un candidat avec ses critères
   static async creerCandidatAvecCriteres(candidatData, criteres) {
     try {
+      // Résoudre le statut initial de la candidature
+      // Si aucun statut fourni, utiliser "En attente" (fallback: id = 1)
+      let statutId = candidatData.idStatut;
+      if (!statutId) {
+        try {
+          const [rows] = await pool.execute(
+            "SELECT id FROM StatutCandidat WHERE LOWER(nom) = LOWER(?) LIMIT 1",
+            ['En attente']
+          );
+          if (rows && rows.length > 0) {
+            statutId = rows[0].id;
+          } else {
+            statutId = 1; // fallback si la ligne n'existe pas
+          }
+        } catch (e) {
+          statutId = 1; // fallback en cas d'erreur d'accès
+        }
+      }
+
       // Créer le candidat
       const queryCandidatInsert = `
-        INSERT INTO Candidat (nom, prenom, dateNaissance, adresse, cv, idAnnonce, idCompteCandidat, idStatut)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO Candidat (nom, prenom, dateNaissance, adresse, cv, idAnnonce, idCompteCandidat, idStatut, idLieu)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
       const [resultCandidat] = await pool.execute(queryCandidatInsert, [
@@ -191,10 +210,21 @@ class CompteCandidatService {
         candidatData.cv,
         candidatData.idAnnonce,
         candidatData.idCompteCandidat,
-        candidatData.idStatut
+        statutId,
+        candidatData.idLieu ?? null
       ]);
 
       const idCandidat = resultCandidat.insertId;
+
+      // Historiser le statut initial de la candidature
+      try {
+        await pool.execute(
+          'INSERT INTO HistoriqueCandidature (idCandidat, idStatut) VALUES (?, ?)',
+          [idCandidat, statutId]
+        );
+      } catch (e) {
+        console.error('Erreur lors de l\'insertion dans HistoriqueCandidature:', e?.message || e);
+      }
 
       // Insérer les critères si fournis
       if (criteres && criteres.length > 0) {
@@ -231,7 +261,8 @@ class CompteCandidatService {
 
       return {
         id: idCandidat,
-        ...candidatData
+        ...candidatData,
+        idStatut: statutId
       };
     } catch (error) {
       throw error;

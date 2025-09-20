@@ -7,12 +7,17 @@ class CandidatService {
     try {
       const [rows] = await pool.execute(
         `SELECT c.id, c.nom, c.prenom, c.dateNaissance, c.adresse, 
-                c.cv, c.idAnnonce, c.idStatut,
+                c.cv, c.idAnnonce, c.idStatut, c.idLieu,
                 a.reference as annonceReference,
-                s.nom as statutNom
+                s.nom as statutNom, s.nom as statut,
+                l.nom as nomLieu,
+                cc.email,
+                COALESCE(c.created_at, NOW()) as dateCandidature
          FROM Candidat c
          LEFT JOIN Annonce a ON c.idAnnonce = a.id
          LEFT JOIN StatutCandidat s ON c.idStatut = s.id
+         LEFT JOIN Lieu l ON c.idLieu = l.id
+         LEFT JOIN CompteCandidat cc ON c.idCompteCandidat = cc.id
          ORDER BY c.id DESC`
       );
       return rows;
@@ -27,12 +32,17 @@ class CandidatService {
     try {
       const [rows] = await pool.execute(
         `SELECT c.id, c.nom, c.prenom, c.dateNaissance, c.adresse, 
-                c.cv, c.idAnnonce, c.idStatut,
+                c.cv, c.idAnnonce, c.idStatut, c.idLieu,
                 a.reference as annonceReference,
-                s.nom as statutNom
+                s.nom as statutNom, s.nom as statut,
+                l.nom as nomLieu,
+                cc.email,
+                COALESCE(c.created_at, NOW()) as dateCandidature
          FROM Candidat c
          LEFT JOIN Annonce a ON c.idAnnonce = a.id
          LEFT JOIN StatutCandidat s ON c.idStatut = s.id
+         LEFT JOIN Lieu l ON c.idLieu = l.id
+         LEFT JOIN CompteCandidat cc ON c.idCompteCandidat = cc.id
          WHERE c.idAnnonce = ?
          ORDER BY c.id DESC`,
         [idAnnonce]

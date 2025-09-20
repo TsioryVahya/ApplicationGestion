@@ -231,7 +231,7 @@ class CompteCandidatController {
   // Soumettre une candidature avec critères
   static async soumettreCandidat(req, res) {
     try {
-      const { nom, prenom, dateNaissance, adresse, cv, idAnnonce, criteres } = req.body;
+      const { nom, prenom, dateNaissance, adresse, cv, idAnnonce, idLieu, criteres } = req.body;
       const idCompteCandidat = req.candidat.id;
 
       // Validation des données
@@ -250,6 +250,7 @@ class CompteCandidatController {
         adresse,
         cv,
         idAnnonce,
+        idLieu,
         idCompteCandidat,
         idStatut: 1 // Statut "En attente" par défaut
       };

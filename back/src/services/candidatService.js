@@ -47,6 +47,43 @@ class CandidatService {
          ORDER BY c.id DESC`,
         [idAnnonce]
       );
+
+      // Pour chaque candidat, récupérer ses critères de candidature
+      for (let candidat of rows) {
+        const [criteresRows] = await pool.execute(
+          `SELECT cc.idCritere, cc.valeurVarchar, cc.valeurDouble, cc.valeurBool,
+                  c.nom as nomCritere
+           FROM CandidatureCritere cc
+           LEFT JOIN Critere c ON cc.idCritere = c.id
+           WHERE cc.idCandidat = ? AND cc.idAnnonce = ?`,
+          [candidat.id, idAnnonce]
+        );
+        
+        console.log(`🔍 Candidat ${candidat.nom} ${candidat.prenom} (ID: ${candidat.id}) - Annonce ID: ${idAnnonce} - Critères trouvés:`, criteresRows);
+        
+        // Debug: afficher tous les critères trouvés
+        criteresRows.forEach(critere => {
+          console.log(`  - Critère ${critere.idCritere} (${critere.nomCritere}): ${critere.valeurVarchar || critere.valeurDouble || critere.valeurBool}`);
+        });
+        
+        // Ajouter les critères au candidat
+        candidat.criteres = criteresRows;
+        
+        // Ajouter spécifiquement le diplôme si présent
+        const diplomeCritere = criteresRows.find(c => 
+          c.nomCritere && (
+            c.nomCritere.toLowerCase().includes('diplome') || 
+            c.nomCritere.toLowerCase().includes('diplôme')
+          )
+        );
+        if (diplomeCritere && diplomeCritere.valeurVarchar) {
+          candidat.diplome = diplomeCritere.valeurVarchar;
+          console.log(`🎓 Candidat ${candidat.nom} ${candidat.prenom} - Diplôme: ${candidat.diplome}`);
+        } else {
+          console.log(`❌ Candidat ${candidat.nom} ${candidat.prenom} - Pas de diplôme trouvé. Critères:`, criteresRows);
+        }
+      }
+
       return rows;
     } catch (error) {
       console.error('Erreur lors de la récupération des candidats de l\'annonce:', error);

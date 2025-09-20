@@ -95,7 +95,10 @@ INSERT INTO Critere (nom) VALUES
 ('Niveau d\'études'),
 ('Compétences techniques'),
 ('Langues parlées'),
-('Disponibilité');
+('Disponibilité'),
+('Diplome');
+
+
 
 -- Insertion des statuts candidat
 INSERT INTO StatutCandidat (nom) VALUES 
@@ -118,6 +121,16 @@ INSERT INTO TypeAnnonce (libelle) VALUES
 ('Stage'),
 ('Freelance'),
 ('Alternance');
+
+
+INSERT INTO Diplome (nom) VALUES
+('CPE'),       -- Certificat de Premier Etude
+('BEPC'),      -- Brevet d’Études du Premier Cycle
+('BACC'),      -- Baccalauréat
+('Licence'),
+('Master'),
+('Doctorat');
+
 
 -- Ajouter une colonne de date de création pour les candidats
 ALTER TABLE Candidat 

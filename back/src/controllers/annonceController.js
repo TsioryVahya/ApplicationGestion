@@ -1,4 +1,5 @@
 const AnnonceService = require('../services/annonceService');
+const DiplomeService = require('../services/diplomeService');
 
 class AnnonceController {
   
@@ -446,6 +447,27 @@ class AnnonceController {
 
     } catch (error) {
       console.error('Erreur lors de la récupération des types d\'annonce:', error);
+      res.status(500).json({
+        success: false,
+        message: "Erreur interne du serveur",
+        error: error.message
+      });
+    }
+  }
+
+  // Obtenir tous les diplômes
+  static async obtenirDiplomes(req, res) {
+    try {
+      const diplomes = await DiplomeService.obtenirTousLesDiplomes();
+
+      res.status(200).json({
+        success: true,
+        message: "Liste des diplômes récupérée avec succès",
+        data: diplomes
+      });
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des diplômes:', error);
       res.status(500).json({
         success: false,
         message: "Erreur interne du serveur",

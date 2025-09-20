@@ -26,6 +26,7 @@ const DetailsAnnonce = () => {
   const [candidats, setCandidats] = useState([]);
   const [candidatsFiltres, setCandidatsFiltres] = useState([]);
   const [lieux, setLieux] = useState([]);
+  const [diplomes, setDiplomes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -44,6 +45,7 @@ const DetailsAnnonce = () => {
     chargerDetailsAnnonce();
     chargerCandidatsAnnonce();
     chargerLieux();
+    chargerDiplomes();
   }, [id]);
 
   useEffect(() => {
@@ -106,6 +108,22 @@ const DetailsAnnonce = () => {
       }
     } catch (err) {
       console.error('Erreur lors du chargement des lieux:', err);
+    }
+  };
+
+  const chargerDiplomes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/client/diplomes', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setDiplomes(data.data);
+      }
+    } catch (err) {
+      console.error('Erreur lors du chargement des diplômes:', err);
     }
   };
 
@@ -209,12 +227,39 @@ const DetailsAnnonce = () => {
       console.log('🏠 Après filtre lieu:', candidatsFiltres.length);
     }
 
-    // Filtre par diplôme (recherche dans le CV)
+    // Filtre par diplôme (recherche dans les critères de candidature)
     if (filtres.diplome) {
-      const diplome = filtres.diplome.toLowerCase();
-      candidatsFiltres = candidatsFiltres.filter(candidat => 
-        candidat.cv?.toLowerCase().includes(diplome)
-      );
+      const diplomeId = parseInt(filtres.diplome);
+      const diplomeNom = diplomes.find(d => d.id === diplomeId)?.nom;
+      
+      console.log('🔍 Filtre diplôme - ID:', diplomeId, 'Nom:', diplomeNom);
+      console.log('📊 Candidats avant filtre diplôme:', candidatsFiltres.length);
+      
+      candidatsFiltres = candidatsFiltres.filter(candidat => {
+        console.log(`👤 Candidat ${candidat.nom} ${candidat.prenom}:`, {
+          diplome: candidat.diplome,
+          criteres: candidat.criteres,
+          cv: candidat.cv?.substring(0, 100) + '...' // Afficher un aperçu du CV
+        });
+        
+        // Utiliser la propriété diplome si disponible, sinon fallback sur le CV
+        if (candidat.diplome) {
+          const match = candidat.diplome.toLowerCase() === diplomeNom?.toLowerCase();
+          console.log(`✅ Comparaison diplôme: "${candidat.diplome}" === "${diplomeNom}" = ${match}`);
+          return match;
+        }
+        
+        // Si pas de diplôme dans les critères, vérifier si le candidat a des critères
+        if (!candidat.criteres || candidat.criteres.length === 0) {
+          console.log(`⚠️ Candidat ${candidat.nom} ${candidat.prenom} n'a pas de critères de candidature`);
+        }
+        
+        // Fallback: rechercher dans le CV
+        const cvMatch = candidat.cv?.toLowerCase().includes(diplomeNom?.toLowerCase() || '');
+        console.log(`📄 Recherche dans CV: "${diplomeNom}" dans CV = ${cvMatch}`);
+        return cvMatch;
+      });
+      console.log('🎓 Après filtre diplôme:', candidatsFiltres.length);
     }
 
     console.log('✅ Candidats après tous les filtres:', candidatsFiltres.length);
@@ -418,14 +463,17 @@ const DetailsAnnonce = () => {
               </div>
               
               <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Diplôme/Formation</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Master, Licence, BTS..."
+                <label style={styles.filterLabel}>Diplôme</label>
+                <select
                   value={filtres.diplome}
                   onChange={(e) => handleFiltreChange('diplome', e.target.value)}
                   style={styles.filterSelect}
-                />
+                >
+                  <option value="">Tous les diplômes</option>
+                  {diplomes.map(diplome => (
+                    <option key={diplome.id} value={diplome.id}>{diplome.nom}</option>
+                  ))}
+                </select>
               </div>
             </div>
             
@@ -514,6 +562,27 @@ const DetailsAnnonce = () => {
                       <FiMapPin size={14} color="#6b7280" />
                       <span style={styles.detailLabel}>Lieu:</span>
                       <span>{candidat.nomLieu || lieux.find(l => l.id === candidat.idLieu)?.nom || 'Non spécifié'}</span>
+                    </div>
+                  )}
+                  {candidat.diplome && (
+                    <div style={styles.detailItem}>
+                      <FiFileText size={14} color="#6b7280" />
+                      <span style={styles.detailLabel}>Diplôme:</span>
+                      <span>{candidat.diplome}</span>
+                    </div>
+                  )}
+                  {/* Debug: afficher les critères */}
+                  {candidat.criteres && candidat.criteres.length > 0 && (
+                    <div style={styles.detailItem}>
+                      <FiFileText size={14} color="#6b7280" />
+                      <span style={styles.detailLabel}>Critères:</span>
+                      <div style={styles.criteresList}>
+                        {candidat.criteres.map((critere, index) => (
+                          <div key={index} style={styles.critereItem}>
+                            <strong>{critere.nomCritere}:</strong> {critere.valeurVarchar || critere.valeurDouble || (critere.valeurBool ? 'Oui' : 'Non')}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

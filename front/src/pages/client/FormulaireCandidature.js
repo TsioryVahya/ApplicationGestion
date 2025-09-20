@@ -12,6 +12,7 @@ const FormulaireCandidature = () => {
   
   const [annonce, setAnnonce] = useState(null);
   const [lieux, setLieux] = useState([]);
+  const [diplomes, setDiplomes] = useState([]);
   const [criteres, setCriteres] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -78,6 +79,15 @@ const FormulaireCandidature = () => {
         if (resLieux.ok) {
           const dataLieux = await resLieux.json();
           setLieux(dataLieux.data || []);
+        }
+      } catch (_) { /* ignorer */ }
+
+      // Charger les diplômes (public)
+      try {
+        const resDiplomes = await fetch('/api/client/diplomes');
+        if (resDiplomes.ok) {
+          const dataDiplomes = await resDiplomes.json();
+          setDiplomes(dataDiplomes.data || []);
         }
       } catch (_) { /* ignorer */ }
     } catch (error) {
@@ -169,6 +179,24 @@ const FormulaireCandidature = () => {
   const renderCritereInput = (critere) => {
     const critereId = critere.idCritere || critere.id || critere.idCritereProfil;
     const value = criteresReponses[critereId] || '';
+    const critereNom = critere.nom || critere.nomCritere || '';
+    
+    // Si le critère s'appelle "Diplôme", afficher une liste déroulante avec les diplômes
+    if (critereNom.toLowerCase().includes('diplome') || critereNom.toLowerCase().includes('diplôme')) {
+      return (
+        <select
+          value={value}
+          onChange={(e) => handleCritereChange(critereId, e.target.value)}
+          style={styles.input}
+          required={critere.estObligatoire}
+        >
+          <option value="">Sélectionnez votre diplôme...</option>
+          {diplomes.map(diplome => (
+            <option key={diplome.id} value={diplome.nom}>{diplome.nom}</option>
+          ))}
+        </select>
+      );
+    }
     
     // Déterminer le type de champ basé sur les valeurs définies du critère
     // Si valeurDouble est définie (pas null et pas undefined), c'est un champ numérique

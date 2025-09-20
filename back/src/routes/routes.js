@@ -58,6 +58,7 @@ router.get('/annonces/types', AuthController.verifierToken, AnnonceController.ob
 router.get('/client/departements', AnnonceController.obtenirDepartements);
 router.get('/client/types', AnnonceController.obtenirTypesAnnonce);
 router.get('/client/lieux', AnnonceController.obtenirLieux);
+router.get('/client/diplomes', AnnonceController.obtenirDiplomes);
 
 // Test endpoint pour vérifier les données
 router.get('/client/test-data', async (req, res) => {

@@ -431,6 +431,30 @@
   cursor: not-allowed;
 }
 
+.contrat-button-small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #8b5cf6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.contrat-button-small:hover {
+  background-color: #7c3aed;
+}
+
+.contrat-button-small:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
 .candidat-details {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -773,6 +797,13 @@
 }
 
 .entretien-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.entretien-badges {
   display: flex;
   flex-direction: column;
   align-items: flex-end;

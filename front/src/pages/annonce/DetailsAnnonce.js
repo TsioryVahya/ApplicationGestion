@@ -4,7 +4,7 @@ import {
   FiArrowLeft, FiBriefcase, FiCalendar, FiMapPin, FiUsers,
   FiMail, FiFileText, FiUser, FiClock, FiCheckCircle,
   FiXCircle, FiAlertCircle, FiFilter, FiSearch, FiX, FiSend,
-  FiCheck, FiRefreshCw
+  FiCheck, FiRefreshCw, FiFilePlus
 } from 'react-icons/fi';
 import './DetailsAnnonce.css';
 
@@ -205,6 +205,19 @@ const DetailsAnnonce = () => {
       'bon': '#10b981'     // Vert
     };
     return colors[note] || '#6b7280';
+  };
+
+  const naviguerVersContrat = (candidatId, candidatNom, candidatPrenom) => {
+    // Naviguer vers la page de création de contrat avec les infos du candidat
+    navigate(`/contrats/nouveau`, {
+      state: {
+        candidatId: candidatId,
+        candidatNom: candidatNom,
+        candidatPrenom: candidatPrenom,
+        annonceId: id,
+        annonceReference: annonce?.reference
+      }
+    });
   };
 
   const getStatutIcon = (statut) => {
@@ -867,28 +880,43 @@ const DetailsAnnonce = () => {
                     </div>
                     
                     <div className="entretien-status">
-                      <div
-                        className="statut-badge"
-                        style={{
-                          backgroundColor: getEntretienStatutColor(entretien.idStatut) + '20',
-                          color: getEntretienStatutColor(entretien.idStatut),
-                        }}
-                      >
-                        {getEntretienStatutIcon(entretien.idStatut)}
-                        <span>{entretien.statutNom}</span>
-                      </div>
-                      
-                      {entretien.resultatNote && (
+                      <div className="entretien-badges">
                         <div
-                          className="resultat-badge"
+                          className="statut-badge"
                           style={{
-                            backgroundColor: getResultatColor(entretien.resultatNote) + '20',
-                            color: getResultatColor(entretien.resultatNote),
+                            backgroundColor: getEntretienStatutColor(entretien.idStatut) + '20',
+                            color: getEntretienStatutColor(entretien.idStatut),
                           }}
                         >
-                          <span>Résultat: {entretien.resultatNote}</span>
+                          {getEntretienStatutIcon(entretien.idStatut)}
+                          <span>{entretien.statutNom}</span>
                         </div>
-                      )}
+                        
+                        {entretien.resultatNote && (
+                          <div
+                            className="resultat-badge"
+                            style={{
+                              backgroundColor: getResultatColor(entretien.resultatNote) + '20',
+                              color: getResultatColor(entretien.resultatNote),
+                            }}
+                          >
+                            <span>Résultat: {entretien.resultatNote}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <button
+                        className="contrat-button-small"
+                        onClick={() => naviguerVersContrat(
+                          entretien.idCandidat,
+                          entretien.candidatNom,
+                          entretien.candidatPrenom
+                        )}
+                        title={`Créer un contrat pour ${entretien.candidatPrenom} ${entretien.candidatNom}`}
+                      >
+                        <FiFilePlus size={14} />
+                        Contrat
+                      </button>
                     </div>
                   </div>
 

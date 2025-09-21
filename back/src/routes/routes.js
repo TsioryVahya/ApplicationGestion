@@ -3,6 +3,7 @@ const router = express.Router();
 const UtilisateursController = require('../controllers/utilisateursController');
 const AuthController = require('../controllers/authController');
 const EmployeController = require('../controllers/employeController');
+const CandidatsController = require('../controllers/candidatsController');
 const QcmController = require('../controllers/qcmController');
 const QcmPublicController = require('../controllers/qcmPublicController');
 const AnnonceController = require('../controllers/annonceController');
@@ -187,5 +188,11 @@ router.put('/candidats/notifications/:id/lue/simple', NotificationCandidatContro
 
 // Routes de debug pour notifications
 router.get('/candidats/notifications/debug', NotificationCandidatController.debugNotifications);
+router.get('/candidats', AuthController.verifierToken, CandidatsController.obtenirTousLesCandidats);
+router.get('/employes/:id', AuthController.verifierToken, CandidatsController.obtenirEmployeParId);
+router.post('/contrats', AuthController.verifierToken, CandidatsController.ajouterContrat);
+router.get('/contrats', AuthController.verifierToken, CandidatsController.obtenirTousLesContrats);
+router.get('/contrats/:id', AuthController.verifierToken, CandidatsController.obtenirContratParId);
+
 
 module.exports = router;

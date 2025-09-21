@@ -21,6 +21,11 @@ import CandidatureConfirmee from './pages/client/CandidatureConfirmee';
 import HireHubHome from './pages/client/HireHubHome';
 import DetailsAnnonceClient from './pages/client/DetailsAnnonceClient';
 import TestQCM from './pages/client/TestQCM';
+import ListeCandidats from './pages/Contrat/ListeCandidats';
+import CandidatsFormulaire from './pages/Contrat/CandidatsFormulaire';
+import ListeContrats from './pages/Contrat/ListeContrats';
+import DetailsCandidatContrat from './pages/Contrat/DetailsCandidatContrat';
+
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -100,7 +105,11 @@ function App() {
                     <Route path="/calendrier" element={<CalendrierEntretiens />} />
                     <Route path="/login" element={<Navigate to="/" replace />} />
                     <Route path="/inscription" element={<Navigate to="/" replace />} />
-                  </Routes>
+                    <Route path="/candidats" element={<ListeCandidats />} />
+                    <Route path="/contrats/ajouter/:id" element={<CandidatsFormulaire />} />
+                    <Route path="/contrats" element={<ListeContrats />}/>
+                    <Route path="/contrats/details/:id" element={<DetailsCandidatContrat />} />
+                  </Routes> 
                 </div>
               </>
             ) : (

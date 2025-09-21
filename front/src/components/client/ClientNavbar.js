@@ -10,6 +10,8 @@ import {
   FiLogIn,
   FiUserPlus
 } from 'react-icons/fi';
+import NotificationBell from '../NotificationBell';
+import './ClientNavbar.css';
 
 const ClientNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,7 +42,7 @@ const ClientNavbar = () => {
         </Link>
 
         {/* Desktop Menu */}
-        <div style={styles.desktopMenu}>
+        <div className="desktop-menu" style={styles.desktopMenu}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -49,6 +51,7 @@ const ClientNavbar = () => {
               <Link
                 key={item.path}
                 to={item.path}
+                className="menu-item"
                 style={{
                   ...styles.menuItem,
                   ...(active ? styles.activeMenuItem : {})
@@ -61,36 +64,48 @@ const ClientNavbar = () => {
           })}
         </div>
 
-        {/* Auth Buttons */}
-        <div style={styles.authButtons}>
-          {!isLoggedIn() ? (
-            <>
-              <Link to="/HireHub/connexion" style={styles.loginButton}>
-                <FiLogIn size={18} />
-                <span>Connexion</span>
-              </Link>
-              <Link to="/HireHub/inscription" style={styles.signupButton}>
-                <FiUserPlus size={18} />
-                <span>Inscription</span>
-              </Link>
-            </>
-          ) : (
-            <button 
-              onClick={() => {
-                localStorage.removeItem('candidatToken');
-                localStorage.removeItem('candidatData');
-                window.location.href = '/HireHub';
-              }}
-              style={styles.logoutButton}
-            >
-              <FiLogIn size={18} />
-              <span>Déconnexion</span>
-            </button>
+        {/* Notifications & Auth */}
+        <div className="right-section" style={styles.rightSection}>
+          {/* Notifications (only for logged in users) */}
+          {isLoggedIn() && (
+            <div style={styles.notificationContainer}>
+              <NotificationBell />
+            </div>
           )}
+          
+          {/* Auth Buttons */}
+          <div style={styles.authButtons}>
+            {!isLoggedIn() ? (
+              <>
+                <Link to="/HireHub/connexion" className="login-button" style={styles.loginButton}>
+                  <FiLogIn size={18} />
+                  <span>Connexion</span>
+                </Link>
+                <Link to="/HireHub/inscription" className="signup-button" style={styles.signupButton}>
+                  <FiUserPlus size={18} />
+                  <span>Inscription</span>
+                </Link>
+              </>
+            ) : (
+              <button 
+                className="logout-button"
+                onClick={() => {
+                  localStorage.removeItem('candidatToken');
+                  localStorage.removeItem('candidatData');
+                  window.location.href = '/HireHub';
+                }}
+                style={styles.logoutButton}
+              >
+                <FiLogIn size={18} />
+                <span>Déconnexion</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Mobile Menu Button */}
         <button 
+          className="mobile-menu-button"
           style={styles.mobileMenuButton}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
@@ -100,7 +115,7 @@ const ClientNavbar = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div style={styles.mobileMenu}>
+        <div className="mobile-menu" style={styles.mobileMenu}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -120,6 +135,14 @@ const ClientNavbar = () => {
               </Link>
             );
           })}
+          {/* Mobile Notifications */}
+          {isLoggedIn() && (
+            <div style={styles.mobileNotificationSection}>
+              <div style={styles.mobileNotificationTitle}>Notifications</div>
+              <NotificationBell />
+            </div>
+          )}
+          
           <div style={styles.mobileAuthButtons}>
             {!isLoggedIn() ? (
               <>
@@ -206,10 +229,7 @@ const styles = {
   desktopMenu: {
     display: 'flex',
     alignItems: 'center',
-    gap: '32px',
-    '@media (max-width: 768px)': {
-      display: 'none'
-    }
+    gap: '32px'
   },
   menuItem: {
     display: 'flex',
@@ -228,13 +248,19 @@ const styles = {
     color: '#1e3a8a',
     backgroundColor: '#dbeafe'
   },
+  rightSection: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  notificationContainer: {
+    display: 'flex',
+    alignItems: 'center'
+  },
   authButtons: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    '@media (max-width: 768px)': {
-      display: 'none'
-    }
+    gap: '12px'
   },
   loginButton: {
     display: 'flex',
@@ -270,19 +296,13 @@ const styles = {
     border: 'none',
     color: '#6b7280',
     cursor: 'pointer',
-    padding: '8px',
-    '@media (max-width: 768px)': {
-      display: 'block'
-    }
+    padding: '8px'
   },
   mobileMenu: {
     display: 'block',
     backgroundColor: '#ffffff',
     borderTop: '1px solid #e5e7eb',
-    padding: '20px',
-    '@media (min-width: 769px)': {
-      display: 'none'
-    }
+    padding: '20px'
   },
   mobileMenuItem: {
     display: 'flex',
@@ -297,6 +317,20 @@ const styles = {
   },
   activeMobileMenuItem: {
     color: '#1e3a8a'
+  },
+  mobileNotificationSection: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '12px 0',
+    marginTop: '12px',
+    borderTop: '1px solid #f3f4f6',
+    borderBottom: '1px solid #f3f4f6'
+  },
+  mobileNotificationTitle: {
+    fontSize: '16px',
+    fontWeight: '500',
+    color: '#6b7280'
   },
   mobileAuthButtons: {
     display: 'flex',

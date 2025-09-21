@@ -1,22 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  FiArrowLeft, 
-  FiBriefcase, 
-  FiCalendar, 
-  FiMapPin, 
-  FiUsers,
-  FiMail,
-  FiPhone,
-  FiFileText,
-  FiUser,
-  FiClock,
-  FiCheckCircle,
-  FiXCircle,
-  FiAlertCircle,
-  FiFilter,
-  FiSearch,
-  FiX
+import {
+  FiArrowLeft, FiBriefcase, FiCalendar, FiMapPin, FiUsers,
+  FiMail, FiFileText, FiUser, FiClock, FiCheckCircle,
+  FiXCircle, FiAlertCircle, FiFilter, FiSearch, FiX, FiSend
 } from 'react-icons/fi';
 
 const DetailsAnnonce = () => {
@@ -26,26 +13,23 @@ const DetailsAnnonce = () => {
   const [candidats, setCandidats] = useState([]);
   const [candidatsFiltres, setCandidatsFiltres] = useState([]);
   const [lieux, setLieux] = useState([]);
-  const [diplomes, setDiplomes] = useState([]);
+  const [qcms, setQcms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showQcmModal, setShowQcmModal] = useState(false);
+  const [selectedCandidat, setSelectedCandidat] = useState(null);
+  const [sendingQcm, setSendingQcm] = useState(false);
   const [filtres, setFiltres] = useState({
-    statut: '',
-    recherche: '',
-    dateDebut: '',
-    dateFin: '',
-    ageMin: '',
-    ageMax: '',
-    lieu: '',
-    diplome: ''
+    statut: '', recherche: '', dateDebut: '', dateFin: '',
+    ageMin: '', ageMax: '', lieu: '', diplome: ''
   });
 
   useEffect(() => {
     chargerDetailsAnnonce();
     chargerCandidatsAnnonce();
     chargerLieux();
-    chargerDiplomes();
+    chargerQcms();
   }, [id]);
 
   useEffect(() => {
@@ -59,7 +43,6 @@ const DetailsAnnonce = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      
       if (data.success) {
         setAnnonce(data.data);
       } else {
@@ -78,11 +61,7 @@ const DetailsAnnonce = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      
-      console.log('Réponse API candidats:', data); // Debug
-      
       if (data.success) {
-        console.log('📊 Données candidats reçues:', data.data);
         setCandidats(data.data);
         setCandidatsFiltres(data.data);
       } else {
@@ -102,7 +81,6 @@ const DetailsAnnonce = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      
       if (data.success) {
         setLieux(data.data);
       }
@@ -111,159 +89,99 @@ const DetailsAnnonce = () => {
     }
   };
 
-  const chargerDiplomes = async () => {
+  const chargerQcms = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/client/diplomes', {
+      const response = await fetch('/api/qcm/tests', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      
+
+      console.log('🔍 Réponse API QCM:', data); // Debug
       if (data.success) {
-        setDiplomes(data.data);
+        setQcms(data.data);
+        console.log('✅ QCMs chargés:', data.data); // Debug
+      } else {
+        console.error('❌ Erreur API QCM:', data.message);
       }
     } catch (err) {
-      console.error('Erreur lors du chargement des diplômes:', err);
+      console.error('❌ Erreur lors du chargement des QCM:', err);
     }
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
+      day: 'numeric', month: 'long', year: 'numeric'
     });
   };
 
   const getStatutIcon = (statut) => {
     switch (statut?.toLowerCase()) {
-      case 'accepté':
-        return <FiCheckCircle color="#10b981" size={16} />;
-      case 'refusé':
-        return <FiXCircle color="#ef4444" size={16} />;
-      case 'en cours d\'évaluation':
-        return <FiAlertCircle color="#f59e0b" size={16} />;
-      default:
-        return <FiClock color="#6b7280" size={16} />;
+      case 'accepté': return <FiCheckCircle color="#10b981" size={16} />;
+      case 'refusé': return <FiXCircle color="#ef4444" size={16} />;
+      case 'en cours d\'évaluation': return <FiAlertCircle color="#f59e0b" size={16} />;
+      default: return <FiClock color="#6b7280" size={16} />;
     }
   };
 
   const getStatutColor = (statut) => {
     switch (statut?.toLowerCase()) {
-      case 'accepté':
-        return '#10b981';
-      case 'refusé':
-        return '#ef4444';
-      case 'en cours d\'évaluation':
-        return '#f59e0b';
-      default:
-        return '#6b7280';
+      case 'accepté': return '#10b981';
+      case 'refusé': return '#ef4444';
+      case 'en cours d\'évaluation': return '#f59e0b';
+      default: return '#6b7280';
     }
   };
 
   const appliquerFiltres = () => {
-    console.log('🔍 Application des filtres:', filtres);
-    console.log('📊 Candidats avant filtrage:', candidats.length);
-    
-    let candidatsFiltres = [...candidats];
-
-    // Filtre par statut
+    let res = [...candidats];
     if (filtres.statut) {
-      candidatsFiltres = candidatsFiltres.filter(candidat => 
-        candidat.statut?.toLowerCase() === filtres.statut.toLowerCase() ||
-        candidat.statutNom?.toLowerCase() === filtres.statut.toLowerCase()
+      res = res.filter(c =>
+        c.statut?.toLowerCase() === filtres.statut.toLowerCase() ||
+        c.statutNom?.toLowerCase() === filtres.statut.toLowerCase()
       );
-      console.log('📋 Après filtre statut:', candidatsFiltres.length);
     }
-
-    // Filtre par recherche (nom, prénom, email)
     if (filtres.recherche) {
-      const recherche = filtres.recherche.toLowerCase();
-      candidatsFiltres = candidatsFiltres.filter(candidat => 
-        candidat.nom?.toLowerCase().includes(recherche) ||
-        candidat.prenom?.toLowerCase().includes(recherche) ||
-        candidat.email?.toLowerCase().includes(recherche)
+      const r = filtres.recherche.toLowerCase();
+      res = res.filter(c =>
+        c.nom?.toLowerCase().includes(r) ||
+        c.prenom?.toLowerCase().includes(r) ||
+        c.email?.toLowerCase().includes(r)
       );
     }
-
-    // Filtre par date de candidature
     if (filtres.dateDebut) {
-      candidatsFiltres = candidatsFiltres.filter(candidat => 
-        new Date(candidat.dateCandidature) >= new Date(filtres.dateDebut)
-      );
+      res = res.filter(c => new Date(c.dateCandidature) >= new Date(filtres.dateDebut));
     }
-
     if (filtres.dateFin) {
-      candidatsFiltres = candidatsFiltres.filter(candidat => 
-        new Date(candidat.dateCandidature) <= new Date(filtres.dateFin)
-      );
+      res = res.filter(c => new Date(c.dateCandidature) <= new Date(filtres.dateFin));
     }
-
-    // Filtre par âge
     if (filtres.ageMin) {
-      candidatsFiltres = candidatsFiltres.filter(candidat => {
-        if (!candidat.dateNaissance) return false;
-        const age = new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear();
+      res = res.filter(c => {
+        if (!c.dateNaissance) return false;
+        const age = new Date().getFullYear() - new Date(c.dateNaissance).getFullYear();
         return age >= parseInt(filtres.ageMin);
       });
     }
-
     if (filtres.ageMax) {
-      candidatsFiltres = candidatsFiltres.filter(candidat => {
-        if (!candidat.dateNaissance) return false;
-        const age = new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear();
+      res = res.filter(c => {
+        if (!c.dateNaissance) return false;
+        const age = new Date().getFullYear() - new Date(c.dateNaissance).getFullYear();
         return age <= parseInt(filtres.ageMax);
       });
     }
-
-    // Filtre par lieu
     if (filtres.lieu) {
-      candidatsFiltres = candidatsFiltres.filter(candidat => {
+      res = res.filter(c => {
         const lieuId = parseInt(filtres.lieu);
-        return candidat.idLieu === lieuId || 
-               candidat.nomLieu?.toLowerCase().includes(filtres.lieu.toLowerCase());
+        return c.idLieu === lieuId || c.nomLieu?.toLowerCase().includes(filtres.lieu.toLowerCase());
       });
-      console.log('🏠 Après filtre lieu:', candidatsFiltres.length);
     }
-
-    // Filtre par diplôme (recherche dans les critères de candidature)
     if (filtres.diplome) {
-      const diplomeId = parseInt(filtres.diplome);
-      const diplomeNom = diplomes.find(d => d.id === diplomeId)?.nom;
-      
-      console.log('🔍 Filtre diplôme - ID:', diplomeId, 'Nom:', diplomeNom);
-      console.log('📊 Candidats avant filtre diplôme:', candidatsFiltres.length);
-      
-      candidatsFiltres = candidatsFiltres.filter(candidat => {
-        console.log(`👤 Candidat ${candidat.nom} ${candidat.prenom}:`, {
-          diplome: candidat.diplome,
-          criteres: candidat.criteres,
-          cv: candidat.cv?.substring(0, 100) + '...' // Afficher un aperçu du CV
-        });
-        
-        // Utiliser la propriété diplome si disponible, sinon fallback sur le CV
-        if (candidat.diplome) {
-          const match = candidat.diplome.toLowerCase() === diplomeNom?.toLowerCase();
-          console.log(`✅ Comparaison diplôme: "${candidat.diplome}" === "${diplomeNom}" = ${match}`);
-          return match;
-        }
-        
-        // Si pas de diplôme dans les critères, vérifier si le candidat a des critères
-        if (!candidat.criteres || candidat.criteres.length === 0) {
-          console.log(`⚠️ Candidat ${candidat.nom} ${candidat.prenom} n'a pas de critères de candidature`);
-        }
-        
-        // Fallback: rechercher dans le CV
-        const cvMatch = candidat.cv?.toLowerCase().includes(diplomeNom?.toLowerCase() || '');
-        console.log(`📄 Recherche dans CV: "${diplomeNom}" dans CV = ${cvMatch}`);
-        return cvMatch;
-      });
-      console.log('🎓 Après filtre diplôme:', candidatsFiltres.length);
+      const d = filtres.diplome.toLowerCase();
+      res = res.filter(c => c.cv?.toLowerCase().includes(d));
     }
-
-    console.log('✅ Candidats après tous les filtres:', candidatsFiltres.length);
-    setCandidatsFiltres(candidatsFiltres);
+    setCandidatsFiltres(res);
   };
 
   const handleFiltreChange = (key, value) => {
@@ -272,20 +190,47 @@ const DetailsAnnonce = () => {
 
   const resetFiltres = () => {
     setFiltres({
-      statut: '',
-      recherche: '',
-      dateDebut: '',
-      dateFin: '',
-      ageMin: '',
-      ageMax: '',
-      lieu: '',
-      diplome: ''
+      statut: '', recherche: '', dateDebut: '', dateFin: '',
+      ageMin: '', ageMax: '', lieu: '', diplome: ''
     });
   };
 
   const getStatutsUniques = () => {
-    const statuts = candidats.map(c => c.statut).filter(Boolean);
+    const statuts = candidats.map(c => c.statut || c.statutNom).filter(Boolean);
     return [...new Set(statuts)];
+  };
+
+  const envoyerTestQCMCandidat = async (candidat, qcmId, dureeValidite = 72) => {
+    setSendingQcm(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/notifications/envoyer-qcm', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          idCandidat: candidat.id,
+          idAnnonce: parseInt(id),
+          idQcmTest: qcmId,
+          dureeValidite
+        })
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert(`✅ Test QCM envoyé avec succès à ${candidat.prenom} ${candidat.nom}`);
+        setShowQcmModal(false);
+        setSelectedCandidat(null);
+      } else {
+        alert(`❌ Erreur lors de l'envoi du test QCM: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Erreur envoi QCM:', error);
+      alert('❌ Erreur lors de l\'envoi du test QCM');
+    } finally {
+      setSendingQcm(false);
+    }
   };
 
   if (loading) return <div style={styles.loading}>Chargement...</div>;
@@ -294,7 +239,6 @@ const DetailsAnnonce = () => {
 
   return (
     <div style={styles.container}>
-      {/* Header avec bouton retour */}
       <div style={styles.header}>
         <button onClick={() => navigate(-1)} style={styles.backButton}>
           <FiArrowLeft size={20} />
@@ -303,7 +247,6 @@ const DetailsAnnonce = () => {
         <h1 style={styles.title}>Détails de l'Annonce</h1>
       </div>
 
-      {/* Détails de l'annonce */}
       <div style={styles.annonceCard}>
         <div style={styles.annonceHeader}>
           <div style={styles.annonceTitle}>
@@ -349,7 +292,6 @@ const DetailsAnnonce = () => {
         </div>
       </div>
 
-      {/* Section Candidats */}
       <div style={styles.candidatsSection}>
         <div style={styles.candidatsHeader}>
           <div style={styles.candidatsTitle}>
@@ -357,8 +299,8 @@ const DetailsAnnonce = () => {
             <h2>Candidats Associés</h2>
           </div>
           <div style={styles.candidatsActions}>
-            <button 
-              style={{...styles.filterButton, ...(showFilters ? styles.filterButtonActive : {})}}
+            <button
+              style={{ ...styles.filterButton, ...(showFilters ? styles.filterButtonActive : {}) }}
               onClick={() => setShowFilters(!showFilters)}
             >
               <FiFilter size={16} />
@@ -370,7 +312,6 @@ const DetailsAnnonce = () => {
           </div>
         </div>
 
-        {/* Panel de filtres */}
         {showFilters && (
           <div style={styles.filtersPanel}>
             <div style={styles.filtersGrid}>
@@ -387,7 +328,7 @@ const DetailsAnnonce = () => {
                   />
                 </div>
               </div>
-              
+
               <div style={styles.filterGroup}>
                 <label style={styles.filterLabel}>Statut</label>
                 <select
@@ -401,7 +342,7 @@ const DetailsAnnonce = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div style={styles.filterGroup}>
                 <label style={styles.filterLabel}>Date début</label>
                 <input
@@ -411,7 +352,7 @@ const DetailsAnnonce = () => {
                   style={styles.filterSelect}
                 />
               </div>
-              
+
               <div style={styles.filterGroup}>
                 <label style={styles.filterLabel}>Date fin</label>
                 <input
@@ -421,7 +362,7 @@ const DetailsAnnonce = () => {
                   style={styles.filterSelect}
                 />
               </div>
-              
+
               <div style={styles.filterGroup}>
                 <label style={styles.filterLabel}>Âge minimum</label>
                 <input
@@ -434,7 +375,7 @@ const DetailsAnnonce = () => {
                   max="65"
                 />
               </div>
-              
+
               <div style={styles.filterGroup}>
                 <label style={styles.filterLabel}>Âge maximum</label>
                 <input
@@ -447,7 +388,7 @@ const DetailsAnnonce = () => {
                   max="65"
                 />
               </div>
-              
+
               <div style={styles.filterGroup}>
                 <label style={styles.filterLabel}>Lieu</label>
                 <select
@@ -461,22 +402,19 @@ const DetailsAnnonce = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Diplôme</label>
-                <select
+                <label style={styles.filterLabel}>Diplôme/Formation</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Master, Licence, BTS..."
                   value={filtres.diplome}
                   onChange={(e) => handleFiltreChange('diplome', e.target.value)}
                   style={styles.filterSelect}
-                >
-                  <option value="">Tous les diplômes</option>
-                  {diplomes.map(diplome => (
-                    <option key={diplome.id} value={diplome.id}>{diplome.nom}</option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
-            
+
             <div style={styles.filterActions}>
               <button style={styles.resetButton} onClick={resetFiltres}>
                 <FiX size={16} />
@@ -514,17 +452,39 @@ const DetailsAnnonce = () => {
                         <FiUser size={14} color="#6b7280" />
                         <span>ID: {candidat.id}</span>
                       </div>
+                      {candidat.email && (
+                        <div style={styles.contactItem}>
+                          <FiMail size={14} color="#6b7280" />
+                          <span>{candidat.email}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div style={styles.candidatStatut}>
-                    <div style={{
-                      ...styles.statutBadge,
-                      backgroundColor: getStatutColor(candidat.statut || candidat.statutNom) + '20',
-                      color: getStatutColor(candidat.statut || candidat.statutNom)
-                    }}>
+
+                  <div style={styles.candidatActions}>
+                    <div
+                      style={{
+                        ...styles.statutBadge,
+                        backgroundColor: getStatutColor(candidat.statut || candidat.statutNom) + '20',
+                        color: getStatutColor(candidat.statut || candidat.statutNom),
+                      }}
+                    >
                       {getStatutIcon(candidat.statut || candidat.statutNom)}
                       <span>{candidat.statut || candidat.statutNom || 'En attente'}</span>
                     </div>
+
+                    <button
+                      style={styles.qcmButtonSmall}
+                      onClick={() => {
+                        setSelectedCandidat(candidat);
+                        setShowQcmModal(true);
+                      }}
+                      disabled={sendingQcm}
+                      title={`Envoyer un test QCM à ${candidat.prenom} ${candidat.nom}`}
+                    >
+                      <FiSend size={14} />
+                      QCM
+                    </button>
                   </div>
                 </div>
 
@@ -536,53 +496,24 @@ const DetailsAnnonce = () => {
                       <span>{formatDate(candidat.dateCandidature)}</span>
                     </div>
                   )}
+
                   {candidat.dateNaissance && (
                     <div style={styles.detailItem}>
                       <FiUser size={14} color="#6b7280" />
                       <span style={styles.detailLabel}>Âge:</span>
-                      <span>{new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear()} ans</span>
+                      <span>
+                        {new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear()} ans
+                      </span>
                     </div>
                   )}
-                  {candidat.adresse && (
-                    <div style={styles.detailItem}>
-                      <FiMapPin size={14} color="#6b7280" />
-                      <span style={styles.detailLabel}>Adresse:</span>
-                      <span>{candidat.adresse}</span>
-                    </div>
-                  )}
-                  {candidat.email && (
-                    <div style={styles.detailItem}>
-                      <FiMail size={14} color="#6b7280" />
-                      <span style={styles.detailLabel}>Email:</span>
-                      <span>{candidat.email}</span>
-                    </div>
-                  )}
+
                   {(candidat.nomLieu || candidat.idLieu) && (
                     <div style={styles.detailItem}>
                       <FiMapPin size={14} color="#6b7280" />
                       <span style={styles.detailLabel}>Lieu:</span>
-                      <span>{candidat.nomLieu || lieux.find(l => l.id === candidat.idLieu)?.nom || 'Non spécifié'}</span>
-                    </div>
-                  )}
-                  {candidat.diplome && (
-                    <div style={styles.detailItem}>
-                      <FiFileText size={14} color="#6b7280" />
-                      <span style={styles.detailLabel}>Diplôme:</span>
-                      <span>{candidat.diplome}</span>
-                    </div>
-                  )}
-                  {/* Debug: afficher les critères */}
-                  {candidat.criteres && candidat.criteres.length > 0 && (
-                    <div style={styles.detailItem}>
-                      <FiFileText size={14} color="#6b7280" />
-                      <span style={styles.detailLabel}>Critères:</span>
-                      <div style={styles.criteresList}>
-                        {candidat.criteres.map((critere, index) => (
-                          <div key={index} style={styles.critereItem}>
-                            <strong>{critere.nomCritere}:</strong> {critere.valeurVarchar || critere.valeurDouble || (critere.valeurBool ? 'Oui' : 'Non')}
-                          </div>
-                        ))}
-                      </div>
+                      <span>
+                        {candidat.nomLieu || lieux.find(l => l.id === candidat.idLieu)?.nom || 'Non spécifié'}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -594,10 +525,9 @@ const DetailsAnnonce = () => {
                       <span>CV / Profil</span>
                     </div>
                     <p style={styles.motivationText}>
-                      {candidat.cv.length > 200 
+                      {candidat.cv.length > 200
                         ? candidat.cv.substring(0, 200) + '...'
-                        : candidat.cv
-                      }
+                        : candidat.cv}
                     </p>
                   </div>
                 )}
@@ -606,6 +536,51 @@ const DetailsAnnonce = () => {
           </div>
         )}
       </div>
+
+      {showQcmModal && selectedCandidat && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <div style={styles.modalHeader}>
+              <h3>Envoyer un test QCM</h3>
+              <button
+                style={styles.closeButton}
+                onClick={() => {
+                  setShowQcmModal(false);
+                  setSelectedCandidat(null);
+                }}
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+            <div style={styles.modalBody}>
+              <p>
+                Candidat: <strong>{selectedCandidat.prenom} {selectedCandidat.nom}</strong>
+              </p>
+              <div style={styles.qcmList}>
+                <label>Choisir un test QCM :</label>
+                {qcms.length === 0 ? (
+                  <p style={{color: '#ef4444', fontStyle: 'italic'}}>
+                    ❌ Aucun test QCM disponible. Vérifiez la console pour plus de détails.
+                  </p>
+                ) : (
+                  qcms.map(qcm => (
+                    <button
+                      key={qcm.id}
+                      style={styles.qcmOption}
+                      onClick={() => envoyerTestQCMCandidat(selectedCandidat, qcm.id)}
+                      disabled={sendingQcm}
+                    >
+                      <FiFileText size={16} />
+                      <span>{qcm.nom || qcm.titre}</span>
+                      {sendingQcm && <span>Envoi en cours...</span>}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -634,12 +609,9 @@ const styles = {
     cursor: 'pointer',
     fontSize: '14px',
     color: '#475569',
-    transition: 'all 0.2s ease',
-    ':hover': {
-      backgroundColor: '#f1f5f9'
-    }
+    transition: 'all 0.2s ease'
   },
-  title: {
+title: {
     fontSize: '28px',
     fontWeight: '700',
     color: '#1e293b',
@@ -743,123 +715,15 @@ const styles = {
     alignItems: 'center',
     gap: '12px'
   },
+  candidatsActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
   candidatsCount: {
     fontSize: '14px',
     color: '#64748b',
-    backgroundColor: '#f1f5f9',
-    padding: '6px 12px',
-    borderRadius: '20px',
     fontWeight: '500'
-  },
-  noCandidats: {
-    textAlign: 'center',
-    padding: '60px 20px',
-    color: '#64748b'
-  },
-  candidatsList: {
-    display: 'grid',
-    gap: '16px'
-  },
-  candidatCard: {
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    padding: '20px',
-    backgroundColor: '#fafafa'
-  },
-  candidatHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '16px'
-  },
-  candidatInfo: {
-    flex: 1
-  },
-  candidatNom: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: '8px'
-  },
-  candidatContact: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px'
-  },
-  contactItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontSize: '14px',
-    color: '#64748b'
-  },
-  candidatStatut: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontSize: '14px',
-    fontWeight: '500'
-  },
-  candidatDetails: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '12px',
-    marginBottom: '16px'
-  },
-  detailItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px'
-  },
-  detailLabel: {
-    fontSize: '12px',
-    color: '#64748b',
-    fontWeight: '500'
-  },
-  motivationSection: {
-    borderTop: '1px solid #e2e8f0',
-    paddingTop: '16px'
-  },
-  motivationHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    marginBottom: '8px',
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#475569'
-  },
-  motivationText: {
-    fontSize: '14px',
-    lineHeight: '1.5',
-    color: '#64748b',
-    fontStyle: 'italic',
-    margin: 0
-  },
-  loading: {
-    textAlign: 'center',
-    padding: '60px',
-    fontSize: '16px',
-    color: '#64748b'
-  },
-  error: {
-    textAlign: 'center',
-    padding: '60px',
-    fontSize: '16px',
-    color: '#ef4444'
-  },
-  statutBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 12px',
-    borderRadius: '20px',
-    fontSize: '12px',
-    fontWeight: '600',
-    border: '1px solid currentColor'
   },
   filterButton: {
     display: 'flex',
@@ -904,16 +768,6 @@ const styles = {
     textTransform: 'uppercase',
     letterSpacing: '0.5px'
   },
-  filterSelect: {
-    padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '14px',
-    backgroundColor: '#ffffff',
-    color: '#1f2937',
-    outline: 'none',
-    transition: 'border-color 0.2s ease'
-  },
   searchContainer: {
     position: 'relative',
     display: 'flex',
@@ -937,6 +791,16 @@ const styles = {
     width: '100%',
     transition: 'border-color 0.2s ease'
   },
+  filterSelect: {
+    padding: '8px 12px',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    fontSize: '14px',
+    backgroundColor: '#ffffff',
+    color: '#1f2937',
+    outline: 'none',
+    transition: 'border-color 0.2s ease'
+  },
   filterActions: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -957,15 +821,182 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.2s ease'
   },
-  candidatsActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
-  },
   resultCount: {
     fontSize: '12px',
     color: '#6b7280',
     fontWeight: '500'
+  },
+  candidatsList: {
+    display: 'grid',
+    gap: '16px'
+  },
+  candidatCard: {
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '20px'
+  },
+  candidatHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '12px'
+  },
+  candidatInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  candidatNom: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontWeight: 600,
+    color: '#1e293b'
+  },
+  candidatContact: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    flexWrap: 'wrap'
+  },
+  contactItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    color: '#64748b',
+    fontSize: '13px'
+  },
+  candidatActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  statutBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '600',
+    border: '1px solid currentColor'
+  },
+  qcmButtonSmall: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    backgroundColor: '#10b981',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  candidatDetails: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '10px',
+    marginTop: '12px'
+  },
+  detailItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '14px',
+    color: '#475569'
+  },
+  detailLabel: {
+    fontWeight: 600,
+    color: '#64748b'
+  },
+  motivationSection: {
+    marginTop: '12px',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '12px'
+  },
+  motivationHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    color: '#6b7280',
+    marginBottom: '8px'
+  },
+  motivationText: {
+    margin: 0,
+    color: '#475569',
+    fontSize: '14px'
+  },
+  noCandidats: {
+    display: 'grid',
+    placeItems: 'center',
+    padding: '24px',
+    color: '#64748b',
+    gap: '8px'
+  },
+  loading: {
+    padding: '24px'
+  },
+  error: {
+    padding: '24px',
+    color: '#ef4444'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: '12px',
+    padding: '24px',
+    maxWidth: '520px',
+    width: '90%',
+    maxHeight: '80vh',
+    overflowY: 'auto'
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+    borderBottom: '1px solid #e2e8f0',
+    paddingBottom: '12px'
+  },
+  closeButton: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '4px'
+  },
+  modalBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  qcmList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  qcmOption: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 12px',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    cursor: 'pointer'
   }
 };
 

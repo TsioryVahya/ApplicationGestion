@@ -20,6 +20,7 @@ import FormulaireCandidature from './pages/client/FormulaireCandidature';
 import CandidatureConfirmee from './pages/client/CandidatureConfirmee';
 import HireHubHome from './pages/client/HireHubHome';
 import DetailsAnnonceClient from './pages/client/DetailsAnnonceClient';
+import TestQCM from './pages/client/TestQCM';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -77,6 +78,7 @@ function App() {
           <Route path="/HireHub" element={<HireHubHome />} />
           <Route path="/HireHub/annonces" element={<OffresClient />} />
           <Route path="/HireHub/annonces/:id" element={<DetailsAnnonceClient />} />
+          <Route path="/HireHub/test/:token" element={<TestQCM />} />
           
           {/* Routes conditionnelles selon l'authentification */}
           <Route path="/*" element={

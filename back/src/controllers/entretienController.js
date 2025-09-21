@@ -186,6 +186,7 @@ class EntretienController {
     try {
       const { id } = req.params;
       const historique = await EntretienService.obtenirHistoriqueEntretien(id);
+      
       res.json({
         success: true,
         data: historique
@@ -194,7 +195,26 @@ class EntretienController {
       console.error('Erreur dans obtenirHistoriqueEntretien:', error);
       res.status(500).json({
         success: false,
-        message: 'Erreur lors de la récupération de l\'historique'
+        message: 'Erreur lors de la récupération de l\'historique de l\'entretien'
+      });
+    }
+  }
+
+  // Récupérer les entretiens d'une annonce
+  static async obtenirEntretiensParAnnonce(req, res) {
+    try {
+      const { annonceId } = req.params;
+      const entretiens = await EntretienService.obtenirEntretiensParAnnonce(annonceId);
+      
+      res.json({
+        success: true,
+        data: entretiens
+      });
+    } catch (error) {
+      console.error('Erreur dans obtenirEntretiensParAnnonce:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la récupération des entretiens de l\'annonce'
       });
     }
   }

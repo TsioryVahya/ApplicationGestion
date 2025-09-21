@@ -1,5 +1,6 @@
 const AnnonceService = require('../services/annonceService');
 const DiplomeService = require('../services/diplomeService');
+const { pool } = require('../config/database');
 
 class AnnonceController {
   
@@ -472,6 +473,29 @@ class AnnonceController {
         success: false,
         message: "Erreur interne du serveur",
         error: error.message
+      });
+    }
+  }
+
+  // Test endpoint pour vérifier les données
+  static async obtenirTestData(req, res) {
+    try {
+      const [depts] = await pool.execute('SELECT id, nom FROM Departement ORDER BY nom');
+      const [types] = await pool.execute('SELECT id, nom FROM TypeAnnonce ORDER BY nom');
+      
+      res.json({
+        success: true,
+        data: {
+          departements: depts,
+          types: types,
+          message: 'Données de test récupérées'
+        }
+      });
+    } catch (error) {
+      console.error('Erreur test-data:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message
       });
     }
   }

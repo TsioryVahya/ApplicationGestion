@@ -4,6 +4,7 @@ const UtilisateursController = require('../controllers/utilisateursController');
 const AuthController = require('../controllers/authController');
 const EmployeController = require('../controllers/employeController');
 const QcmController = require('../controllers/qcmController');
+const QcmPublicController = require('../controllers/qcmPublicController');
 const AnnonceController = require('../controllers/annonceController');
 const ProfilController = require('../controllers/profilController');
 const CritereController = require('../controllers/critereController');
@@ -12,6 +13,7 @@ const CandidatController = require('../controllers/candidatController');
 const EntretienController = require('../controllers/entretienController');
 const CompteCandidatController = require('../controllers/compteCandidatController');
 const NotificationController = require('../controllers/notificationController');
+const NotificationCandidatController = require('../controllers/notificationCandidatController');
 
 // Routes d'authentification
 router.post('/auth/inscription', AuthController.inscription);
@@ -25,134 +27,41 @@ router.get('/employes/:id', EmployeController.obtenirEmployeParId);
 
 // Routes publiques pour les tests QCM (accès candidats)
 router.get('/qcm/public/tests/:id', QcmController.obtenirTestParId);
+router.post('/qcm/public/token/:token/soumettre', QcmPublicController.soumettreReponses);
+router.get('/qcm/public/token/:token', QcmPublicController.obtenirTestParToken);
 
-// Route pour accéder au test QCM par token
-router.get('/qcm/public/token/:token', async (req, res) => {
+// Routes de debug QCM
+router.get('/qcm/public/tests/:token/debug', QcmPublicController.debugToken);
+router.get('/qcm/debug/test/:testId', QcmPublicController.debugTest);
+router.get('/qcm/debug/reponses/:candidatId/:testId', QcmPublicController.debugReponses);
+
+// Routes pour les résultats QCM (protégées - admin)
+router.get('/qcm/resultats/annonce/:annonceId', AuthController.verifierToken, QcmPublicController.obtenirResultatsQcmAnnonce);
+
+// Route de debug pour insérer les statuts d'entretien manquants
+router.post('/debug/init-statuts-entretien', async (req, res) => {
   try {
-    const { token } = req.params;
     const { pool } = require('../config/database');
     
-    // Vérifier si le token existe et est valide
-    const [invitations] = await pool.execute(`
-      SELECT iq.*, qt.*, c.nom as candidatNom, c.prenom as candidatPrenom
-      FROM InvitationQCM iq
-      JOIN QcmTest qt ON iq.idQcmTest = qt.id
-      JOIN Candidat c ON iq.idCandidat = c.id
-      WHERE iq.token = ? AND iq.dateExpiration > NOW() AND iq.statut != 'terminee'
-    `, [token]);
+    // Insérer les statuts d'entretien
+    await pool.execute(`
+      INSERT IGNORE INTO StatutEntretien (id, nom) VALUES 
+      (1, 'En attente'),
+      (2, 'Confirmé'),
+      (3, 'Reporté'),
+      (4, 'Annulé')
+    `);
     
-    if (invitations.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Token invalide ou expiré"
-      });
-    }
-    
-    const invitation = invitations[0];
-    
-    // Récupérer les questions du test
-    const [questions] = await pool.execute(`
-      SELECT q.*, GROUP_CONCAT(c.texte ORDER BY c.id SEPARATOR '|||') as reponses,
-             GROUP_CONCAT(c.estCorrect ORDER BY c.id SEPARATOR '|||') as corrections
-      FROM QcmQuestion q
-      LEFT JOIN QcmChoix c ON q.id = c.idQuestion
-      WHERE q.idTest = ?
-      GROUP BY q.id
-      ORDER BY q.numero
-    `, [invitation.idQcmTest]);
-    
-    // Formater les questions avec leurs réponses
-    const questionsFormatees = questions.map(q => ({
-      ...q,
-      reponses: q.reponses ? q.reponses.split('|||').map((texte, index) => ({
-        texte,
-        estCorrecte: q.corrections.split('|||')[index] === '1'
-      })) : []
-    }));
-    
-    // Marquer comme vue si pas encore vue
-    if (!invitation.dateVue) {
-      await pool.execute(`
-        UPDATE InvitationQCM SET dateVue = NOW(), statut = 'vue' WHERE token = ?
-      `, [token]);
-    }
+    // Vérifier les statuts créés
+    const [statuts] = await pool.execute('SELECT * FROM StatutEntretien ORDER BY id');
     
     res.json({
       success: true,
-      data: {
-        test: {
-          id: invitation.idQcmTest,
-          nom: invitation.nom,
-          description: invitation.description || 'Test QCM',
-          dureeMinutes: invitation.dureeMinutes || 30,
-          notePassage: invitation.notePassage || 50
-        },
-        questions: questionsFormatees,
-        candidat: {
-          nom: invitation.candidatNom,
-          prenom: invitation.candidatPrenom
-        },
-        invitation: {
-          dateExpiration: invitation.dateExpiration,
-          statut: invitation.statut
-        }
-      }
-    });
-    
-  } catch (error) {
-    console.error('Erreur accès test par token:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
-// Route de test pour vérifier les tokens QCM
-router.get('/qcm/public/tests/:token/debug', async (req, res) => {
-  try {
-    const { token } = req.params;
-    const { pool } = require('../config/database');
-    
-    // Chercher le token dans InvitationQCM
-    const [invitations] = await pool.execute(`
-      SELECT iq.*, qt.nom as testNom, c.nom as candidatNom, c.prenom as candidatPrenom
-      FROM InvitationQCM iq
-      LEFT JOIN QcmTest qt ON iq.idQcmTest = qt.id
-      LEFT JOIN Candidat c ON iq.idCandidat = c.id
-      WHERE iq.token = ?
-    `, [token]);
-    
-    // Récupérer aussi les questions et choix
-    let questions = [];
-    let choix = [];
-    if (invitations.length > 0) {
-      const testId = invitations[0].idQcmTest;
-      
-      [questions] = await pool.execute(`
-        SELECT * FROM QcmQuestion WHERE idTest = ? ORDER BY numero
-      `, [testId]);
-      
-      [choix] = await pool.execute(`
-        SELECT c.*, q.numero as questionNumero 
-        FROM QcmChoix c 
-        JOIN QcmQuestion q ON c.idQuestion = q.id 
-        WHERE q.idTest = ?
-        ORDER BY q.numero, c.id
-      `, [testId]);
-    }
-    
-    res.json({
-      success: true,
-      data: {
-        token: token,
-        invitations: invitations,
-        questions: questions,
-        choix: choix,
-        found: invitations.length > 0
-      }
+      message: 'Statuts d\'entretien initialisés avec succès',
+      data: statuts
     });
   } catch (error) {
+    console.error('Erreur initialisation statuts:', error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -196,26 +105,7 @@ router.get('/client/lieux', AnnonceController.obtenirLieux);
 router.get('/client/diplomes', AnnonceController.obtenirDiplomes);
 
 // Test endpoint pour vérifier les données
-router.get('/client/test-data', async (req, res) => {
-  try {
-    const { pool } = require('../config/database');
-    const [depts] = await pool.execute('SELECT id, nom FROM Departement ORDER BY nom');
-    const [types] = await pool.execute('SELECT id, libelle FROM TypeAnnonce ORDER BY libelle');
-    
-    res.json({
-      success: true,
-      data: {
-        departements: depts,
-        typesAnnonce: types
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+router.get('/client/test-data', AnnonceController.obtenirTestData);
 router.get('/annonces/departement/:idDepartement', AuthController.verifierToken, AnnonceController.obtenirAnnoncesParDepartement);
 router.get('/annonces/:id', AuthController.verifierToken, AnnonceController.obtenirAnnonceParId);
 router.get('/annonces/:id/candidats', AuthController.verifierToken, AnnonceController.obtenirNombreCandidats);
@@ -254,6 +144,7 @@ router.get('/entretiens/candidats/eligibles', AuthController.verifierToken, Entr
 router.get('/entretiens/candidats/disponibles', AuthController.verifierToken, EntretienController.obtenirCandidatsDisponibles);
 router.get('/entretiens/candidats/tous', AuthController.verifierToken, EntretienController.obtenirTousLesCandidats);
 router.get('/entretiens/statuts/tous', AuthController.verifierToken, EntretienController.obtenirStatutsEntretien);
+router.get('/entretiens/annonce/:annonceId', AuthController.verifierToken, EntretienController.obtenirEntretiensParAnnonce);
 router.get('/entretiens/:id/historique', AuthController.verifierToken, EntretienController.obtenirHistoriqueEntretien);
 router.get('/entretiens', AuthController.verifierToken, EntretienController.obtenirTousLesEntretiens);
 router.get('/entretiens/:id', AuthController.verifierToken, EntretienController.obtenirEntretienParId);
@@ -290,136 +181,11 @@ router.get('/notifications/historique', AuthController.verifierToken, Notificati
 router.get('/candidats/notifications', CompteCandidatController.verifierTokenCandidat, NotificationController.obtenirNotificationsCandidat);
 router.put('/candidats/notifications/:id/lue', CompteCandidatController.verifierTokenCandidat, NotificationController.marquerCommeLue);
 
-// Route temporaire sans authentification pour debug
-router.get('/candidats/notifications/simple', async (req, res) => {
-  try {
-    const { pool } = require('../config/database');
-    
-    // Récupérer toutes les notifications pour le destinataire ID 1
-    const [notifications] = await pool.execute(`
-      SELECT 
-        n.*,
-        tn.nom as typeNotification,
-        tn.icone,
-        tn.couleur,
-        a.reference as annonceReference,
-        qt.nom as qcmTitre
-      FROM Notification n
-      JOIN TypeNotification tn ON n.idTypeNotification = tn.id
-      LEFT JOIN Annonce a ON n.idAnnonce = a.id
-      LEFT JOIN QcmTest qt ON n.idQcmTest = qt.id
-      WHERE n.idDestinataire = 1
-      ORDER BY n.dateCreation DESC
-    `);
-    
-    res.json({
-      success: true,
-      data: notifications
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+// Routes temporaires pour notifications (sans authentification)
+router.get('/candidats/notifications/simple', NotificationCandidatController.obtenirNotificationsSimple);
+router.put('/candidats/notifications/:id/lue/simple', NotificationCandidatController.marquerCommeLueSimple);
 
-// Route temporaire pour marquer comme lue (sans authentification)
-router.put('/candidats/notifications/:id/lue/simple', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { pool } = require('../config/database');
-    
-    // Marquer comme lue
-    await pool.execute(`
-      UPDATE Notification SET lue = TRUE WHERE id = ?
-    `, [id]);
-    
-    res.json({
-      success: true,
-      message: 'Notification marquée comme lue'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
-// Route pour insérer des données de test QCM
-router.post('/qcm/insert-test-data', async (req, res) => {
-  try {
-    const { pool } = require('../config/database');
-    
-    // Insérer les choix pour la question 1
-    await pool.execute(`
-      INSERT IGNORE INTO QcmChoix (idQuestion, texte, estCorrect) VALUES
-      (1, 'Une variable qui peut être redéclarée', false),
-      (1, 'Une variable de portée de bloc qui ne peut pas être redéclarée', true),
-      (1, 'Une constante', false),
-      (1, 'Une fonction', false)
-    `);
-    
-    // Insérer les choix pour la question 2
-    await pool.execute(`
-      INSERT IGNORE INTO QcmChoix (idQuestion, texte, estCorrect) VALUES
-      (2, 'Vrai', false),
-      (2, 'Faux', true),
-      (2, 'Parfois', false),
-      (2, 'Ça dépend du navigateur', false)
-    `);
-    
-    res.json({
-      success: true,
-      message: 'Données de test QCM insérées avec succès'
-    });
-    
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
-// Route de debug pour les notifications (temporaire)
-router.get('/candidats/notifications/debug', async (req, res) => {
-  try {
-    const { pool } = require('../config/database');
-    
-    // Récupérer toutes les notifications
-    const [notifications] = await pool.execute(`
-      SELECT 
-        n.*,
-        tn.nom as typeNotification,
-        tn.icone,
-        tn.couleur,
-        a.reference as annonceReference,
-        qt.nom as qcmTitre
-      FROM Notification n
-      JOIN TypeNotification tn ON n.idTypeNotification = tn.id
-      LEFT JOIN Annonce a ON n.idAnnonce = a.id
-      LEFT JOIN QcmTest qt ON n.idQcmTest = qt.id
-      ORDER BY n.dateCreation DESC
-    `);
-    
-    // Récupérer tous les comptes candidats
-    const [comptes] = await pool.execute('SELECT * FROM CompteCandidat');
-    
-    res.json({
-      success: true,
-      data: {
-        notifications: notifications,
-        comptes: comptes
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+// Routes de debug pour notifications
+router.get('/candidats/notifications/debug', NotificationCandidatController.debugNotifications);
 
 module.exports = router;

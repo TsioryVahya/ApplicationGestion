@@ -67,19 +67,32 @@ const TestQCM = () => {
 
   const terminerTest = async () => {
     try {
-      setTestTermine(true);
-      // Ici vous pouvez envoyer les réponses au serveur
-      console.log('Réponses du candidat:', reponses);
+      console.log('Soumission des réponses:', reponses);
       
-      // TODO: Envoyer les réponses à l'API
-      // const response = await fetch(`/api/qcm/public/token/${token}/soumettre`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ reponses })
-      // });
+      // Envoyer les réponses à l'API
+      const response = await fetch(`/api/qcm/public/token/${token}/soumettre`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reponses })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Test soumis avec succès:', data.data);
+        setTestData(prev => ({
+          ...prev,
+          resultat: data.data
+        }));
+        setTestTermine(true);
+      } else {
+        console.error('❌ Erreur soumission:', data.message);
+        setError('Erreur lors de la soumission du test');
+      }
       
     } catch (error) {
       console.error('Erreur soumission test:', error);
+      setError('Erreur lors de la soumission du test');
     }
   };
 
@@ -159,13 +172,28 @@ const TestQCM = () => {
   }
 
   if (testTermine) {
+    const resultat = testData?.resultat;
     return (
       <div style={styles.container}>
         <div style={styles.finished}>
           <FiCheck size={48} color="#10b981" />
           <h2>Test terminé !</h2>
           <p>Vos réponses ont été enregistrées avec succès.</p>
-          <p>Vous recevrez les résultats par email.</p>
+          
+          {resultat && (
+            <div style={styles.scoreContainer}>
+              <h3>Votre score :</h3>
+              <div style={styles.scoreDisplay}>
+                <span style={styles.scoreNumber}>{resultat.pourcentage}%</span>
+                <span style={styles.scoreDetail}>
+                  {resultat.scoreTotal} / {resultat.pointsMax} points
+                </span>
+              </div>
+              <p style={styles.scoreMessage}>{resultat.message}</p>
+            </div>
+          )}
+          
+          <p>Vous recevrez les résultats détaillés par email.</p>
           <button onClick={() => navigate('/HireHub')} style={styles.button}>
             Retour à l'accueil
           </button>
@@ -411,6 +439,34 @@ const styles = {
     height: '50vh',
     gap: '20px',
     textAlign: 'center'
+  },
+  scoreContainer: {
+    backgroundColor: '#f0f9ff',
+    padding: '20px',
+    borderRadius: '12px',
+    border: '2px solid #3b82f6',
+    margin: '20px 0'
+  },
+  scoreDisplay: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+    margin: '15px 0'
+  },
+  scoreNumber: {
+    fontSize: '48px',
+    fontWeight: 'bold',
+    color: '#3b82f6'
+  },
+  scoreDetail: {
+    fontSize: '16px',
+    color: '#6b7280'
+  },
+  scoreMessage: {
+    fontSize: '14px',
+    color: '#374151',
+    fontStyle: 'italic'
   },
   button: {
     padding: '12px 24px',

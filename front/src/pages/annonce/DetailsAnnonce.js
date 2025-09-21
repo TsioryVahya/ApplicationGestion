@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   FiArrowLeft, FiBriefcase, FiCalendar, FiMapPin, FiUsers,
   FiMail, FiFileText, FiUser, FiClock, FiCheckCircle,
-  FiXCircle, FiAlertCircle, FiFilter, FiSearch, FiX, FiSend
+  FiXCircle, FiAlertCircle, FiFilter, FiSearch, FiX, FiSend,
+  FiCheck, FiRefreshCw
 } from 'react-icons/fi';
+import './DetailsAnnonce.css';
 
 const DetailsAnnonce = () => {
   const { id } = useParams();
@@ -12,14 +14,23 @@ const DetailsAnnonce = () => {
   const [annonce, setAnnonce] = useState(null);
   const [candidats, setCandidats] = useState([]);
   const [candidatsFiltres, setCandidatsFiltres] = useState([]);
+  const [resultatsQcm, setResultatsQcm] = useState([]);
+  const [entretiensAnnonce, setEntretiensAnnonce] = useState([]);
   const [lieux, setLieux] = useState([]);
   const [qcms, setQcms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showQcmModal, setShowQcmModal] = useState(false);
+  const [showEntretienModal, setShowEntretienModal] = useState(false);
   const [selectedCandidat, setSelectedCandidat] = useState(null);
   const [sendingQcm, setSendingQcm] = useState(false);
+  const [creatingEntretien, setCreatingEntretien] = useState(false);
+  const [activeTab, setActiveTab] = useState('candidats');
+  const [entretienData, setEntretienData] = useState({
+    dateHeure: '',
+    idStatut: 1
+  });
   const [filtres, setFiltres] = useState({
     statut: '', recherche: '', dateDebut: '', dateFin: '',
     ageMin: '', ageMax: '', lieu: '', diplome: ''
@@ -30,6 +41,8 @@ const DetailsAnnonce = () => {
     chargerCandidatsAnnonce();
     chargerLieux();
     chargerQcms();
+    chargerResultatsQcm();
+    chargerEntretiensAnnonce();
   }, [id]);
 
   useEffect(() => {
@@ -96,16 +109,55 @@ const DetailsAnnonce = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-
-      console.log('🔍 Réponse API QCM:', data); // Debug
       if (data.success) {
         setQcms(data.data);
-        console.log('✅ QCMs chargés:', data.data); // Debug
       } else {
         console.error('❌ Erreur API QCM:', data.message);
       }
     } catch (err) {
       console.error('❌ Erreur lors du chargement des QCM:', err);
+    }
+  };
+
+  const chargerResultatsQcm = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/qcm/resultats/annonce/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setResultatsQcm(data.data || []);
+      } else {
+        console.error('Erreur lors du chargement des résultats QCM');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
+
+  const chargerEntretiensAnnonce = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/entretiens/annonce/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setEntretiensAnnonce(data.data || []);
+      } else {
+        console.error('Erreur lors du chargement des entretiens');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
     }
   };
 
@@ -115,6 +167,44 @@ const DetailsAnnonce = () => {
     return date.toLocaleDateString('fr-FR', {
       day: 'numeric', month: 'long', year: 'numeric'
     });
+  };
+
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  };
+
+  const getEntretienStatutColor = (idStatut) => {
+    const colors = {
+      1: '#3b82f6', // En attente - Bleu
+      2: '#10b981', // Confirmé - Vert
+      3: '#f59e0b', // Reporté - Orange
+      4: '#ef4444'  // Annulé - Rouge
+    };
+    return colors[idStatut] || '#6b7280';
+  };
+
+  const getEntretienStatutIcon = (idStatut) => {
+    const icons = {
+      1: <FiClock size={14} />,     // En attente
+      2: <FiCheck size={14} />,     // Confirmé
+      3: <FiRefreshCw size={14} />, // Reporté
+      4: <FiX size={14} />          // Annulé
+    };
+    return icons[idStatut] || <FiClock size={14} />;
+  };
+
+  const getResultatColor = (note) => {
+    const colors = {
+      'basse': '#ef4444',  // Rouge
+      'moyen': '#f59e0b',  // Orange
+      'bon': '#10b981'     // Vert
+    };
+    return colors[note] || '#6b7280';
   };
 
   const getStatutIcon = (statut) => {
@@ -132,6 +222,34 @@ const DetailsAnnonce = () => {
       case 'refusé': return '#ef4444';
       case 'en cours d\'évaluation': return '#f59e0b';
       default: return '#6b7280';
+    }
+  };
+
+  // Fonctions pour les statuts QCM
+  const getQcmStatutIcon = (statut) => {
+    switch (statut?.toLowerCase()) {
+      case 'terminee': return <FiCheckCircle color="#10b981" size={16} />;
+      case 'vue': return <FiAlertCircle color="#f59e0b" size={16} />;
+      case 'envoyee': return <FiSend color="#6b7280" size={16} />;
+      default: return <FiClock color="#6b7280" size={16} />;
+    }
+  };
+
+  const getQcmStatutColor = (statut) => {
+    switch (statut?.toLowerCase()) {
+      case 'terminee': return '#10b981';
+      case 'vue': return '#f59e0b';
+      case 'envoyee': return '#6b7280';
+      default: return '#6b7280';
+    }
+  };
+
+  const getQcmStatutText = (statut) => {
+    switch (statut?.toLowerCase()) {
+      case 'terminee': return 'Terminé';
+      case 'vue': return 'Vu';
+      case 'envoyee': return 'Envoyé';
+      default: return 'En attente';
     }
   };
 
@@ -222,6 +340,8 @@ const DetailsAnnonce = () => {
         alert(`✅ Test QCM envoyé avec succès à ${candidat.prenom} ${candidat.nom}`);
         setShowQcmModal(false);
         setSelectedCandidat(null);
+        // Recharger les résultats QCM
+        chargerResultatsQcm();
       } else {
         alert(`❌ Erreur lors de l'envoi du test QCM: ${result.message}`);
       }
@@ -233,108 +353,185 @@ const DetailsAnnonce = () => {
     }
   };
 
-  if (loading) return <div style={styles.loading}>Chargement...</div>;
-  if (error) return <div style={styles.error}>Erreur: {error}</div>;
-  if (!annonce) return <div style={styles.error}>Annonce non trouvée</div>;
+  const creerEntretienCandidat = async () => {
+    if (!entretienData.dateHeure) {
+      alert('Veuillez sélectionner une date et heure');
+      return;
+    }
+
+    setCreatingEntretien(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/entretiens', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          idCandidat: selectedCandidat.id,
+          dateHeure: entretienData.dateHeure,
+          idStatut: entretienData.idStatut
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        alert(`✅ Entretien programmé avec succès pour ${selectedCandidat.prenom} ${selectedCandidat.nom}`);
+        setShowEntretienModal(false);
+        setSelectedCandidat(null);
+        setEntretienData({ dateHeure: '', idStatut: 1 });
+      } else {
+        alert(`❌ Erreur lors de la programmation: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Erreur création entretien:', error);
+      alert('❌ Erreur lors de la programmation de l\'entretien');
+    } finally {
+      setCreatingEntretien(false);
+    }
+  };
+
+  const handleEntretienInputChange = (e) => {
+    const { name, value } = e.target;
+    setEntretienData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  if (loading) return <div className="loading">Chargement...</div>;
+  if (error) return <div className="error">Erreur: {error}</div>;
+  if (!annonce) return <div className="error">Annonce non trouvée</div>;
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <button onClick={() => navigate(-1)} style={styles.backButton}>
+    <div className="container">
+      <div className="header">
+        <button onClick={() => navigate(-1)} className="back-button">
           <FiArrowLeft size={20} />
           <span>Retour</span>
         </button>
-        <h1 style={styles.title}>Détails de l'Annonce</h1>
+        <h1 className="title">Détails de l'Annonce</h1>
       </div>
 
-      <div style={styles.annonceCard}>
-        <div style={styles.annonceHeader}>
-          <div style={styles.annonceTitle}>
+      <div className="annonce-card">
+        <div className="annonce-header">
+          <div className="annonce-title">
             <FiBriefcase size={24} color="#3b82f6" />
-            <h2 style={styles.annonceNom}>{annonce.reference}</h2>
+            <h2 className="annonce-nom">{annonce.reference}</h2>
           </div>
-          <div style={styles.annonceInfo}>
-            <div style={styles.infoItem}>
+          <div className="annonce-info">
+            <div className="info-item">
               <FiMapPin size={16} color="#6b7280" />
               <span>{annonce.nomDepartement}</span>
             </div>
-            <div style={styles.infoItem}>
+            <div className="info-item">
               <FiUser size={16} color="#6b7280" />
               <span>{annonce.nomProfil}</span>
             </div>
           </div>
         </div>
 
-        <div style={styles.annonceDetails}>
-          <div style={styles.detailSection}>
-            <h3 style={styles.sectionTitle}>Description</h3>
-            <p style={styles.description}>
+        <div className="annonce-details">
+          <div className="detail-section">
+            <h3 className="section-title">Description</h3>
+            <p className="description">
               {annonce.description || 'Aucune description disponible'}
             </p>
           </div>
 
-          <div style={styles.dateSection}>
-            <div style={styles.dateItem}>
+          <div className="date-section">
+            <div className="date-item">
               <FiCalendar size={16} color="#6b7280" />
               <div>
-                <span style={styles.dateLabel}>Date de début</span>
-                <span style={styles.dateValue}>{formatDate(annonce.dateDebut)}</span>
+                <span className="date-label">Date de début</span>
+                <span className="date-value">{formatDate(annonce.dateDebut)}</span>
               </div>
             </div>
-            <div style={styles.dateItem}>
+            <div className="date-item">
               <FiCalendar size={16} color="#6b7280" />
               <div>
-                <span style={styles.dateLabel}>Date de fin</span>
-                <span style={styles.dateValue}>{formatDate(annonce.dateFin)}</span>
+                <span className="date-label">Date de fin</span>
+                <span className="date-value">{formatDate(annonce.dateFin)}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div style={styles.candidatsSection}>
-        <div style={styles.candidatsHeader}>
-          <div style={styles.candidatsTitle}>
+      <div className="candidats-section">
+        <div className="candidats-header">
+          <div className="candidats-title">
             <FiUsers size={24} color="#3b82f6" />
             <h2>Candidats Associés</h2>
           </div>
-          <div style={styles.candidatsActions}>
+        </div>
+
+        {/* Onglets */}
+        <div className="tabs">
+          <button
+            className={`tab ${activeTab === 'candidats' ? 'active' : ''}`}
+            onClick={() => setActiveTab('candidats')}
+          >
+            <FiUsers size={16} />
+            Candidats ({candidatsFiltres.length})
+          </button>
+          <button
+            className={`tab ${activeTab === 'qcm' ? 'active' : ''}`}
+            onClick={() => setActiveTab('qcm')}
+          >
+            <FiFileText size={16} />
+            Résultats QCM ({resultatsQcm.length})
+          </button>
+          <button
+            className={`tab ${activeTab === 'entretiens' ? 'active' : ''}`}
+            onClick={() => setActiveTab('entretiens')}
+          >
+            <FiCalendar size={16} />
+            Entretiens ({entretiensAnnonce.length})
+          </button>
+        </div>
+
+        {/* Actions selon l'onglet actif */}
+        {activeTab === 'candidats' && (
+          <div className="candidats-actions">
             <button
-              style={{ ...styles.filterButton, ...(showFilters ? styles.filterButtonActive : {}) }}
+              className={`filter-button ${showFilters ? 'filter-button-active' : ''}`}
               onClick={() => setShowFilters(!showFilters)}
             >
               <FiFilter size={16} />
               Filtres
             </button>
-            <div style={styles.candidatsCount}>
+            <div className="candidats-count">
               {candidatsFiltres.length} / {candidats.length} candidat{candidats.length > 1 ? 's' : ''}
             </div>
           </div>
-        </div>
+        )}
 
-        {showFilters && (
-          <div style={styles.filtersPanel}>
-            <div style={styles.filtersGrid}>
-              <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Recherche</label>
-                <div style={styles.searchContainer}>
-                  <FiSearch size={16} style={styles.searchIcon} />
+        {/* Panneau de filtres */}
+        {showFilters && activeTab === 'candidats' && (
+          <div className="filters-panel">
+            <div className="filters-grid">
+              <div className="filter-group">
+                <label className="filter-label">Recherche</label>
+                <div className="search-container">
+                  <FiSearch size={16} className="search-icon" />
                   <input
                     type="text"
                     placeholder="Nom, prénom ou email..."
                     value={filtres.recherche}
                     onChange={(e) => handleFiltreChange('recherche', e.target.value)}
-                    style={styles.searchInput}
+                    className="search-input"
                   />
                 </div>
               </div>
 
-              <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Statut</label>
+              <div className="filter-group">
+                <label className="filter-label">Statut</label>
                 <select
                   value={filtres.statut}
                   onChange={(e) => handleFiltreChange('statut', e.target.value)}
-                  style={styles.filterSelect}
+                  className="filter-select"
                 >
                   <option value="">Tous les statuts</option>
                   {getStatutsUniques().map(statut => (
@@ -343,58 +540,54 @@ const DetailsAnnonce = () => {
                 </select>
               </div>
 
-              <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Date début</label>
+              <div className="filter-group">
+                <label className="filter-label">Date début</label>
                 <input
                   type="date"
                   value={filtres.dateDebut}
                   onChange={(e) => handleFiltreChange('dateDebut', e.target.value)}
-                  style={styles.filterSelect}
+                  className="filter-select"
                 />
               </div>
 
-              <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Date fin</label>
+              <div className="filter-group">
+                <label className="filter-label">Date fin</label>
                 <input
                   type="date"
                   value={filtres.dateFin}
                   onChange={(e) => handleFiltreChange('dateFin', e.target.value)}
-                  style={styles.filterSelect}
+                  className="filter-select"
                 />
               </div>
 
-              <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Âge minimum</label>
+              <div className="filter-group">
+                <label className="filter-label">Âge minimum</label>
                 <input
                   type="number"
-                  placeholder="Ex: 25"
+                  placeholder="18"
                   value={filtres.ageMin}
                   onChange={(e) => handleFiltreChange('ageMin', e.target.value)}
-                  style={styles.filterSelect}
-                  min="18"
-                  max="65"
+                  className="filter-select"
                 />
               </div>
 
-              <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Âge maximum</label>
+              <div className="filter-group">
+                <label className="filter-label">Âge maximum</label>
                 <input
                   type="number"
-                  placeholder="Ex: 45"
+                  placeholder="65"
                   value={filtres.ageMax}
                   onChange={(e) => handleFiltreChange('ageMax', e.target.value)}
-                  style={styles.filterSelect}
-                  min="18"
-                  max="65"
+                  className="filter-select"
                 />
               </div>
 
-              <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Lieu</label>
+              <div className="filter-group">
+                <label className="filter-label">Lieu</label>
                 <select
                   value={filtres.lieu}
                   onChange={(e) => handleFiltreChange('lieu', e.target.value)}
-                  style={styles.filterSelect}
+                  className="filter-select"
                 >
                   <option value="">Tous les lieux</option>
                   {lieux.map(lieu => (
@@ -403,147 +596,329 @@ const DetailsAnnonce = () => {
                 </select>
               </div>
 
-              <div style={styles.filterGroup}>
-                <label style={styles.filterLabel}>Diplôme/Formation</label>
+              <div className="filter-group">
+                <label className="filter-label">Diplôme/Formation</label>
                 <input
                   type="text"
-                  placeholder="Ex: Master, Licence, BTS..."
+                  placeholder="Rechercher dans les CV..."
                   value={filtres.diplome}
                   onChange={(e) => handleFiltreChange('diplome', e.target.value)}
-                  style={styles.filterSelect}
+                  className="filter-select"
                 />
               </div>
             </div>
 
-            <div style={styles.filterActions}>
-              <button style={styles.resetButton} onClick={resetFiltres}>
-                <FiX size={16} />
+            <div className="filter-actions">
+              <button className="reset-button" onClick={resetFiltres}>
+                <FiX size={14} />
                 Réinitialiser
               </button>
-              <span style={styles.resultCount}>
+              <span className="result-count">
                 {candidatsFiltres.length} / {candidats.length} candidat{candidats.length > 1 ? 's' : ''}
               </span>
             </div>
           </div>
         )}
 
-        {candidats.length === 0 ? (
-          <div style={styles.noCandidats}>
-            <FiUsers size={48} color="#94a3b8" />
-            <p>Aucun candidat n'a encore postulé pour cette annonce</p>
-          </div>
-        ) : candidatsFiltres.length === 0 ? (
-          <div style={styles.noCandidats}>
-            <FiFilter size={48} color="#94a3b8" />
-            <p>Aucun candidat ne correspond aux filtres sélectionnés</p>
-          </div>
-        ) : (
-          <div style={styles.candidatsList}>
-            {candidatsFiltres.map(candidat => (
-              <div key={candidat.id} style={styles.candidatCard}>
-                <div style={styles.candidatHeader}>
-                  <div style={styles.candidatInfo}>
-                    <div style={styles.candidatNom}>
-                      <FiUser size={20} color="#3b82f6" />
-                      <span>{candidat.prenom} {candidat.nom}</span>
-                    </div>
-                    <div style={styles.candidatContact}>
-                      <div style={styles.contactItem}>
-                        <FiUser size={14} color="#6b7280" />
-                        <span>ID: {candidat.id}</span>
+        {/* Contenu de l'onglet Candidats */}
+        {activeTab === 'candidats' && (
+          <>
+            {candidats.length === 0 ? (
+              <div className="no-candidats">
+                <FiUsers size={48} color="#94a3b8" />
+                <p>Aucun candidat n'a encore postulé pour cette annonce</p>
+              </div>
+            ) : candidatsFiltres.length === 0 ? (
+              <div className="no-candidats">
+                <FiFilter size={48} color="#94a3b8" />
+                <p>Aucun candidat ne correspond aux filtres sélectionnés</p>
+              </div>
+            ) : (
+              <div className="candidats-list">
+                {candidatsFiltres.map(candidat => (
+                  <div key={candidat.id} className="candidat-card">
+                    <div className="candidat-header">
+                      <div className="candidat-info">
+                        <div className="candidat-nom">
+                          <FiUser size={20} color="#3b82f6" />
+                          <span>{candidat.prenom} {candidat.nom}</span>
+                        </div>
+                        <div className="candidat-contact">
+                          <div className="contact-item">
+                            <FiUser size={14} color="#6b7280" />
+                            <span>ID: {candidat.id}</span>
+                          </div>
+                          {candidat.email && (
+                            <div className="contact-item">
+                              <FiMail size={14} color="#6b7280" />
+                              <span>{candidat.email}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {candidat.email && (
-                        <div style={styles.contactItem}>
-                          <FiMail size={14} color="#6b7280" />
-                          <span>{candidat.email}</span>
+
+                      <div className="candidat-actions">
+                        <div
+                          className="statut-badge"
+                          style={{
+                            backgroundColor: getStatutColor(candidat.statut || candidat.statutNom) + '20',
+                            color: getStatutColor(candidat.statut || candidat.statutNom),
+                          }}
+                        >
+                          {getStatutIcon(candidat.statut || candidat.statutNom)}
+                          <span>{candidat.statut || candidat.statutNom || 'En attente'}</span>
+                        </div>
+
+                        <button
+                          className="qcm-button-small"
+                          onClick={() => {
+                            setSelectedCandidat(candidat);
+                            setShowQcmModal(true);
+                          }}
+                          disabled={sendingQcm}
+                          title={`Envoyer un test QCM à ${candidat.prenom} ${candidat.nom}`}
+                        >
+                          <FiSend size={14} />
+                          QCM
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="candidat-details">
+                      {candidat.dateCandidature && (
+                        <div className="detail-item">
+                          <FiCalendar size={14} color="#6b7280" />
+                          <span className="detail-label">Candidature:</span>
+                          <span>{formatDate(candidat.dateCandidature)}</span>
+                        </div>
+                      )}
+
+                      {candidat.dateNaissance && (
+                        <div className="detail-item">
+                          <FiUser size={14} color="#6b7280" />
+                          <span className="detail-label">Âge:</span>
+                          <span>
+                            {new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear()} ans
+                          </span>
+                        </div>
+                      )}
+
+                      {(candidat.nomLieu || candidat.idLieu) && (
+                        <div className="detail-item">
+                          <FiMapPin size={14} color="#6b7280" />
+                          <span className="detail-label">Lieu:</span>
+                          <span>
+                            {candidat.nomLieu || lieux.find(l => l.id === candidat.idLieu)?.nom || 'Non spécifié'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {candidat.cv && (
+                      <div className="motivation-section">
+                        <div className="motivation-header">
+                          <FiFileText size={16} color="#6b7280" />
+                          <span>CV / Profil</span>
+                        </div>
+                        <p className="motivation-text">
+                          {candidat.cv.length > 200
+                            ? candidat.cv.substring(0, 200) + '...'
+                            : candidat.cv}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Contenu de l'onglet QCM */}
+        {activeTab === 'qcm' && (
+          <div className="qcm-results-list">
+            {resultatsQcm.length === 0 ? (
+              <div className="no-candidats">
+                <FiFileText size={48} color="#94a3b8" />
+                <p>Aucun résultat de QCM disponible pour cette annonce</p>
+              </div>
+            ) : (
+              resultatsQcm.map(resultat => (
+                <div key={resultat.invitationId} className="qcm-card">
+                  <div className="qcm-header">
+                    <div className="qcm-candidat-info">
+                      <div className="candidat-nom">
+                        <FiUser size={20} color="#3b82f6" />
+                        <span>{resultat.candidatPrenom} {resultat.candidatNom}</span>
+                      </div>
+                      <div className="qcm-test-info">
+                        <FiFileText size={14} color="#6b7280" />
+                        <span>{resultat.testNom}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="qcm-score">
+                      <div className="score-display">
+                        <span className="score-number">{resultat.score || 0}%</span>
+                        <span className="score-detail">
+                          {resultat.pointsObtenus || 0} / {resultat.pointsMax || 0} pts
+                        </span>
+                      </div>
+                      <div className="qcm-actions">
+                        <div
+                          className="statut-badge"
+                          style={{
+                            backgroundColor: getQcmStatutColor(resultat.statut) + '20',
+                            color: getQcmStatutColor(resultat.statut),
+                          }}
+                        >
+                          {getQcmStatutIcon(resultat.statut)}
+                          <span>{getQcmStatutText(resultat.statut)}</span>
+                        </div>
+                        
+                        <button
+                          className="entretien-button-small"
+                          onClick={() => {
+                            setSelectedCandidat({
+                              id: resultat.candidatId,
+                              nom: resultat.candidatNom,
+                              prenom: resultat.candidatPrenom,
+                              email: resultat.candidatEmail || 'Non renseigné'
+                            });
+                            setEntretienData({ dateHeure: '', idStatut: 1 });
+                            setShowEntretienModal(true);
+                          }}
+                          disabled={creatingEntretien}
+                          title={`Programmer un entretien avec ${resultat.candidatPrenom} ${resultat.candidatNom}`}
+                        >
+                          <FiCalendar size={14} />
+                          Entretien
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="qcm-details">
+                    <div className="qcm-timeline">
+                      {resultat.dateEnvoi && (
+                        <div className="timeline-item">
+                          <FiSend size={14} color="#6b7280" />
+                          <span>Envoyé: {formatDate(resultat.dateEnvoi)}</span>
+                        </div>
+                      )}
+                      {resultat.dateVue && (
+                        <div className="timeline-item">
+                          <FiCheckCircle size={14} color="#10b981" />
+                          <span>Vu: {formatDate(resultat.dateVue)}</span>
+                        </div>
+                      )}
+                      {resultat.dateTerminee && (
+                        <div className="timeline-item">
+                          <FiFileText size={14} color="#3b82f6" />
+                          <span>Terminé: {formatDate(resultat.dateTerminee)}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="qcm-stats">
+                      <div className="stat-item">
+                        <span className="stat-label">Questions:</span>
+                        <span>{resultat.nombreQuestions || 0}</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Réponses:</span>
+                        <span>{resultat.nombreReponses || 0}</span>
+                      </div>
+                      {resultat.dateExpiration && (
+                        <div className="stat-item">
+                          <span className="stat-label">Expire:</span>
+                          <span>{formatDate(resultat.dateExpiration)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Onglet Entretiens */}
+        {activeTab === 'entretiens' && (
+          <div className="entretiens-content">
+            {entretiensAnnonce.length === 0 ? (
+              <div className="no-data">
+                <FiCalendar size={48} color="#9ca3af" />
+                <p>Aucun entretien programmé pour cette annonce</p>
+              </div>
+            ) : (
+              entretiensAnnonce.map((entretien, index) => (
+                <div key={entretien.id} className="entretien-card">
+                  <div className="entretien-header">
+                    <div className="entretien-candidat">
+                      <div className="candidat-name">
+                        <FiUser size={16} color="#3b82f6" />
+                        <span>{entretien.candidatPrenom} {entretien.candidatNom}</span>
+                      </div>
+                      <div className="entretien-date">
+                        <FiClock size={14} color="#6b7280" />
+                        <span>{formatDateTime(entretien.dateHeure)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="entretien-status">
+                      <div
+                        className="statut-badge"
+                        style={{
+                          backgroundColor: getEntretienStatutColor(entretien.idStatut) + '20',
+                          color: getEntretienStatutColor(entretien.idStatut),
+                        }}
+                      >
+                        {getEntretienStatutIcon(entretien.idStatut)}
+                        <span>{entretien.statutNom}</span>
+                      </div>
+                      
+                      {entretien.resultatNote && (
+                        <div
+                          className="resultat-badge"
+                          style={{
+                            backgroundColor: getResultatColor(entretien.resultatNote) + '20',
+                            color: getResultatColor(entretien.resultatNote),
+                          }}
+                        >
+                          <span>Résultat: {entretien.resultatNote}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div style={styles.candidatActions}>
-                    <div
-                      style={{
-                        ...styles.statutBadge,
-                        backgroundColor: getStatutColor(candidat.statut || candidat.statutNom) + '20',
-                        color: getStatutColor(candidat.statut || candidat.statutNom),
-                      }}
-                    >
-                      {getStatutIcon(candidat.statut || candidat.statutNom)}
-                      <span>{candidat.statut || candidat.statutNom || 'En attente'}</span>
+                  <div className="entretien-details">
+                    <div className="detail-item">
+                      <span className="detail-label">Annonce:</span>
+                      <span>{entretien.annonceReference}</span>
                     </div>
-
-                    <button
-                      style={styles.qcmButtonSmall}
-                      onClick={() => {
-                        setSelectedCandidat(candidat);
-                        setShowQcmModal(true);
-                      }}
-                      disabled={sendingQcm}
-                      title={`Envoyer un test QCM à ${candidat.prenom} ${candidat.nom}`}
-                    >
-                      <FiSend size={14} />
-                      QCM
-                    </button>
+                    {entretien.resultatAppreciation && (
+                      <div className="detail-item">
+                        <span className="detail-label">Appréciation:</span>
+                        <span>{entretien.resultatAppreciation}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                <div style={styles.candidatDetails}>
-                  {candidat.dateCandidature && (
-                    <div style={styles.detailItem}>
-                      <FiCalendar size={14} color="#6b7280" />
-                      <span style={styles.detailLabel}>Candidature:</span>
-                      <span>{formatDate(candidat.dateCandidature)}</span>
-                    </div>
-                  )}
-
-                  {candidat.dateNaissance && (
-                    <div style={styles.detailItem}>
-                      <FiUser size={14} color="#6b7280" />
-                      <span style={styles.detailLabel}>Âge:</span>
-                      <span>
-                        {new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear()} ans
-                      </span>
-                    </div>
-                  )}
-
-                  {(candidat.nomLieu || candidat.idLieu) && (
-                    <div style={styles.detailItem}>
-                      <FiMapPin size={14} color="#6b7280" />
-                      <span style={styles.detailLabel}>Lieu:</span>
-                      <span>
-                        {candidat.nomLieu || lieux.find(l => l.id === candidat.idLieu)?.nom || 'Non spécifié'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {candidat.cv && (
-                  <div style={styles.motivationSection}>
-                    <div style={styles.motivationHeader}>
-                      <FiFileText size={16} color="#6b7280" />
-                      <span>CV / Profil</span>
-                    </div>
-                    <p style={styles.motivationText}>
-                      {candidat.cv.length > 200
-                        ? candidat.cv.substring(0, 200) + '...'
-                        : candidat.cv}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
+              ))
+            )}
           </div>
         )}
       </div>
 
+      {/* Modal QCM */}
       {showQcmModal && selectedCandidat && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
               <h3>Envoyer un test QCM</h3>
               <button
-                style={styles.closeButton}
+                className="close-button"
                 onClick={() => {
                   setShowQcmModal(false);
                   setSelectedCandidat(null);
@@ -552,30 +927,128 @@ const DetailsAnnonce = () => {
                 <FiX size={20} />
               </button>
             </div>
-            <div style={styles.modalBody}>
+            <div className="modal-body">
               <p>
-                Candidat: <strong>{selectedCandidat.prenom} {selectedCandidat.nom}</strong>
+                <strong>Candidat:</strong> {selectedCandidat.prenom} {selectedCandidat.nom}
               </p>
-              <div style={styles.qcmList}>
-                <label>Choisir un test QCM :</label>
-                {qcms.length === 0 ? (
-                  <p style={{color: '#ef4444', fontStyle: 'italic'}}>
-                    ❌ Aucun test QCM disponible. Vérifiez la console pour plus de détails.
-                  </p>
-                ) : (
-                  qcms.map(qcm => (
-                    <button
+              <p>
+                <strong>Email:</strong> {selectedCandidat.email}
+              </p>
+              
+              <div className="filter-group">
+                <label className="filter-label">Sélectionner un test QCM</label>
+                <div className="qcm-list">
+                  {qcms.map(qcm => (
+                    <div
                       key={qcm.id}
-                      style={styles.qcmOption}
+                      className="qcm-option"
                       onClick={() => envoyerTestQCMCandidat(selectedCandidat, qcm.id)}
-                      disabled={sendingQcm}
                     >
-                      <FiFileText size={16} />
-                      <span>{qcm.nom || qcm.titre}</span>
-                      {sendingQcm && <span>Envoi en cours...</span>}
-                    </button>
-                  ))
-                )}
+                      <FiFileText size={16} color="#3b82f6" />
+                      <div>
+                        <div style={{ fontWeight: '600' }}>{qcm.nom}</div>
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                          {qcm.description || 'Aucune description'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {qcms.length === 0 && (
+                <p style={{ color: '#6b7280', textAlign: 'center' }}>
+                  Aucun test QCM disponible
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Entretien */}
+      {showEntretienModal && selectedCandidat && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>
+                <FiCalendar size={20} />
+                Programmer un entretien
+              </h3>
+              <button
+                className="close-button"
+                onClick={() => {
+                  setShowEntretienModal(false);
+                  setSelectedCandidat(null);
+                  setEntretienData({ dateHeure: '', idStatut: 1 });
+                }}
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="candidat-info-modal">
+                <p>
+                  <strong>Candidat:</strong> {selectedCandidat.prenom} {selectedCandidat.nom}
+                </p>
+                <p>
+                  <strong>Email:</strong> {selectedCandidat.email}
+                </p>
+                <p>
+                  <strong>Annonce:</strong> {annonce.reference}
+                </p>
+              </div>
+              
+              <div className="filter-group">
+                <label className="filter-label">
+                  <FiClock size={16} />
+                  Date et heure de l'entretien
+                </label>
+                <input
+                  type="datetime-local"
+                  name="dateHeure"
+                  value={entretienData.dateHeure}
+                  onChange={handleEntretienInputChange}
+                  className="filter-select"
+                  min={new Date().toISOString().slice(0, 16)}
+                  required
+                />
+              </div>
+
+              <div className="filter-group">
+                <label className="filter-label">Statut</label>
+                <select
+                  name="idStatut"
+                  value={entretienData.idStatut}
+                  onChange={handleEntretienInputChange}
+                  className="filter-select"
+                >
+                  <option value={1}>En attente</option>
+                  <option value={2}>Confirmé</option>
+                  <option value={3}>Reporté</option>
+                  <option value={4}>Annulé</option>
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  className="cancel-button"
+                  onClick={() => {
+                    setShowEntretienModal(false);
+                    setSelectedCandidat(null);
+                    setEntretienData({ dateHeure: '', idStatut: 1 });
+                  }}
+                >
+                  Annuler
+                </button>
+                <button
+                  className="save-button"
+                  onClick={creerEntretienCandidat}
+                  disabled={creatingEntretien || !entretienData.dateHeure}
+                >
+                  <FiCalendar size={16} />
+                  {creatingEntretien ? 'Programmation...' : 'Programmer'}
+                </button>
               </div>
             </div>
           </div>
@@ -583,421 +1056,6 @@ const DetailsAnnonce = () => {
       )}
     </div>
   );
-};
-
-const styles = {
-  container: {
-    padding: '20px',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    backgroundColor: '#f8fafc'
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '30px',
-    gap: '20px'
-  },
-  backButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '10px 16px',
-    backgroundColor: '#fff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    color: '#475569',
-    transition: 'all 0.2s ease'
-  },
-title: {
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#1e293b',
-    margin: 0
-  },
-  annonceCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '24px',
-    marginBottom: '30px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-  },
-  annonceHeader: {
-    borderBottom: '1px solid #e2e8f0',
-    paddingBottom: '20px',
-    marginBottom: '20px'
-  },
-  annonceTitle: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    marginBottom: '12px'
-  },
-  annonceNom: {
-    fontSize: '24px',
-    fontWeight: '600',
-    color: '#1e293b',
-    margin: 0
-  },
-  annonceInfo: {
-    display: 'flex',
-    gap: '24px'
-  },
-  infoItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontSize: '14px',
-    color: '#64748b'
-  },
-  annonceDetails: {
-    display: 'grid',
-    gap: '20px'
-  },
-  detailSection: {
-    marginBottom: '20px'
-  },
-  sectionTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: '8px'
-  },
-  description: {
-    fontSize: '16px',
-    lineHeight: '1.6',
-    color: '#475569',
-    margin: 0
-  },
-  dateSection: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '16px'
-  },
-  dateItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px',
-    backgroundColor: '#f8fafc',
-    borderRadius: '8px'
-  },
-  dateLabel: {
-    display: 'block',
-    fontSize: '12px',
-    color: '#64748b',
-    fontWeight: '500'
-  },
-  dateValue: {
-    display: 'block',
-    fontSize: '14px',
-    color: '#1e293b',
-    fontWeight: '600'
-  },
-  candidatsSection: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '24px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-  },
-  candidatsHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '24px',
-    borderBottom: '1px solid #e2e8f0',
-    paddingBottom: '16px'
-  },
-  candidatsTitle: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
-  },
-  candidatsActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
-  },
-  candidatsCount: {
-    fontSize: '14px',
-    color: '#64748b',
-    fontWeight: '500'
-  },
-  filterButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '10px 16px',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  filterButtonActive: {
-    backgroundColor: '#2563eb'
-  },
-  filtersPanel: {
-    marginTop: '16px',
-    padding: '20px',
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
-  },
-  filtersGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '16px',
-    marginBottom: '16px'
-  },
-  filterGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px'
-  },
-  filterLabel: {
-    fontSize: '12px',
-    fontWeight: '600',
-    color: '#374151',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  },
-  searchContainer: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center'
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '12px',
-    color: '#6b7280',
-    zIndex: 1
-  },
-  searchInput: {
-    paddingLeft: '36px',
-    padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '14px',
-    backgroundColor: '#ffffff',
-    color: '#1f2937',
-    outline: 'none',
-    width: '100%',
-    transition: 'border-color 0.2s ease'
-  },
-  filterSelect: {
-    padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '14px',
-    backgroundColor: '#ffffff',
-    color: '#1f2937',
-    outline: 'none',
-    transition: 'border-color 0.2s ease'
-  },
-  filterActions: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: '16px',
-    borderTop: '1px solid #e5e7eb'
-  },
-  resetButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 12px',
-    backgroundColor: '#f3f4f6',
-    color: '#374151',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '12px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  resultCount: {
-    fontSize: '12px',
-    color: '#6b7280',
-    fontWeight: '500'
-  },
-  candidatsList: {
-    display: 'grid',
-    gap: '16px'
-  },
-  candidatCard: {
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    padding: '20px'
-  },
-  candidatHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '12px',
-    marginBottom: '12px'
-  },
-  candidatInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  candidatNom: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontWeight: 600,
-    color: '#1e293b'
-  },
-  candidatContact: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    flexWrap: 'wrap'
-  },
-  contactItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    color: '#64748b',
-    fontSize: '13px'
-  },
-  candidatActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
-  },
-  statutBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 12px',
-    borderRadius: '20px',
-    fontSize: '12px',
-    fontWeight: '600',
-    border: '1px solid currentColor'
-  },
-  qcmButtonSmall: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 12px',
-    backgroundColor: '#10b981',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  candidatDetails: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '10px',
-    marginTop: '12px'
-  },
-  detailItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontSize: '14px',
-    color: '#475569'
-  },
-  detailLabel: {
-    fontWeight: 600,
-    color: '#64748b'
-  },
-  motivationSection: {
-    marginTop: '12px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    padding: '12px'
-  },
-  motivationHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    color: '#6b7280',
-    marginBottom: '8px'
-  },
-  motivationText: {
-    margin: 0,
-    color: '#475569',
-    fontSize: '14px'
-  },
-  noCandidats: {
-    display: 'grid',
-    placeItems: 'center',
-    padding: '24px',
-    color: '#64748b',
-    gap: '8px'
-  },
-  loading: {
-    padding: '24px'
-  },
-  error: {
-    padding: '24px',
-    color: '#ef4444'
-  },
-  modalOverlay: {
-    position: 'fixed',
-    inset: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '24px',
-    maxWidth: '520px',
-    width: '90%',
-    maxHeight: '80vh',
-    overflowY: 'auto'
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '16px',
-    borderBottom: '1px solid #e2e8f0',
-    paddingBottom: '12px'
-  },
-  closeButton: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '4px'
-  },
-  modalBody: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px'
-  },
-  qcmList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  qcmOption: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '10px 12px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    cursor: 'pointer'
-  }
 };
 
 export default DetailsAnnonce;

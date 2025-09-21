@@ -29,8 +29,10 @@ const CalendrierEntretiens = () => {
   const [formData, setFormData] = useState({
     idCandidat: '',
     dateHeure: '',
-    idStatut: 1
+    idStatut: 1,
+    idResultat: null
   });
+  const [candidatDetails, setCandidatDetails] = useState(null);
 
   const calendarRef = useRef(null);
   const calendarInstance = useRef(null);
@@ -166,7 +168,7 @@ const CalendrierEntretiens = () => {
     setShowModal(true);
   };
 
-  const handleEventClick = (clickInfo) => {
+  const handleEventClick = async (clickInfo) => {
     const event = clickInfo.event;
     setEditingEntretien({
       id: event.id,
@@ -175,9 +177,35 @@ const CalendrierEntretiens = () => {
     setFormData({
       idCandidat: event.extendedProps.idCandidat,
       dateHeure: event.start.toISOString().slice(0, 16),
-      idStatut: event.extendedProps.idStatut
+      idStatut: event.extendedProps.idStatut,
+      idResultat: event.extendedProps.idResultat || null
     });
+    
+    // Charger les détails du candidat
+    await chargerDetailsCandidatEntretien(event.extendedProps.idCandidat);
+    
     setShowModal(true);
+  };
+
+  const chargerDetailsCandidatEntretien = async (idCandidat) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/candidats/${idCandidat}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCandidatDetails(data.data);
+      } else {
+        console.error('Erreur lors du chargement des détails du candidat');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
   };
 
   const handleEventDrop = async (dropInfo) => {
@@ -374,26 +402,56 @@ const CalendrierEntretiens = () => {
             </div>
 
             <form onSubmit={handleSubmit} style={styles.form}>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>
-                  <FiUser size={16} />
-                  Candidat
-                </label>
-                <select
-                  name="idCandidat"
-                  value={formData.idCandidat}
-                  onChange={handleInputChange}
-                  style={styles.select}
-                  required
-                >
-                  <option value="">Sélectionnez un candidat</option>
-                  {candidats.map(candidat => (
-                    <option key={candidat.id} value={candidat.id}>
-                      {candidat.prenom} {candidat.nom} - {candidat.annonceReference}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Informations du candidat pour entretien existant */}
+              {editingEntretien && candidatDetails && (
+                <div style={styles.candidatInfo}>
+                  <h4 style={styles.candidatInfoTitle}>
+                    <FiUser size={16} />
+                    Informations du candidat
+                  </h4>
+                  <div style={styles.candidatInfoContent}>
+                    <p><strong>Nom:</strong> {candidatDetails.prenom} {candidatDetails.nom}</p>
+                    <p><strong>Email:</strong> {candidatDetails.email || 'Non renseigné'}</p>
+                    <p><strong>Âge:</strong> {candidatDetails.dateNaissance ? 
+                      Math.floor((new Date() - new Date(candidatDetails.dateNaissance)) / (365.25 * 24 * 60 * 60 * 1000)) + ' ans' 
+                      : 'Non renseigné'}</p>
+                    <p><strong>Adresse:</strong> {candidatDetails.adresse || 'Non renseignée'}</p>
+                    <p><strong>Annonce:</strong> {editingEntretien.annonceReference || 'Non renseignée'}</p>
+                    {candidatDetails.cv && (
+                      <div style={styles.cvPreview}>
+                        <strong>CV:</strong>
+                        <div style={styles.cvContent}>
+                          {candidatDetails.cv.substring(0, 200)}...
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Sélection candidat pour nouvel entretien */}
+              {!editingEntretien && (
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>
+                    <FiUser size={16} />
+                    Candidat
+                  </label>
+                  <select
+                    name="idCandidat"
+                    value={formData.idCandidat}
+                    onChange={handleInputChange}
+                    style={styles.select}
+                    required
+                  >
+                    <option value="">Sélectionnez un candidat</option>
+                    {candidats.map(candidat => (
+                      <option key={candidat.id} value={candidat.id}>
+                        {candidat.prenom} {candidat.nom} - {candidat.annonceReference}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>
@@ -428,6 +486,26 @@ const CalendrierEntretiens = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Résultat de l'entretien (seulement pour modification) */}
+              {editingEntretien && (
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>
+                    Résultat de l'entretien
+                  </label>
+                  <select
+                    name="idResultat"
+                    value={formData.idResultat || ''}
+                    onChange={handleInputChange}
+                    style={styles.select}
+                  >
+                    <option value="">Pas encore évalué</option>
+                    <option value="basse">Basse</option>
+                    <option value="moyen">Moyen</option>
+                    <option value="bon">Bon</option>
+                  </select>
+                </div>
+              )}
 
               <div style={styles.modalActions}>
                 {editingEntretien && (
@@ -660,6 +738,41 @@ const styles = {
     fontWeight: '500',
     zIndex: 1001,
     animation: 'slideIn 0.3s ease'
+  },
+  candidatInfo: {
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '16px',
+    marginBottom: '20px'
+  },
+  candidatInfoTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: '12px',
+    margin: '0 0 12px 0'
+  },
+  candidatInfoContent: {
+    display: 'grid',
+    gap: '8px'
+  },
+  cvPreview: {
+    marginTop: '8px'
+  },
+  cvContent: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    padding: '8px',
+    fontSize: '12px',
+    color: '#6b7280',
+    marginTop: '4px',
+    maxHeight: '60px',
+    overflow: 'hidden'
   }
 };
 

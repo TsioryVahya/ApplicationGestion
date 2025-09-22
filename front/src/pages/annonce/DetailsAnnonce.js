@@ -18,6 +18,7 @@ const DetailsAnnonce = () => {
   const [entretiensAnnonce, setEntretiensAnnonce] = useState([]);
   const [lieux, setLieux] = useState([]);
   const [qcms, setQcms] = useState([]);
+  const [diplomes, setDiplomes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -40,6 +41,7 @@ const DetailsAnnonce = () => {
     chargerDetailsAnnonce();
     chargerCandidatsAnnonce();
     chargerLieux();
+    chargerDiplomes();
     chargerQcms();
     chargerResultatsQcm();
     chargerEntretiensAnnonce();
@@ -99,6 +101,18 @@ const DetailsAnnonce = () => {
       }
     } catch (err) {
       console.error('Erreur lors du chargement des lieux:', err);
+    }
+  };
+
+  const chargerDiplomes = async () => {
+    try {
+      const response = await fetch('/api/client/diplomes');
+      const data = await response.json();
+      if (data.success) {
+        setDiplomes(data.data || []);
+      }
+    } catch (err) {
+      console.error('Erreur lors du chargement des diplômes:', err);
     }
   };
 
@@ -308,8 +322,21 @@ const DetailsAnnonce = () => {
       });
     }
     if (filtres.diplome) {
-      const d = filtres.diplome.toLowerCase();
-      res = res.filter(c => c.cv?.toLowerCase().includes(d));
+      const diplomeRecherche = filtres.diplome.toLowerCase();
+      res = res.filter(c => {
+        const diplomeDirect = c.diplome?.toLowerCase();
+        const diplomeDepuisCritere = c.criteres?.find(cr =>
+          cr.nomCritere && (
+            cr.nomCritere.toLowerCase().includes('diplome') ||
+            cr.nomCritere.toLowerCase().includes('diplôme')
+          )
+        )?.valeurVarchar?.toLowerCase();
+
+        return (
+          (diplomeDirect && diplomeDirect === diplomeRecherche) ||
+          (diplomeDepuisCritere && diplomeDepuisCritere === diplomeRecherche)
+        );
+      });
     }
     setCandidatsFiltres(res);
   };
@@ -609,14 +636,17 @@ const DetailsAnnonce = () => {
               </div>
 
               <div className="filter-group">
-                <label className="filter-label">Diplôme/Formation</label>
-                <input
-                  type="text"
-                  placeholder="Rechercher dans les CV..."
+                <label className="filter-label">Diplôme</label>
+                <select
                   value={filtres.diplome}
                   onChange={(e) => handleFiltreChange('diplome', e.target.value)}
                   className="filter-select"
-                />
+                >
+                  <option value="">Tous les diplômes</option>
+                  {diplomes.map(d => (
+                    <option key={d.id} value={d.nom}>{d.nom}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

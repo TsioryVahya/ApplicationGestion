@@ -13,7 +13,8 @@ import {
   FiLayers,
   FiChevronDown,
   FiChevronUp,
-  FiCalendar
+  FiCalendar,
+  FiFileText
 } from 'react-icons/fi';
 import { useState } from 'react';
 
@@ -31,7 +32,8 @@ const Sidebar = ({ user, onLogout }) => {
     { path: '/utilisateurs', icon: FiUsers, label: 'Utilisateurs', color: '#10B981' },
     { path: '/annonces', icon: FiBriefcase, label: 'Annonces', color: '#DC2626' },
     { path: '/qcm', icon: FiEdit3, label: 'Tests QCM', color: '#8B5CF6' },
-    { path: '/calendrier', icon: FiCalendar, label: 'Calendrier Entretiens', color: '#F59E0B' }
+    { path: '/calendrier', icon: FiCalendar, label: 'Calendrier Entretiens', color: '#F59E0B' },
+    { path: '/contrats', icon: FiFileText, label: 'Contrats', color: '#8B5CF6' }
   ];
 
   const profilMenuItems = [

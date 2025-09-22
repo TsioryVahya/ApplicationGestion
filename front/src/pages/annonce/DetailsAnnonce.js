@@ -208,10 +208,9 @@ const DetailsAnnonce = () => {
   };
 
   const naviguerVersContrat = (candidatId, candidatNom, candidatPrenom) => {
-    // Naviguer vers la page de création de contrat avec les infos du candidat
-    navigate(`/contrats/nouveau`, {
+    // Naviguer vers la page CandidatsFormulaire avec l'ID du candidat
+    navigate(`/contrats/ajouter/${candidatId}`, {
       state: {
-        candidatId: candidatId,
         candidatNom: candidatNom,
         candidatPrenom: candidatPrenom,
         annonceId: id,

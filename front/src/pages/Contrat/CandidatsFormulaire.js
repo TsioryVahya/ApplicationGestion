@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FiSave } from 'react-icons/fi';
 
 const CandidatsFormulaire = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     idEmploye: id,
     dateDebut: '',
@@ -60,7 +61,16 @@ const CandidatsFormulaire = () => {
         <div style={styles.headerContent}>
           <h1 style={styles.title}>Ajouter un Contrat d'Essai</h1>
           <p style={styles.subtitle}>
-            Remplissez les détails du contrat pour le candidat ID: {id}
+            {location.state?.candidatNom && location.state?.candidatPrenom ? (
+              <>
+                Candidat: <strong>{location.state.candidatPrenom} {location.state.candidatNom}</strong>
+                {location.state?.annonceReference && (
+                  <> • Annonce: <strong>{location.state.annonceReference}</strong></>
+                )}
+              </>
+            ) : (
+              `Remplissez les détails du contrat pour le candidat ID: ${id}`
+            )}
           </p>
         </div>
       </div>

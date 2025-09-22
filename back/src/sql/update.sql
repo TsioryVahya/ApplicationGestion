@@ -46,6 +46,11 @@ ADD COLUMN idLieu INT,
 ADD CONSTRAINT fk_candidat_lieu
     FOREIGN KEY (idLieu) REFERENCES Lieu(id);
 
+INSERT INTO StatutEntretien (nom) VALUES 
+('En attente'),
+('Confirmé'),
+('Reporté'),
+('Annulé');
 
 INSERT INTO Lieu (nom) VALUES
 ('Antananarivo'),
@@ -124,7 +129,7 @@ INSERT INTO TypeAnnonce (libelle) VALUES
 
 
 INSERT INTO Diplome (nom) VALUES
-('CPE'),       -- Certificat de Premier Etude
+('CEPE'),       -- Certificat de Premier Etude
 ('BEPC'),      -- Brevet d’Études du Premier Cycle
 ('BACC'),      -- Baccalauréat
 ('Licence'),

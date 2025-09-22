@@ -158,6 +158,9 @@ CREATE TABLE Resultat (
     note INT,
     appreciation VARCHAR(200)
 );
+ALTER TABLE Resultat 
+MODIFY note ENUM('basse', 'moyen', 'bon') NOT NULL;
+
 
 -- Table StatutEntretien
 CREATE TABLE StatutEntretien (

@@ -15,6 +15,7 @@ const EntretienController = require('../controllers/entretienController');
 const CompteCandidatController = require('../controllers/compteCandidatController');
 const NotificationController = require('../controllers/notificationController');
 const NotificationCandidatController = require('../controllers/notificationCandidatController');
+const StatistiquesController = require('../controllers/statistiquesController');
 
 // Routes d'authentification
 router.post('/auth/inscription', AuthController.inscription);
@@ -193,6 +194,11 @@ router.get('/employes/:id', AuthController.verifierToken, CandidatsController.ob
 router.post('/contrats', AuthController.verifierToken, CandidatsController.ajouterContrat);
 router.get('/contrats', AuthController.verifierToken, CandidatsController.obtenirTousLesContrats);
 router.get('/contrats/:id', AuthController.verifierToken, CandidatsController.obtenirContratParId);
+
+// Routes pour les statistiques (protégées)
+router.get('/statistiques/generales', AuthController.verifierToken, StatistiquesController.obtenirStatistiquesGenerales);
+router.get('/statistiques/graphiques', AuthController.verifierToken, StatistiquesController.obtenirDonneesGraphiques);
+router.get('/statistiques/mensuelles', AuthController.verifierToken, StatistiquesController.obtenirStatistiquesParMois);
 
 
 module.exports = router;

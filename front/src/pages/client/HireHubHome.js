@@ -3,7 +3,17 @@ import ClientNavbar from '../../components/client/ClientNavbar';
 import { 
   FiSearch, 
   FiMapPin, 
-  FiBriefcase
+  FiBriefcase,
+  FiUsers,
+  FiTrendingUp,
+  FiAward,
+  FiArrowRight,
+  FiStar,
+  FiMail,
+  FiPhone,
+  FiGithub,
+  FiLinkedin,
+  FiTwitter
 } from 'react-icons/fi';
 
 const HireHubHome = () => {
@@ -146,6 +156,321 @@ const HireHubHome = () => {
           </div>
         </div>
       </section>
+
+      {/* Categories Section */}
+      <section style={styles.categoriesSection}>
+        <div style={styles.sectionContent}>
+          <h2 style={styles.sectionTitle}>Explorez par catégorie</h2>
+          <p style={styles.sectionSubtitle}>
+            Découvrez les opportunités dans différents secteurs d'activité
+          </p>
+          
+          <div style={styles.categoriesGrid}>
+            <div style={styles.categoryCard}>
+              <div style={{...styles.categoryIcon, backgroundColor: '#dbeafe'}}>
+                <span style={styles.categoryEmoji}>💻</span>
+              </div>
+              <h3 style={styles.categoryName}>Informatique & Tech</h3>
+              <p style={styles.categoryCount}>245 postes disponibles</p>
+            </div>
+            
+            <div style={styles.categoryCard}>
+              <div style={{...styles.categoryIcon, backgroundColor: '#dcfce7'}}>
+                <span style={styles.categoryEmoji}>💼</span>
+              </div>
+              <h3 style={styles.categoryName}>Finance & Comptabilité</h3>
+              <p style={styles.categoryCount}>189 postes disponibles</p>
+            </div>
+            
+            <div style={styles.categoryCard}>
+              <div style={{...styles.categoryIcon, backgroundColor: '#fef3c7'}}>
+                <span style={styles.categoryEmoji}>🎨</span>
+              </div>
+              <h3 style={styles.categoryName}>Design & Créatif</h3>
+              <p style={styles.categoryCount}>156 postes disponibles</p>
+            </div>
+            
+            <div style={styles.categoryCard}>
+              <div style={{...styles.categoryIcon, backgroundColor: '#fce7f3'}}>
+                <span style={styles.categoryEmoji}>📊</span>
+              </div>
+              <h3 style={styles.categoryName}>Marketing & Vente</h3>
+              <p style={styles.categoryCount}>203 postes disponibles</p>
+            </div>
+            
+            <div style={styles.categoryCard}>
+              <div style={{...styles.categoryIcon, backgroundColor: '#e0e7ff'}}>
+                <span style={styles.categoryEmoji}>🏥</span>
+              </div>
+              <h3 style={styles.categoryName}>Santé & Médical</h3>
+              <p style={styles.categoryCount}>134 postes disponibles</p>
+            </div>
+            
+            <div style={styles.categoryCard}>
+              <div style={{...styles.categoryIcon, backgroundColor: '#ecfdf5'}}>
+                <span style={styles.categoryEmoji}>🎓</span>
+              </div>
+              <h3 style={styles.categoryName}>Éducation & Formation</h3>
+              <p style={styles.categoryCount}>98 postes disponibles</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Jobs Section */}
+      <section style={styles.jobsSection}>
+        <div style={styles.sectionContent}>
+          <div style={styles.sectionHeader}>
+            <div>
+              <h2 style={styles.sectionTitle}>Offres en vedette</h2>
+              <p style={styles.sectionSubtitle}>Les meilleures opportunités sélectionnées pour vous</p>
+            </div>
+            <button style={styles.viewAllButton}>
+              <span>Voir toutes les offres</span>
+              <FiArrowRight />
+            </button>
+          </div>
+          
+          <div style={styles.jobsGrid}>
+            <div style={styles.jobCard}>
+              <div style={styles.jobHeader}>
+                <div style={styles.jobLogo}>🚀</div>
+                <span style={styles.jobType}>Temps plein</span>
+              </div>
+              <h3 style={styles.jobTitle}>Développeur Full Stack</h3>
+              <p style={styles.jobCompany}>TechCorp Madagascar</p>
+              <div style={styles.jobDetails}>
+                <div style={styles.jobLocation}>
+                  <FiMapPin size={16} />
+                  <span>Antananarivo</span>
+                </div>
+                <div style={styles.jobSalary}>800 000 - 1 200 000 Ar</div>
+              </div>
+              <button style={styles.applyButton}>
+                <span>Postuler maintenant</span>
+                <FiArrowRight />
+              </button>
+            </div>
+            
+            <div style={styles.jobCard}>
+              <div style={styles.jobHeader}>
+                <div style={styles.jobLogo}>💼</div>
+                <span style={styles.jobType}>Temps plein</span>
+              </div>
+              <h3 style={styles.jobTitle}>Chef de Projet Marketing</h3>
+              <p style={styles.jobCompany}>Digital Agency Mada</p>
+              <div style={styles.jobDetails}>
+                <div style={styles.jobLocation}>
+                  <FiMapPin size={16} />
+                  <span>Antananarivo</span>
+                </div>
+                <div style={styles.jobSalary}>600 000 - 900 000 Ar</div>
+              </div>
+              <button style={styles.applyButton}>
+                <span>Postuler maintenant</span>
+                <FiArrowRight />
+              </button>
+            </div>
+            
+            <div style={styles.jobCard}>
+              <div style={styles.jobHeader}>
+                <div style={styles.jobLogo}>🎨</div>
+                <span style={styles.jobType}>Freelance</span>
+              </div>
+              <h3 style={styles.jobTitle}>Designer UI/UX</h3>
+              <p style={styles.jobCompany}>Creative Studio</p>
+              <div style={styles.jobDetails}>
+                <div style={styles.jobLocation}>
+                  <FiMapPin size={16} />
+                  <span>Remote</span>
+                </div>
+                <div style={styles.jobSalary}>400 000 - 700 000 Ar</div>
+              </div>
+              <button style={styles.applyButton}>
+                <span>Postuler maintenant</span>
+                <FiArrowRight />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section style={styles.howItWorksSection}>
+        <div style={styles.sectionContent}>
+          <h2 style={styles.sectionTitle}>Comment ça marche ?</h2>
+          <p style={styles.sectionSubtitle}>
+            Trouvez votre emploi idéal en quelques étapes simples
+          </p>
+          
+          <div style={styles.stepsGrid}>
+            <div style={styles.step}>
+              <div style={styles.stepNumber}>1</div>
+              <h3 style={styles.stepTitle}>Créez votre profil</h3>
+              <p style={styles.stepDescription}>
+                Inscrivez-vous gratuitement et créez un profil professionnel complet avec votre CV et vos compétences.
+              </p>
+            </div>
+            
+            <div style={styles.step}>
+              <div style={styles.stepNumber}>2</div>
+              <h3 style={styles.stepTitle}>Recherchez des offres</h3>
+              <p style={styles.stepDescription}>
+                Explorez des milliers d'offres d'emploi adaptées à votre profil et vos préférences.
+              </p>
+            </div>
+            
+            <div style={styles.step}>
+              <div style={styles.stepNumber}>3</div>
+              <h3 style={styles.stepTitle}>Postulez facilement</h3>
+              <p style={styles.stepDescription}>
+                Candidatez en un clic et suivez l'évolution de vos candidatures en temps réel.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section style={styles.testimonialsSection}>
+        <div style={styles.sectionContent}>
+          <h2 style={styles.sectionTitle}>Ce que disent nos utilisateurs</h2>
+          <p style={styles.sectionSubtitle}>
+            Des milliers de professionnels nous font confiance
+          </p>
+          
+          <div style={styles.testimonialsGrid}>
+            <div style={styles.testimonialCard}>
+              <div style={styles.testimonialRating}>
+                {[...Array(5)].map((_, i) => (
+                  <FiStar key={i} size={16} color="#fbbf24" fill="#fbbf24" />
+                ))}
+              </div>
+              <p style={styles.testimonialContent}>
+                "Grâce à HireHub, j'ai trouvé mon emploi de rêve en moins de 2 semaines. 
+                La plateforme est intuitive et les offres sont de qualité."
+              </p>
+              <div style={styles.testimonialAuthor}>
+                <div style={styles.authorAvatar}>R</div>
+                <div>
+                  <div style={styles.authorName}>Ravo Andriamanalina</div>
+                  <div style={styles.authorRole}>Développeur Web</div>
+                </div>
+              </div>
+            </div>
+            
+            <div style={styles.testimonialCard}>
+              <div style={styles.testimonialRating}>
+                {[...Array(5)].map((_, i) => (
+                  <FiStar key={i} size={16} color="#fbbf24" fill="#fbbf24" />
+                ))}
+              </div>
+              <p style={styles.testimonialContent}>
+                "Interface moderne et processus de candidature simplifié. 
+                J'ai pu postuler à plusieurs offres rapidement."
+              </p>
+              <div style={styles.testimonialAuthor}>
+                <div style={styles.authorAvatar}>M</div>
+                <div>
+                  <div style={styles.authorName}>Miora Rakotomalala</div>
+                  <div style={styles.authorRole}>Chef de Projet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section style={styles.ctaSection}>
+        <div style={styles.ctaContent}>
+          <h2 style={styles.ctaTitle}>Prêt à décrocher votre emploi idéal ?</h2>
+          <p style={styles.ctaSubtitle}>
+            Rejoignez des milliers de professionnels qui ont trouvé leur voie grâce à HireHub
+          </p>
+          <div style={styles.ctaButtons}>
+            <button style={styles.ctaPrimaryButton}>
+              <span>Commencer maintenant</span>
+              <FiArrowRight />
+            </button>
+            <button style={styles.ctaSecondaryButton}>
+              <span>En savoir plus</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={styles.footer}>
+        <div style={styles.footerContent}>
+          <div style={styles.footerSection}>
+            <div style={styles.footerLogo}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#3b82f6',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                fontWeight: 'bold',
+                fontSize: '18px'
+              }}>
+                H
+              </div>
+              <span style={{fontSize: '24px', fontWeight: '700'}}>HireHub</span>
+            </div>
+            <p style={styles.footerDescription}>
+              La plateforme de recrutement leader à Madagascar. 
+              Connectons les talents aux opportunités.
+            </p>
+            <div style={{display: 'flex', gap: '16px', marginTop: '20px'}}>
+              <div style={styles.socialIcon}>
+                <FiLinkedin size={20} />
+              </div>
+              <div style={styles.socialIcon}>
+                <FiTwitter size={20} />
+              </div>
+              <div style={styles.socialIcon}>
+                <FiGithub size={20} />
+              </div>
+            </div>
+          </div>
+          
+          <div style={styles.footerLinks}>
+            <div style={styles.footerColumn}>
+              <h4 style={styles.footerColumnTitle}>Candidats</h4>
+              <a href="#" style={styles.footerLink}>Rechercher un emploi</a>
+              <a href="#" style={styles.footerLink}>Créer un CV</a>
+              <a href="#" style={styles.footerLink}>Conseils carrière</a>
+              <a href="#" style={styles.footerLink}>Salaires</a>
+            </div>
+            
+            <div style={styles.footerColumn}>
+              <h4 style={styles.footerColumnTitle}>Entreprises</h4>
+              <a href="#" style={styles.footerLink}>Publier une offre</a>
+              <a href="#" style={styles.footerLink}>Rechercher des talents</a>
+              <a href="#" style={styles.footerLink}>Solutions RH</a>
+              <a href="#" style={styles.footerLink}>Tarifs</a>
+            </div>
+            
+            <div style={styles.footerColumn}>
+              <h4 style={styles.footerColumnTitle}>Support</h4>
+              <a href="#" style={styles.footerLink}>Centre d'aide</a>
+              <a href="#" style={styles.footerLink}>Nous contacter</a>
+              <a href="#" style={styles.footerLink}>Confidentialité</a>
+              <a href="#" style={styles.footerLink}>Conditions d'utilisation</a>
+            </div>
+          </div>
+        </div>
+        
+        <div style={styles.footerBottom}>
+          <p style={styles.footerCopyright}>
+            © 2024 HireHub Madagascar. Tous droits réservés.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
@@ -647,6 +972,18 @@ const styles = {
   footerCopyright: {
     color: '#9ca3af',
     fontSize: '14px'
+  },
+  socialIcon: {
+    width: '40px',
+    height: '40px',
+    backgroundColor: '#374151',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#9ca3af',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
   }
 };
 

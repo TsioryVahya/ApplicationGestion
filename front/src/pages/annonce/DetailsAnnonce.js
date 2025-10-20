@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
+import { 
   FiArrowLeft, FiBriefcase, FiCalendar, FiMapPin, FiUsers,
   FiMail, FiFileText, FiUser, FiClock, FiCheckCircle,
   FiXCircle, FiAlertCircle, FiFilter, FiSearch, FiX, FiSend,
-  FiCheck, FiRefreshCw, FiFilePlus
+  FiCheck, FiRefreshCw, FiFilePlus, FiDownload
 } from 'react-icons/fi';
+import * as XLSX from 'xlsx';
 import './DetailsAnnonce.css';
 
 const DetailsAnnonce = () => {
@@ -23,6 +24,7 @@ const DetailsAnnonce = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showQcmModal, setShowQcmModal] = useState(false);
   const [showEntretienModal, setShowEntretienModal] = useState(false);
+  const [showCandidatModal, setShowCandidatModal] = useState(false);
   const [selectedCandidat, setSelectedCandidat] = useState(null);
   const [sendingQcm, setSendingQcm] = useState(false);
   const [creatingEntretien, setCreatingEntretien] = useState(false);
@@ -412,6 +414,95 @@ const DetailsAnnonce = () => {
     }));
   };
 
+  const ouvrirDetailsCandidature = (candidat) => {
+    console.log('🔍 Ouverture détails candidature:', candidat);
+    console.log('📋 Critères du candidat:', candidat.criteres);
+    setSelectedCandidat(candidat);
+    setShowCandidatModal(true);
+  };
+
+  const exporterCandidatureExcel = (candidat) => {
+    // Créer les données pour l'export Excel
+    const donnees = [];
+    
+    // Informations personnelles
+    donnees.push(['INFORMATIONS PERSONNELLES', '']);
+    donnees.push(['Nom complet', `${candidat.prenom} ${candidat.nom}`]);
+    if (candidat.email) donnees.push(['Email', candidat.email]);
+    if (candidat.dateNaissance) {
+      const age = new Date().getFullYear() - new Date(candidat.dateNaissance).getFullYear();
+      donnees.push(['Âge', `${age} ans`]);
+      donnees.push(['Date de naissance', formatDate(candidat.dateNaissance)]);
+    }
+    if (candidat.nomLieu || candidat.idLieu) {
+      const lieu = candidat.nomLieu || lieux.find(l => l.id === candidat.idLieu)?.nom || 'Non spécifié';
+      donnees.push(['Lieu de résidence', lieu]);
+    }
+    
+    // Informations de candidature
+    donnees.push(['', '']); // Ligne vide
+    donnees.push(['CANDIDATURE', '']);
+    donnees.push(['ID Candidat', `#${candidat.id}`]);
+    if (candidat.dateCandidature) donnees.push(['Date de candidature', formatDate(candidat.dateCandidature)]);
+    donnees.push(['Statut', candidat.statut || candidat.statutNom || 'En attente']);
+    donnees.push(['Annonce', annonce.reference]);
+    
+    // Critères de candidature
+    if (candidat.criteres && candidat.criteres.length > 0) {
+      donnees.push(['', '']); // Ligne vide
+      donnees.push(['INFORMATIONS DU FORMULAIRE CV', '']);
+      candidat.criteres.forEach(critere => {
+        let valeur = '';
+        if (critere.valeurBool !== null) {
+          valeur = critere.valeurBool ? 'Oui' : 'Non';
+        } else if (critere.valeurDouble !== null) {
+          valeur = critere.valeurDouble.toString();
+        } else if (critere.valeurVarchar) {
+          valeur = critere.valeurVarchar;
+        }
+        donnees.push([critere.nomCritere, valeur]);
+      });
+    }
+    
+    // CV / Profil
+    if (candidat.cv) {
+      donnees.push(['', '']); // Ligne vide
+      donnees.push(['CV / PROFIL PROFESSIONNEL', '']);
+      donnees.push(['Description', candidat.cv]);
+    }
+    
+    // Créer le workbook et worksheet
+    const ws = XLSX.utils.aoa_to_sheet(donnees);
+    
+    // Styliser les en-têtes de section
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: 0 });
+      if (ws[cellAddress] && ws[cellAddress].v && 
+          (ws[cellAddress].v.includes('INFORMATIONS') || ws[cellAddress].v.includes('CANDIDATURE') || ws[cellAddress].v.includes('CV'))) {
+        ws[cellAddress].s = {
+          font: { bold: true, sz: 12 },
+          fill: { fgColor: { rgb: "E2E8F0" } }
+        };
+      }
+    }
+    
+    // Ajuster la largeur des colonnes
+    ws['!cols'] = [
+      { wch: 25 }, // Colonne A (labels)
+      { wch: 50 }  // Colonne B (valeurs)
+    ];
+    
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Candidature');
+    
+    // Nom du fichier : nom_prenom.xlsx
+    const nomFichier = `${candidat.nom}_${candidat.prenom}.xlsx`;
+    
+    // Télécharger le fichier
+    XLSX.writeFile(wb, nomFichier);
+  };
+
   if (loading) return <div className="loading">Chargement...</div>;
   if (error) return <div className="error">Erreur: {error}</div>;
   if (!annonce) return <div className="error">Annonce non trouvée</div>;
@@ -650,7 +741,11 @@ const DetailsAnnonce = () => {
                 {candidatsFiltres.map(candidat => (
                   <div key={candidat.id} className="candidat-card">
                     <div className="candidat-header">
-                      <div className="candidat-info">
+                      <div 
+                        className="candidat-info candidat-clickable"
+                        onClick={() => ouvrirDetailsCandidature(candidat)}
+                        title={`Voir les détails de candidature de ${candidat.prenom} ${candidat.nom}`}
+                      >
                         <div className="candidat-nom">
                           <FiUser size={20} color="#3b82f6" />
                           <span>{candidat.prenom} {candidat.nom}</span>
@@ -1076,6 +1171,214 @@ const DetailsAnnonce = () => {
                   <FiCalendar size={16} />
                   {creatingEntretien ? 'Programmation...' : 'Programmer'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Détails Candidature */}
+      {showCandidatModal && selectedCandidat && (
+        <div className="modal-overlay">
+          <div className="modal-content modal-large">
+            <div className="modal-header">
+              <h3>
+                <FiUser size={20} />
+                Détails de candidature
+              </h3>
+              <div className="modal-header-actions">
+                <button
+                  className="export-excel-button"
+                  onClick={() => exporterCandidatureExcel(selectedCandidat)}
+                  title="Exporter en Excel"
+                >
+                  <FiDownload size={16} />
+                  Excel
+                </button>
+                <button
+                  className="close-button"
+                  onClick={() => {
+                    setShowCandidatModal(false);
+                    setSelectedCandidat(null);
+                  }}
+                >
+                  <FiX size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="modal-body">
+              <div className="candidature-details">
+                {/* Informations personnelles */}
+                <div className="detail-section">
+                  <h4 className="section-title">
+                    <FiUser size={16} />
+                    Informations personnelles
+                  </h4>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <span className="info-label">Nom complet:</span>
+                      <span className="info-value">{selectedCandidat.prenom} {selectedCandidat.nom}</span>
+                    </div>
+                    {selectedCandidat.email && (
+                      <div className="info-item">
+                        <span className="info-label">Email:</span>
+                        <span className="info-value">{selectedCandidat.email}</span>
+                      </div>
+                    )}
+                    {selectedCandidat.dateNaissance && (
+                      <div className="info-item">
+                        <span className="info-label">Âge:</span>
+                        <span className="info-value">
+                          {new Date().getFullYear() - new Date(selectedCandidat.dateNaissance).getFullYear()} ans
+                          <span className="info-secondary">
+                            (né(e) le {formatDate(selectedCandidat.dateNaissance)})
+                          </span>
+                        </span>
+                      </div>
+                    )}
+                    {(selectedCandidat.nomLieu || selectedCandidat.idLieu) && (
+                      <div className="info-item">
+                        <span className="info-label">Lieu de résidence:</span>
+                        <span className="info-value">
+                          {selectedCandidat.nomLieu || lieux.find(l => l.id === selectedCandidat.idLieu)?.nom || 'Non spécifié'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Informations de candidature */}
+                <div className="detail-section">
+                  <h4 className="section-title">
+                    <FiBriefcase size={16} />
+                    Candidature
+                  </h4>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <span className="info-label">ID Candidat:</span>
+                      <span className="info-value">#{selectedCandidat.id}</span>
+                    </div>
+                    {selectedCandidat.dateCandidature && (
+                      <div className="info-item">
+                        <span className="info-label">Date de candidature:</span>
+                        <span className="info-value">{formatDate(selectedCandidat.dateCandidature)}</span>
+                      </div>
+                    )}
+                    <div className="info-item">
+                      <span className="info-label">Statut:</span>
+                      <div className="info-value">
+                        <div
+                          className="statut-badge"
+                          style={{
+                            backgroundColor: getStatutColor(selectedCandidat.statut || selectedCandidat.statutNom) + '20',
+                            color: getStatutColor(selectedCandidat.statut || selectedCandidat.statutNom),
+                          }}
+                        >
+                          {getStatutIcon(selectedCandidat.statut || selectedCandidat.statutNom)}
+                          <span>{selectedCandidat.statut || selectedCandidat.statutNom || 'En attente'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Annonce:</span>
+                      <span className="info-value">{annonce.reference}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Critères de candidature */}
+                <div className="detail-section">
+                  <h4 className="section-title">
+                    <FiCheck size={16} />
+                    Informations du formulaire CV
+                  </h4>
+                  {selectedCandidat.criteres && selectedCandidat.criteres.length > 0 ? (
+                    <div className="criteres-grid">
+                      {selectedCandidat.criteres.map((critere, index) => (
+                        <div key={index} className="critere-item">
+                          <span className="critere-label">{critere.nomCritere}:</span>
+                          <span className="critere-value">
+                            {critere.valeurBool !== null ? (
+                              <span className={`bool-value ${critere.valeurBool ? 'bool-true' : 'bool-false'}`}>
+                                {critere.valeurBool ? 'Oui' : 'Non'}
+                              </span>
+                            ) : critere.valeurDouble !== null ? (
+                              <span className="number-value">{critere.valeurDouble}</span>
+                            ) : (
+                              <span className="text-value">{critere.valeurVarchar}</span>
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="no-criteres">
+                      <FiFileText size={32} color="#94a3b8" />
+                      <p>Aucune information supplémentaire du formulaire CV disponible</p>
+                      <small>Les critères comme les compétences linguistiques, l'expérience, etc. s'afficheront ici</small>
+                    </div>
+                  )}
+                </div>
+
+                {/* CV / Profil */}
+                {selectedCandidat.cv && (
+                  <div className="detail-section">
+                    <h4 className="section-title">
+                      <FiFileText size={16} />
+                      CV / Profil professionnel
+                    </h4>
+                    <div className="cv-content">
+                      <p>{selectedCandidat.cv}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions rapides */}
+                <div className="detail-section">
+                  <h4 className="section-title">
+                    <FiCheck size={16} />
+                    Actions
+                  </h4>
+                  <div className="action-buttons">
+                    <button
+                      className="action-button qcm-button"
+                      onClick={() => {
+                        setShowCandidatModal(false);
+                        setShowQcmModal(true);
+                      }}
+                      title="Envoyer un test QCM"
+                    >
+                      <FiSend size={16} />
+                      Envoyer QCM
+                    </button>
+                    <button
+                      className="action-button entretien-button"
+                      onClick={() => {
+                        setShowCandidatModal(false);
+                        setEntretienData({ dateHeure: '', idStatut: 1 });
+                        setShowEntretienModal(true);
+                      }}
+                      title="Programmer un entretien"
+                    >
+                      <FiCalendar size={16} />
+                      Programmer entretien
+                    </button>
+                    <button
+                      className="action-button contrat-button"
+                      onClick={() => {
+                        naviguerVersContrat(
+                          selectedCandidat.id,
+                          selectedCandidat.nom,
+                          selectedCandidat.prenom
+                        );
+                      }}
+                      title="Créer un contrat"
+                    >
+                      <FiFilePlus size={16} />
+                      Créer contrat
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

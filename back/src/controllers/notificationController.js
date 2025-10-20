@@ -53,25 +53,31 @@ const NotificationController = {
       // Créer le lien du test
       const lienTest = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/test/${token}`;
 
-      // Créer la notification pour le candidat (si il a un compte)
+      // Créer la notification pour le candidat
       let idNotification = null;
-      if (candidatInfo.idCompteCandidat) {
-        const [notifResult] = await pool.execute(`
-          INSERT INTO Notification (
-            titre, message, idTypeNotification, idDestinataire, 
-            idAnnonce, idQcmTest, dateExpiration, donnees
-          ) VALUES (?, ?, 1, ?, ?, ?, ?, ?)
-        `, [
-          `Test QCM - ${candidatInfo.annonceReference}`,
-          `Vous êtes invité(e) à passer le test "${testInfo.nom}" pour l'annonce ${candidatInfo.annonceReference}. Date limite: ${dateExpiration.toLocaleDateString('fr-FR')}`,
-          candidatInfo.idCompteCandidat,
-          idAnnonce,
-          idQcmTest,
-          dateExpiration,
-          JSON.stringify({ token, lienTest, dureeValidite })
-        ]);
-        idNotification = notifResult.insertId;
+      let idDestinataire = candidatInfo.idCompteCandidat;
+      
+      // Si le candidat n'a pas de compte, utiliser un compte par défaut (ID 1)
+      if (!idDestinataire) {
+        console.warn(`⚠️ Candidat ${candidatInfo.prenom} ${candidatInfo.nom} n'a pas de compte. Notification assignée au compte par défaut.`);
+        idDestinataire = 1; // Compte par défaut
       }
+      
+      const [notifResult] = await pool.execute(`
+        INSERT INTO Notification (
+          titre, message, idTypeNotification, idDestinataire, 
+          idAnnonce, idQcmTest, dateExpiration, donnees
+        ) VALUES (?, ?, 1, ?, ?, ?, ?, ?)
+      `, [
+        `Test QCM - ${candidatInfo.annonceReference}`,
+        `Vous êtes invité(e) à passer le test "${testInfo.nom}" pour l'annonce ${candidatInfo.annonceReference}. Date limite: ${dateExpiration.toLocaleDateString('fr-FR')}`,
+        idDestinataire,
+        idAnnonce,
+        idQcmTest,
+        dateExpiration,
+        JSON.stringify({ token, lienTest, dureeValidite })
+      ]);
+      idNotification = notifResult.insertId;
 
       // Enregistrer l'invitation QCM
       const [invitationResult] = await pool.execute(`
